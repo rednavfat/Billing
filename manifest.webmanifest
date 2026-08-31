@@ -2,7 +2,6 @@
   "name": "Bottom Time",
   "short_name": "Bottom Time",
   "description": "Dive and hours log for commercial diving, on a 16th-to-15th billing cycle.",
-  "id": "/bottom-time/",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
