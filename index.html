@@ -45,6 +45,10 @@
 }
 
 *{box-sizing:border-box}
+/* Any class that sets `display` would otherwise defeat the `hidden` attribute.
+   The artifact viewer injects this rule; a plain web server does not, so the
+   page carries its own — without it a hidden overlay still swallows taps. */
+[hidden]{display:none!important}
 body{
   margin:0;
   background:var(--abyss);
@@ -350,6 +354,26 @@ pre.csv{
   background:var(--abyss);border:1px solid var(--line-soft);border-radius:10px;
   padding:12px;overflow-x:auto;margin:0 0 12px;max-height:190px;white-space:pre;
 }
+/* ---------- migration overlay ---------- */
+.migrate{
+  position:fixed;inset:0;z-index:80;background:var(--abyss);
+  display:grid;place-items:center;padding:22px;overflow-y:auto;
+}
+.migrate-card{max-width:460px;width:100%}
+.migrate .eyebrow{
+  font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--amber);margin:0 0 10px;
+}
+.migrate h2{font-size:26px;font-weight:700;letter-spacing:-.025em;margin:0 0 12px;line-height:1.2;text-wrap:balance}
+.migrate .lead{color:var(--muted);font-size:14.5px;line-height:1.6;margin:0 0 16px}
+.migrate .fine{color:var(--dim);font-size:12.5px;line-height:1.55;margin:14px 0 16px}
+.mstat{border:1px solid var(--line);border-radius:12px;background:var(--deep);overflow:hidden}
+.mstat .r{display:flex;justify-content:space-between;gap:14px;padding:11px 14px;
+  border-bottom:1px solid var(--line-soft);font-size:14px}
+.mstat .r:last-child{border-bottom:none}
+.mstat .r .k{color:var(--dim)}
+.mstat .r .v{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
 /* ---------- backup ---------- */
 hr.rule{border:none;border-top:1px solid var(--line-soft);margin:18px 0 15px}
 .backup-state{
@@ -597,6 +621,23 @@ hr.rule{border:none;border-top:1px solid var(--line-soft);margin:18px 0 15px}
   </nav>
 </div>
 
+<div class="migrate" id="migrateOverlay" hidden>
+  <div class="migrate-card">
+    <p class="eyebrow">One-time update</p>
+    <h2>Your log needs a small update</h2>
+    <p class="lead">This version stores your work differently so it can hold customers,
+      dive teams and closed billing periods. Nothing is deleted and nothing is rewritten —
+      your existing records are copied across and checked.</p>
+    <div class="mstat" id="migrateStats"></div>
+    <p class="fine">Your old data stays exactly where it is, untouched, so this is reversible.
+      Even so, take the backup first — it takes a second and it is yours to keep.</p>
+    <button class="btn ghost" id="migrateBackup" style="width:100%">Save a backup first</button>
+    <div style="height:9px"></div>
+    <button class="btn" id="migrateGo" style="width:100%">Update my log</button>
+    <div id="migrateError"></div>
+  </div>
+</div>
+
 <button class="fab" id="fabAdd" aria-label="Log a shift">
   <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
 </button>
@@ -612,8 +653,154 @@ var K_E='bottomtime.entries.v1', K_S='bottomtime.settings.v1';
 function load(k,f){ try{var r=localStorage.getItem(k);return r?JSON.parse(r):f;}catch(e){return f;} }
 function save(k,v){ try{localStorage.setItem(k,JSON.stringify(v));}catch(e){} }
 
-var entries = load(K_E,[]);
-var settings = Object.assign({cycleStart:16, unit:'m', breakMin:60}, load(K_S,{}));
+/* ================================================================
+   SCHEMA v2
+
+   v1 stored two keys: an array of shifts and a settings object. v2 keeps
+   everything in one versioned document so people, customers and closed
+   periods have somewhere to live, and so later changes have a version
+   number to migrate from.
+
+   The v1 keys are READ and then LEFT IN PLACE — never rewritten, never
+   deleted. Rolling back is loading the old key again.
+   ================================================================ */
+var K_V2 = 'bottomtime.state.v2';
+var SCHEMA = 2;
+
+function defaultSettings(){
+  return {
+    cycleStart:16, unit:'m', breakMin:60,
+    currency:'SEK',
+    /* null means "not set" — with no rates the app shows hours and no money */
+    rates:{ working:null, overtime:null, diving:null, standby:null, travel:null,
+            perDiemFull:null, perDiemHalf:null }
+  };
+}
+function emptyState(){
+  return { schemaVersion:SCHEMA, shifts:[], people:[], customers:[], periods:{},
+           settings:defaultSettings() };
+}
+function mergeSettings(s){
+  var out = Object.assign(defaultSettings(), s||{});
+  out.rates = Object.assign(defaultSettings().rates, (s&&s.rates)||{});
+  /* Early builds briefly wrote this into settings; it belongs to the device. */
+  delete out.lastBackupAt;
+  return out;
+}
+
+/* ---- v1 → v2 ---------------------------------------------------- */
+/* Derives customers from the free-text client strings and gives every dive
+   an id. Nothing is dropped: the original strings stay alongside the ids,
+   and the import fallback fields are carried through untouched. */
+function migrateV1(v1shifts, v1settings){
+  var customers = [], byKey = {};
+  function customerFor(name){
+    var n = (name||'').trim();
+    if(!n) return null;
+    var k = n.toLowerCase();
+    if(byKey[k]){ byKey[k].name = n; return byKey[k].id; }   /* keep latest spelling */
+    var c = {id:uid(), name:n, notes:''};
+    byKey[k] = c; customers.push(c);
+    return c.id;
+  }
+  var shifts = (v1shifts||[]).map(function(e){
+    var out = {
+      id: e.id || uid(),
+      date: e.date || '',
+      clientId: customerFor(e.job),
+      client: e.job || '',            /* string kept as fallback */
+      site: e.site || '',
+      project: '',
+      start: e.start || '',
+      end: e.end || '',
+      lunch: !!e.lunch,
+      lunchMin: num(e.lunchMin) || 0,
+      overtimeHours: 0,
+      standbyHours: num(e.standby),   /* v1 stored these as strings */
+      travelHours: num(e.travel),
+      perDiem: 'none',
+      perDiemAmount: 0,
+      notes: e.notes || '',
+      dives: (e.dives||[]).map(function(d){
+        return {
+          id: uid(),
+          in: d.in || '', out: d.out || '',
+          /* blank depth stays blank — 0 would read as a recorded surface dive */
+          depth: (d.depth===''||d.depth==null) ? null : num(d.depth),
+          task: d.task || '', notes: '',
+          diverId:null, reserveDiverId:null, diveLeaderId:null, tenderId:null
+        };
+      })
+    };
+    /* import fallbacks are carried verbatim rather than interpreted */
+    ['workedOverride','extraDiveMin','extraDives','depthOverride'].forEach(function(k){
+      if(e[k] !== undefined) out[k] = e[k];
+    });
+    return out;
+  });
+  return { schemaVersion:SCHEMA, shifts:shifts, people:[], customers:customers,
+           periods:{}, settings:mergeSettings(v1settings) };
+}
+
+/* Totals that must be identical either side of a migration. Both shapes use
+   the same field names for times, so one function reads both. */
+function tally(shifts){
+  var t = {shifts:(shifts||[]).length, dives:0, bottomMin:0, workedMin:0, dates:[]};
+  (shifts||[]).forEach(function(e){
+    var ds = e.dives || [];
+    t.dives += ds.length;
+    ds.forEach(function(d){ t.bottomMin += minsBetween(d.in, d.out); });
+    t.workedMin += workedMins(e);
+    t.dates.push(e.date||'');
+  });
+  t.dates.sort();
+  return t;
+}
+function verifyMigration(before, after){
+  var a = tally(before), b = tally(after), p = [];
+  if(a.shifts !== b.shifts)       p.push('shift count changed: '+a.shifts+' → '+b.shifts);
+  if(a.dives !== b.dives)         p.push('dive count changed: '+a.dives+' → '+b.dives);
+  if(a.bottomMin !== b.bottomMin) p.push('bottom time changed: '+a.bottomMin+' → '+b.bottomMin+' min');
+  if(a.workedMin !== b.workedMin) p.push('worked time changed: '+a.workedMin+' → '+b.workedMin+' min');
+  if(a.dates.join('|') !== b.dates.join('|')) p.push('the set of shift dates changed');
+  after.forEach(function(e){
+    (e.dives||[]).forEach(function(d){ if(!d.id) p.push('a dive on '+e.date+' has no id'); });
+  });
+  return p;
+}
+
+/* ---- boot ------------------------------------------------------- */
+var migration = null;          /* set when v1 data is present and not yet migrated */
+
+function bootState(){
+  var s = load(K_V2, null);
+  if(s && s.schemaVersion === SCHEMA){
+    s.settings = mergeSettings(s.settings);
+    s.shifts = s.shifts || []; s.people = s.people || [];
+    s.customers = s.customers || []; s.periods = s.periods || {};
+    return s;
+  }
+  var old = load(K_E, null);
+  if(old && old.length){
+    /* Hold the app until the migration is confirmed. */
+    migration = {shifts:old, settings:load(K_S, {})};
+    return emptyState();
+  }
+  var st = emptyState();
+  var os = load(K_S, null);
+  if(os) st.settings = mergeSettings(os);   /* settings survive even with no shifts */
+  return st;
+}
+
+var state    = bootState();
+var entries  = state.shifts;      /* live alias — the rest of the app still says `entries` */
+var settings = state.settings;
+
+function saveState(){
+  state.shifts = entries;
+  state.settings = settings;
+  save(K_V2, state);
+}
 
 /* ---------------- helpers ---------------- */
 var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -641,6 +828,40 @@ function hm(mins){
 function dec(h){ return (Math.round(h*100)/100).toFixed(2); }
 function num(v){ var n=parseFloat(v); return isNaN(n)?0:n; }
 
+/* ---------------- customers and people ---------------- */
+function customerById(id){
+  if(!id) return null;
+  for(var i=0;i<state.customers.length;i++) if(state.customers[i].id===id) return state.customers[i];
+  return null;
+}
+function personById(id){
+  if(!id) return null;
+  for(var i=0;i<state.people.length;i++) if(state.people[i].id===id) return state.people[i];
+  return null;
+}
+/* Find a customer by name, or create one. Matching is case-insensitive so
+   "Peab" and "PEAB" stay one company rather than fragmenting the history. */
+function ensureCustomer(name){
+  var n=(name||'').trim();
+  if(!n) return null;
+  var k=n.toLowerCase(), i;
+  for(i=0;i<state.customers.length;i++)
+    if(state.customers[i].name.trim().toLowerCase()===k) return state.customers[i].id;
+  var c={id:uid(), name:n, notes:''};
+  state.customers.push(c);
+  return c.id;
+}
+
+/* ---------------- shift field accessors ---------------- */
+/* The id is authoritative; the stored string is the fallback, and `job` is
+   read too so a record that somehow escaped migration still displays. */
+function shiftClient(e){
+  var c=customerById(e.clientId);
+  return (c && c.name) || e.client || e.job || '';
+}
+function standbyH(e){ return num(e.standbyHours!==undefined ? e.standbyHours : e.standby); }
+function travelH(e){  return num(e.travelHours !==undefined ? e.travelHours  : e.travel);  }
+
 /* ---------------- derived entry values ---------------- */
 function breakMins(){ var v=num(settings.breakMin); return v>0? v : 60; }
 /* The deduction is stamped onto the shift when it is saved, so changing the
@@ -667,7 +888,7 @@ function maxDepth(e){
   v=num(e.depthOverride); if(v>d) d=v;
   return d;
 }
-function billableH(e){ return workedMins(e)/60 + num(e.standby) + num(e.travel); }
+function billableH(e){ return workedMins(e)/60 + standbyH(e) + travelH(e); }
 
 /* ================================================================
    NITROGEN GROUPS — Norske dykke- og behandlingstabeller (NDBT)
@@ -1142,7 +1363,8 @@ function flatDives(){
       var c=diveClock(e,d);
       if(!c) return;
       out.push({
-        entryId:e.id, idx:i, date:e.date, job:e.job||'', site:e.site||'',
+        entryId:e.id, diveId:d.id, idx:i, date:e.date,
+        job:shiftClient(e), site:e.site||'',
         task:d.task||'', depth:num(d.depth), in:d.in, out:d.out,
         mins:minsBetween(d.in,d.out), inDT:c.inDT, outDT:c.outDT
       });
@@ -1216,11 +1438,11 @@ function totals(list){
   list.forEach(function(e){
     var w=workedMins(e)/60, dm=diveMins(e);
     t.worked+=w; t.dive+=dm; t.dives+=diveCount(e);
-    t.standby+=num(e.standby); t.travel+=num(e.travel);
+    t.standby+=standbyH(e); t.travel+=travelH(e);
     t.bill+=billableH(e);
     var d=maxDepth(e); if(d>t.depth) t.depth=d;
     if(e.date) t.days[e.date]=1;
-    var j=(e.job||'Unassigned').trim()||'Unassigned';
+    var j=(shiftClient(e)||'Unassigned').trim()||'Unassigned';
     t.jobs[j]=(t.jobs[j]||0)+billableH(e);
   });
   return t;
@@ -1271,12 +1493,12 @@ function renderLog(){
     if(dn) tags+='<span class="tag dive">'+dn+' dive'+(dn>1?'s':'')+'</span>';
     if(dep) tags+='<span class="tag dive">'+dep+settings.unit+'</span>';
     if(e.lunch) tags+='<span class="tag">−'+dec(lunchMins(e)/60)+' lunch</span>';
-    if(num(e.standby)) tags+='<span class="tag">standby '+dec(num(e.standby))+'</span>';
-    if(num(e.travel)) tags+='<span class="tag">travel '+dec(num(e.travel))+'</span>';
+    if(standbyH(e)) tags+='<span class="tag">standby '+dec(standbyH(e))+'</span>';
+    if(travelH(e)) tags+='<span class="tag">travel '+dec(travelH(e))+'</span>';
     if(e.notes) tags+='<span class="tag">note</span>';
     return '<button class="day" data-id="'+e.id+'">'+
       '<span class="dstamp"><span class="d">'+pad(d.getDate())+'</span><span class="m">'+MON[d.getMonth()]+'</span></span>'+
-      '<span class="dmain"><span class="j">'+esc(e.job||'Unassigned')+'</span>'+
+      '<span class="dmain"><span class="j">'+esc(shiftClient(e)||'Unassigned')+'</span>'+
         '<span class="s">'+esc(e.site||'')+(e.site&&e.start?' · ':'')+
         (e.start&&e.end?esc(e.start)+'–'+esc(e.end):'')+'</span></span>'+
       '<span class="dnum"><span class="w">'+dec(workedMins(e)/60)+'</span>'+
@@ -1423,7 +1645,7 @@ function divesCSV(list){
 /* ---------------- wizard ---------------- */
 var STEPS=[
   {k:'date',  t:'date',    q:'What day was this?',        h:'Shifts that run past midnight still belong to the day they started.'},
-  {k:'job',   t:'text',    q:'Who was it for?',           h:'Client or job name. This is what your period totals get grouped by.', sug:'job', ph:'e.g. Northern Star Marine'},
+  {k:'client',t:'text',    q:'Who was it for?',           h:'Client or job name. This is what your period totals get grouped by.', sug:'client', ph:'e.g. Northern Star Marine'},
   {k:'site',  t:'text',    q:'Where?',                    h:'Vessel, rig, berth or site. Optional.', sug:'site', ph:'e.g. MV Kestrel'},
   {k:'start', t:'time',    q:'On shift at?',              h:'When you started work — not when you got in the water.'},
   {k:'end',   t:'time',    q:'Off shift at?',             h:'Crossing midnight is handled for you.'},
@@ -1434,9 +1656,17 @@ var STEPS=[
 ];
 var step=0, draft=null, editing=null;
 
+function newDive(){
+  return {id:uid(), in:'', out:'', depth:null, task:'', notes:'',
+          diverId:null, reserveDiverId:null, diveLeaderId:null, tenderId:null};
+}
 function blank(){
-  return {id:uid(), date:todayISO(), job:'', site:'', start:'', end:'',
-          dives:[], standby:'', travel:'', notes:'', lunch:false};
+  return {id:uid(), date:todayISO(),
+          clientId:null, client:'', site:'', project:'',
+          start:'', end:'', lunch:false, lunchMin:0,
+          overtimeHours:0, standbyHours:0, travelHours:0,
+          perDiem:'none', perDiemAmount:0,
+          notes:'', dives:[]};
 }
 function suggestions(field){
   var seen={}, out=[];
@@ -1519,8 +1749,8 @@ function renderStep(animate){
   }
   else if(s.t==='extra'){
     html+='<div class="dgrid">'+
-      '<label><span class="mlbl">Standby / tender (hrs)</span><input class="fld" type="number" inputmode="decimal" step="0.25" min="0" id="f" data-x="standby" value="'+esc(draft.standby||'')+'" placeholder="0"></label>'+
-      '<label><span class="mlbl">Travel (hrs)</span><input class="fld" type="number" inputmode="decimal" step="0.25" min="0" data-x="travel" value="'+esc(draft.travel||'')+'" placeholder="0"></label>'+
+      '<label><span class="mlbl">Standby / tender (hrs)</span><input class="fld" type="number" inputmode="decimal" step="0.25" min="0" id="f" data-x="standbyHours" value="'+esc(draft.standbyHours||'')+'" placeholder="0"></label>'+
+      '<label><span class="mlbl">Travel (hrs)</span><input class="fld" type="number" inputmode="decimal" step="0.25" min="0" data-x="travelHours" value="'+esc(draft.travelHours||'')+'" placeholder="0"></label>'+
       '</div>';
     html+='<div class="calc"><span class="k">Total billable</span><span class="v">'+dec(billableH(draft))+'</span></div>';
   }
@@ -1530,7 +1760,7 @@ function renderStep(animate){
     var row=function(k,v,cls){ return '<div class="rev-r"><span class="k">'+k+'</span><span class="v '+(cls||'')+'">'+v+'</span></div>'; };
     html+='<div class="rev">'+
       row('Date', d.getDate()+' '+MON[d.getMonth()]+' '+d.getFullYear())+
-      row('Client', esc(draft.job||'—'))+
+      row('Client', esc(draft.client||'—'))+
       (draft.site? row('Site', esc(draft.site)) : '')+
       row('Shift', (draft.start&&draft.end)? esc(draft.start)+' – '+esc(draft.end) : '—')+
       (draft.lunch? row('Unpaid lunch', '− '+dec(lunchMins(draft)/60), 'num') : '')+
@@ -1564,13 +1794,13 @@ function capture(){
   else if(s.t==='text'||s.t==='textarea'){ if(f) draft[s.k]=f.value.trim(); }
   else if(s.t==='time'){ if(f) draft[s.k]=f.value; }
   else if(s.t==='extra'){
-    document.querySelectorAll('[data-x]').forEach(function(el){ draft[el.getAttribute('data-x')]=el.value; });
+    document.querySelectorAll('[data-x]').forEach(function(el){ draft[el.getAttribute('data-x')]=num(el.value); });
   }
 }
 function validate(){
   var s=STEPS[step];
   if(s.k==='date' && !draft.date){ toast('Pick a date to continue'); return false; }
-  if(s.k==='job' && !draft.job){ toast('Add a client or job name'); return false; }
+  if(s.k==='client' && !draft.client){ toast('Add a client or job name'); return false; }
   if(s.k==='start' && !draft.start){ toast('Enter your shift start time'); return false; }
   if(s.k==='end' && !draft.end){ toast('Enter your shift end time'); return false; }
   return true;
@@ -1578,8 +1808,10 @@ function validate(){
 function commit(){
   var i, found=-1;
   for(i=0;i<entries.length;i++) if(entries[i].id===draft.id){ found=i; break; }
+  /* Link the typed client name to a customer record, creating one if new. */
+  draft.clientId = ensureCustomer(draft.client);
   if(found>=0) entries[found]=draft; else entries.push(draft);
-  save(K_E,entries);
+  saveState();
   var p=periodOf(draft.date), cur=periodOf(todayISO());
   offset = (p.start.getFullYear()-cur.start.getFullYear())*12 + (p.start.getMonth()-cur.start.getMonth());
   draft=null; editing=null;
@@ -1600,7 +1832,6 @@ function commit(){
    the `data` object is what must round-trip exactly.
    ================================================================ */
 var BACKUP_FORMAT = 1;   /* shape of the envelope below */
-var DATA_SCHEMA   = 1;   /* shape of entries/settings; Phase 1 raises this */
 var K_SNAP = 'bottomtime.snapshot.prerestore.v1';
 /* When this device last backed up is a property of the device, not of the log.
    Keeping it out of `settings` is what makes two backups of unchanged data
@@ -1628,12 +1859,33 @@ function buildBackup(){
   var dates = entries.map(function(e){ return e.date; }).filter(Boolean).sort();
   return {
     app:'bottom-time', kind:'backup',
-    backupFormat:BACKUP_FORMAT, dataSchema:DATA_SCHEMA,
+    backupFormat:BACKUP_FORMAT, dataSchema:SCHEMA,
     exportedAt:new Date().toISOString(),
-    counts:{ shifts:entries.length, dives:countDives(entries) },
+    counts:{ shifts:entries.length, dives:countDives(entries),
+             people:state.people.length, customers:state.customers.length },
     range:{ first:dates[0]||null, last:dates[dates.length-1]||null },
-    data:{ entries:entries, settings:settings }
+    data: snapshotState()
   };
+}
+/* Replace everything in memory with a state document. */
+function adoptState(next){
+  state = {
+    schemaVersion: SCHEMA,
+    shifts:   next.shifts   || [],
+    people:   next.people   || [],
+    customers:next.customers|| [],
+    periods:  next.periods  || {},
+    settings: mergeSettings(next.settings)
+  };
+  entries  = state.shifts;
+  settings = state.settings;
+}
+/* A backup may predate schema v2 — those hold {entries, settings} and are
+   migrated on the way in, by the same code that migrates local data. */
+function stateFromBackup(o){
+  var d = o.data || {};
+  if(Array.isArray(d.shifts)) return d;
+  return migrateV1(d.entries || [], d.settings || {});
 }
 function backupText(){ return stableStringify(buildBackup(), 2); }
 function backupFilename(){ return 'bottom-time-backup_'+iso(new Date())+'.json'; }
@@ -1650,7 +1902,7 @@ function parseBackup(text){
     return {error:'That is not a Bottom Time backup file.'};
   if(o.backupFormat > BACKUP_FORMAT)
     return {error:'That backup was written by a newer version of the app than this one.'};
-  if(!o.data || !Array.isArray(o.data.entries))
+  if(!o.data || (!Array.isArray(o.data.shifts) && !Array.isArray(o.data.entries)))
     return {error:'That backup is missing its shifts, so it cannot be restored.'};
   return {backup:o};
 }
@@ -1707,11 +1959,12 @@ function offerFile(name, text, mime, label){
 var pendingRestore = null;
 
 function describeBackup(o){
-  var d = o.data, n = countDives(d.entries);
+  var d = o.data, list = d.shifts || d.entries, n = countDives(list);
   var when = o.exportedAt ? new Date(o.exportedAt) : null;
   var cur = entries.length, curDives = countDives(entries);
   return '<div class="rep"><h4>This backup contains</h4>'+
-    '<div class="row"><span class="k">Shifts</span><span class="v">'+d.entries.length+'</span></div>'+
+    '<div class="row"><span class="k">Shifts</span><span class="v">'+list.length+'</span></div>'+
+    (o.dataSchema===1 ? '<div class="row"><span class="k">Format</span><span class="v">older — will be updated</span></div>' : '')+
     '<div class="row"><span class="k">Dives</span><span class="v">'+n+'</span></div>'+
     (o.range && o.range.first
       ? '<div class="row"><span class="k">Covering</span><span class="v">'+esc(o.range.first)+' → '+esc(o.range.last)+'</span></div>'
@@ -1739,12 +1992,10 @@ function checkRestore(text){
 function doRestore(){
   if(!pendingRestore) return;
   /* Snapshot first — a restore is reversible exactly once. */
-  try{ save(K_SNAP, {savedAt:new Date().toISOString(), entries:entries, settings:settings}); }catch(e){}
+  try{ save(K_SNAP, {savedAt:new Date().toISOString(), state:snapshotState()}); }catch(e){}
 
-  var d = pendingRestore.data;
-  entries = d.entries;
-  settings = Object.assign({cycleStart:16, unit:'m', breakMin:60}, d.settings||{});
-  save(K_E, entries); save(K_S, settings);
+  adoptState(stateFromBackup(pendingRestore));
+  saveState();
 
   pendingRestore = null;
   offset = 0;
@@ -1754,15 +2005,28 @@ function doRestore(){
   renderLog(); renderData();
   toast(entries.length+' shift'+(entries.length===1?'':'s')+' restored');
 }
+/* A point-in-time copy of everything, for the one-step undo. */
+function snapshotState(){
+  return {schemaVersion:SCHEMA, shifts:entries, people:state.people,
+          customers:state.customers, periods:state.periods, settings:settings};
+}
+/* Snapshots written before schema v2 held {entries, settings}; read both. */
+function snapshotShifts(snap){
+  if(!snap) return null;
+  if(snap.state && Array.isArray(snap.state.shifts)) return snap.state.shifts;
+  if(Array.isArray(snap.entries)) return snap.entries;
+  return null;
+}
 /* One step back from the last destructive action — a restore or a wipe. */
 function undoRestore(){
   var snap = load(K_SNAP, null);
-  if(!snap) { toast('There is nothing to undo'); return; }
-  if(!confirm('Put back the '+snap.entries.length+' shift'+(snap.entries.length===1?'':'s')+
+  var shifts = snapshotShifts(snap);
+  if(!shifts) { toast('There is nothing to undo'); return; }
+  if(!confirm('Put back the '+shifts.length+' shift'+(shifts.length===1?'':'s')+
               ' that were here before? This replaces what is on the device now.')) return;
-  entries = snap.entries;
-  settings = Object.assign({cycleStart:16, unit:'m', breakMin:60}, snap.settings||{});
-  save(K_E, entries); save(K_S, settings);
+  adoptState(snap.state ? snap.state
+                        : migrateV1(snap.entries, snap.settings));
+  saveState();
   try{ localStorage.removeItem(K_SNAP); }catch(e){}
   offset = 0;
   renderLog(); renderData();
@@ -1778,9 +2042,9 @@ function toCSV(list){
   var rows=[COLS.join(',')];
   list.slice().sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;}).forEach(function(e){
     var dm=diveMins(e);
-    rows.push([e.date,e.job||'',e.site||'',e.start||'',e.end||'',
+    rows.push([e.date,shiftClient(e),e.site||'',e.start||'',e.end||'',
       dec(lunchMins(e)/60), dec(workedMins(e)/60),
-      diveCount(e),dm,dec(dm/60),maxDepth(e)||'',dec(num(e.standby)),dec(num(e.travel)),
+      diveCount(e),dm,dec(dm/60),maxDepth(e)||'',dec(standbyH(e)),dec(travelH(e)),
       dec(billableH(e)),e.notes||''].map(q).join(','));
   });
   return rows.join('\n');
@@ -1901,7 +2165,7 @@ function runImport(text){
     if(!date){ skipped++; continue; }
     var e=blank();
     e.date=date;
-    e.job=g('job'); e.site=g('site');
+    e.client=g('job'); e.clientId=ensureCustomer(e.client); e.site=g('site');
     e.start=normTime(g('start')); e.end=normTime(g('end'));
     if(!(e.start&&e.end) && g('worked')) e.workedOverride=num(g('worked'));
     e.lunch=truthy(g('lunch'));
@@ -1913,10 +2177,10 @@ function runImport(text){
     }
     var dc=num(g('dives'));
     if(dc){ e.extraDives = Math.max(0, dc - (e.dives?e.dives.length:0)); }
-    e.standby=g('standby'); e.travel=g('travel'); e.notes=g('notes');
+    e.standbyHours=num(g('standby')); e.travelHours=num(g('travel')); e.notes=g('notes');
     entries.push(e); added++;
   }
-  save(K_E,entries);
+  saveState();
   renderLog(); renderData();
   toast(added+' shift'+(added===1?'':'s')+' imported'+(skipped?' · '+skipped+' skipped':''));
 }
@@ -1929,10 +2193,10 @@ function renderData(){
   prev.textContent = list.length? toCSV(list) : 'No shifts in this period.';
   document.getElementById('cntAll').textContent=entries.length;
   renderBackupState();
-  var snap=load(K_SNAP,null);
+  var snapShifts=snapshotShifts(load(K_SNAP,null));
   var undo=document.getElementById('undoRestore');
-  undo.hidden = !snap;
-  if(snap) undo.textContent='Undo — put back '+snap.entries.length+' shift'+(snap.entries.length===1?'':'s');
+  undo.hidden = !snapShifts;
+  if(snapShifts) undo.textContent='Undo — put back '+snapShifts.length+' shift'+(snapShifts.length===1?'':'s');
   document.getElementById('setCycle').value=cycleDay();
   document.getElementById('setBreak').value=breakMins();
   document.querySelectorAll('#setUnit button').forEach(function(b){
@@ -2031,7 +2295,7 @@ document.getElementById('slot').addEventListener('click',function(ev){
   }
   if(t.closest('#addDive')){
     capture();
-    draft.dives.push({in:'',out:'',depth:'',task:''});
+    draft.dives.push(newDive());
     renderStep(false);
     return;
   }
@@ -2044,7 +2308,7 @@ document.getElementById('slot').addEventListener('click',function(ev){
   if(t.closest('#delEntry')){
     if(!confirm('Delete this shift? This cannot be undone.')) return;
     entries=entries.filter(function(e){ return e.id!==draft.id; });
-    save(K_E,entries);
+    saveState();
     draft=null; editing=null;
     show('log'); toast('Shift deleted');
   }
@@ -2134,27 +2398,27 @@ document.getElementById('impRun').addEventListener('click',function(){
 });
 document.getElementById('setCycle').addEventListener('change',function(){
   var v=Math.min(28,Math.max(1,Math.round(num(this.value))||16));
-  settings.cycleStart=v; this.value=v; save(K_S,settings);
+  settings.cycleStart=v; this.value=v; saveState();
   offset=0; renderLog(); renderData();
   toast('Billing cycle starts on the '+v+'th');
 });
 document.getElementById('setBreak').addEventListener('change',function(){
   var v=Math.min(480,Math.max(0,Math.round(num(this.value))));
-  settings.breakMin=v||60; this.value=breakMins(); save(K_S,settings);
+  settings.breakMin=v||60; this.value=breakMins(); saveState();
   renderLog(); renderData();
   toast('Unpaid lunch set to '+breakMins()+' min');
 });
 document.getElementById('setUnit').addEventListener('click',function(ev){
   var b=ev.target.closest('[data-u]'); if(!b) return;
-  settings.unit=b.getAttribute('data-u'); save(K_S,settings);
+  settings.unit=b.getAttribute('data-u'); saveState();
   renderLog(); renderData();
 });
 document.getElementById('wipe').addEventListener('click',function(){
   if(!entries.length){ toast('Nothing stored to erase'); return; }
   if(!confirm('Erase all '+entries.length+' shifts?')) return;
   /* Snapshot first, so an accidental wipe is recoverable in one step. */
-  try{ save(K_SNAP, {savedAt:new Date().toISOString(), entries:entries, settings:settings}); }catch(e){}
-  entries=[]; save(K_E,entries);
+  try{ save(K_SNAP, {savedAt:new Date().toISOString(), state:snapshotState()}); }catch(e){}
+  entries=[]; saveState();
   renderLog(); renderData(); toast('All shifts erased — undo is in Danger zone');
 });
 
@@ -2199,7 +2463,63 @@ if('serviceWorker' in navigator && window.isSecureContext){
   });
 }
 
+/* ---------------- migration ---------------- */
+/* The migration is verified before it is committed, and refuses to commit if
+   anything measurable changed. A failure leaves v1 authoritative and asks for
+   the backup rather than proceeding with data it cannot vouch for. */
+function runMigration(){
+  var next = migrateV1(migration.shifts, migration.settings);
+  var problems = verifyMigration(migration.shifts, next.shifts);
+  if(problems.length){
+    document.getElementById('migrateError').innerHTML =
+      '<div class="rep bad" style="margin-top:14px"><h4 class="bad">Update stopped</h4>'+
+      '<div style="font-size:13.5px;color:var(--muted);line-height:1.55">'+
+      'Your records were checked after copying and did not match, so nothing has been changed: '+
+      esc(problems[0])+'. Your log is untouched. Save a backup and send it on — this should not happen.'+
+      '</div></div>';
+    return false;
+  }
+  adoptState(next);
+  saveState();                 /* v1 keys are deliberately not touched */
+  migration = null;
+  return true;
+}
+function showMigration(){
+  var t = tally(migration.shifts);
+  var clients = {};
+  migration.shifts.forEach(function(e){
+    var n=(e.job||'').trim(); if(n) clients[n.toLowerCase()]=1;
+  });
+  document.getElementById('migrateStats').innerHTML =
+    '<div class="r"><span class="k">Shifts</span><span class="v">'+t.shifts+'</span></div>'+
+    '<div class="r"><span class="k">Dives</span><span class="v">'+t.dives+'</span></div>'+
+    '<div class="r"><span class="k">Bottom time</span><span class="v">'+hm(t.bottomMin)+'</span></div>'+
+    '<div class="r"><span class="k">Customers found</span><span class="v">'+Object.keys(clients).length+'</span></div>'+
+    (t.dates[0]? '<div class="r"><span class="k">Covering</span><span class="v">'+
+       esc(t.dates[0])+' → '+esc(t.dates[t.dates.length-1])+'</span></div>' : '');
+  document.getElementById('migrateOverlay').hidden = false;
+}
+document.getElementById('migrateBackup').addEventListener('click',function(){
+  /* Back up what is on disk now, in its current shape. */
+  var dates = migration.shifts.map(function(e){ return e.date; }).filter(Boolean).sort();
+  var text = stableStringify({
+    app:'bottom-time', kind:'backup', backupFormat:BACKUP_FORMAT, dataSchema:1,
+    exportedAt:new Date().toISOString(),
+    counts:{shifts:migration.shifts.length, dives:countDives(migration.shifts)},
+    range:{first:dates[0]||null, last:dates[dates.length-1]||null},
+    data:{entries:migration.shifts, settings:migration.settings}
+  }, 2);
+  offerFile('bottom-time-backup_'+iso(new Date())+'.json', text, 'application/json', 'Backup');
+});
+document.getElementById('migrateGo').addEventListener('click',function(){
+  if(!runMigration()) return;
+  document.getElementById('migrateOverlay').hidden = true;
+  renderLog();
+  toast(entries.length+' shift'+(entries.length===1?'':'s')+' updated');
+});
+
 /* ---------------- go ---------------- */
+if(migration) showMigration();
 renderLog();
 })();
 </script>

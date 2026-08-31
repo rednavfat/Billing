@@ -188,6 +188,37 @@ has its own export button for the dive log, with surface interval and nitrogen
 group columns. Inside the claude.ai viewer a *Save CSV file* button also
 appears, which hands you a real `.csv`.
 
+## Storage and schema
+
+State lives in `bottomtime.state.v2`, one versioned document holding shifts,
+people, customers, closed periods and settings.
+
+The v1 keys (`bottomtime.entries.v1`, `bottomtime.settings.v1`) are **read once
+and then left in place** — never rewritten, never deleted — so rolling back is
+loading the old key again.
+
+### Migrating from v1
+
+On first open with v1 data the app stops and explains what it is about to do,
+shows what it found, and offers a backup before doing anything. Nothing is
+written until you confirm.
+
+The migration gives every dive an id, derives customer records from the
+free-text client strings (matching case-insensitively, so `Peab` and `PEAB`
+stay one company), converts the string hour fields to numbers, and seeds the
+overtime and per-diem fields. Nothing is dropped: the original client string is
+kept alongside the id, blank depths stay blank rather than becoming `0`, and the
+CSV import fallback fields are carried through untouched.
+
+`verifyMigration()` then compares shift count, dive count, total bottom time,
+total worked time and the set of shift dates either side of the copy, and
+checks every dive came out with an id. Any mismatch aborts, leaves v1
+authoritative and says so. Once `schemaVersion` is recorded the migration never
+runs again.
+
+Backups written before v2 (`dataSchema: 1`) still restore — they are migrated
+on the way in by the same code, and the restore panel says the format is older.
+
 ## Backup and restore
 
 **Data → Backup** writes a complete JSON copy of every shift, every dive and your settings.
