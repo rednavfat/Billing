@@ -8,8 +8,33 @@ showing how far through you are. The log view opens on the current billing
 period's totals.
 
 `index.html` is the whole app — one self-contained file, no build step and no
-server. Open it directly in a browser, or publish it and add it to your phone's
-home screen.
+server.
+
+## Installing it on a phone
+
+Served over HTTPS the app installs as a standalone web app: its own icon, no
+browser chrome, and it opens and runs with no signal.
+
+1. Serve this directory over HTTPS. GitHub Pages works: repository
+   **Settings → Pages**, source **Deploy from a branch**, pick the branch and
+   the `/ (root)` folder.
+2. Open the resulting URL on the phone.
+   - **iPhone:** Safari → Share → *Add to Home Screen*.
+   - **Android:** Chrome → menu → *Install app* / *Add to Home screen*.
+
+`sw.js` precaches the app shell and caches the web fonts on first online
+visit, so later opens work offline. The page itself is fetched network-first,
+so a new deploy is picked up on the next open rather than being pinned to a
+stale cache. Bump `VERSION` in `sw.js` when the shell file list changes.
+
+`index.html` declares its own `<meta charset="utf-8">`, so en dashes and middle
+dots survive being served by anything, including opening the file directly.
+
+**Data does not move between installs.** Entries live in `localStorage`, which
+is per origin. Opening the app from a different URL — or on iOS, from the home
+screen rather than a Safari tab — is a separate store that starts empty. Export
+from the old one (Data → Copy all) and paste into the new one via the importer
+before switching.
 
 ## What it tracks
 
@@ -99,7 +124,8 @@ structural invariant holds:
 - one surface-interval band per group, from the entering letter down to A
 - surface-interval bands ascend within each row
 - bottom times ascend within each depth page
-- every depth page has a complete 16-group residual-nitrogen row
+- every residual-nitrogen row starts at A, ascends, and has no holes (it may
+  stop short, as the 6 m page does at K)
 - **each row's individual stop times sum to its printed total**
 
 That last check is independent evidence of correct transcription: the "Total
@@ -108,13 +134,13 @@ rows is a real cross-check rather than a restatement. If any check fails the
 tables switch off entirely and the app says so, rather than answering from
 half-read data.
 
-#### Adding the remaining depths
+#### Editing a page
 
-Add a page to `NDBT.standard` in the script — depth, its bottom-time rows with
-stops at 15/12/9/6/3 m, the printed total, the group, the `star` and
-`beyondRule` markers, and the page's own residual-nitrogen footer row — then
-lower `floorDepth` to the next depth still missing. The validator will catch a
-malformed page.
+A page in `NDBT.standard` carries its depth, its bottom-time rows with stops at
+15/12/9/6/3 m, the printed total, the group, the `star` and `beyondRule`
+markers, and the page's own residual-nitrogen footer row. `floorDepth` is the
+depth at or below which no page is transcribed; it is 0, since every page is.
+The validator will catch a malformed page.
 
 ## After the last dive
 

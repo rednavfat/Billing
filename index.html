@@ -1,4 +1,18 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Bottom Time</title>
+
+<!-- Installable-app metadata. These resolve when the file is served as a site
+     (GitHub Pages); inside the Claude artifact viewer they simply 404 and are
+     ignored, which is why the app still runs there unchanged. -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<meta name="theme-color" content="#05121a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bottom Time">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
@@ -1888,6 +1902,16 @@ document.getElementById('saveFile').addEventListener('click',function(){
     else toast('Saving files is not available here — use Copy period');
   });
 });
+
+/* ---------------- offline ---------------- */
+/* Registered only over https on a real origin. Inside the artifact viewer
+   there is no sw.js to fetch, so the promise rejects and is swallowed —
+   the app runs identically either way, just without offline caching. */
+if('serviceWorker' in navigator && window.isSecureContext){
+  window.addEventListener('load',function(){
+    try{ navigator.serviceWorker.register('sw.js').catch(function(){}); }catch(e){}
+  });
+}
 
 /* ---------------- go ---------------- */
 renderLog();

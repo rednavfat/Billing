@@ -1,0 +1,17 @@
+{
+  "name": "Bottom Time",
+  "short_name": "Bottom Time",
+  "description": "Dive and hours log for commercial diving, on a 16th-to-15th billing cycle.",
+  "id": "/bottom-time/",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#05121a",
+  "theme_color": "#05121a",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
