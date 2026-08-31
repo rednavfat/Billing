@@ -45,36 +45,62 @@ or all time, and exportable as its own CSV. Dives are entered as part of a
 shift but chained into one chronological series across shifts, so the
 **surface interval** between consecutive dives is shown between them.
 
-### Nitrogen groups — not yet enabled
+### Nitrogen groups
 
-The repetitive-group machinery is built (surface-interval chaining, residual
-nitrogen time, repetitive-dive lookup) but **the tables ship empty**, so every
-group reads `—`.
+Each dive shows its N2 group, calculated from the *Norske dykke- og
+behandlingstabeller* Standardtabell pages and the surface-interval adjustment
+table, transcribed from the printed document.
 
-This is deliberate. Repetitive-group values are decompression data, and a
-plausible-looking wrong letter is more dangerous than a blank one. Nothing is
-guessed, and no other table set is substituted — US Navy and PADI RDP values
-are *not* interchangeable with NDBT.
+**Coverage is partial.** The pages for **27 to 51 m** are loaded (27, 30, 33,
+36, 39, 42, 45, 48, 51). Dives to **24 m or shallower show no group** and say
+why — the page that covers them has not been transcribed yet. A shallow dive is
+never pushed onto a deeper, wrong page.
 
-To enable, fill the three tables in the `NDBT` block near the top of the
-script from the official *Norske dykke- og behandlingstabeller*, and set
-`loaded: true` with the `edition` string. The block documents the exact shape
-each table expects:
+Every blank group carries a reason, so a dash is never mistaken for "clean":
+no table for this depth, deeper than the loaded tables, bottom time past the
+end of the table, or missing depth and times.
 
-- `noDecoGroup` — group letter by depth (msw) and bottom-time band
-- `surfaceCredit` — group after a surface interval
-- `residualNitrogen` — RNT in minutes, by group and depth
-- `seriesResetMin` — interval after which a diver counts as clean
+Repetitive dives chain automatically. Dives across all shifts are ordered into
+one series; the surface interval sets the adjusted group, that group's residual
+nitrogen time for the next dive's depth is added to its bottom time, and the
+result is looked up on that depth's page. The dive row shows the residual
+nitrogen added and the group entered with, so the working is visible rather
+than implicit.
 
-Lookups round to the harder case (deeper depth row, longer time band) and
-return `null` rather than extrapolating past the end of a table.
+Lookups round to the harder case — the next deeper page and the next longer
+bottom-time row — and return a reason instead of extrapolating past the end of
+a table. Note the 27 m page has no 35 min row, so a 35 min dive there is read
+on the 40 min row, as printed.
 
-## Billing periods
+Rows carry the document's own two markers separately: `*` and "below the heavy
+rule". They are not the same thing — on the 33 and 36 m pages the first row
+below the rule carries no star — and the app reports both as printed without
+assigning them a meaning the transcribed pages do not state.
 
-The cycle start day is configurable under **Data → Settings** (1–28, default 16).
-A period runs from that day to the day before it in the following month, so the
-default gives 16 Aug → 15 Sep. Year rollovers and short months are handled;
-`‹` and `›` on the period header move between periods.
+#### The validator
+
+`validateNDBT()` runs at load and refuses to enable the tables unless every
+structural invariant holds:
+
+- one surface-interval band per group, from the entering letter down to A
+- surface-interval bands ascend within each row
+- bottom times ascend within each depth page
+- every depth page has a complete 16-group residual-nitrogen row
+- **each row's individual stop times sum to its printed total**
+
+That last check is independent evidence of correct transcription: the "Total
+dekomp. tid" column is redundant in the source, so agreement across all 81
+rows is a real cross-check rather than a restatement. If any check fails the
+tables switch off entirely and the app says so, rather than answering from
+half-read data.
+
+#### Adding the remaining depths
+
+Add a page to `NDBT.standard` in the script — depth, its bottom-time rows with
+stops at 15/12/9/6/3 m, the printed total, the group, the `star` and
+`beyondRule` markers, and the page's own residual-nitrogen footer row — then
+lower `floorDepth` to the next depth still missing. The validator will catch a
+malformed page.
 
 ## Getting existing data in
 

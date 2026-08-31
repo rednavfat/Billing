@@ -599,13 +599,85 @@ var NDBT = {
   edition:'NDBT Standardtabell',
   unit:'msw',
   minSurfaceMin:10,             /* under 0:10 the tables do not treat it as a repetitive dive */
-  floorDepth:39,                /* pages for 39 m and shallower are not transcribed yet */
+  floorDepth:24,                /* pages for 24 m and shallower are not transcribed yet */
 
   /* Each depth page: "Dybder ikke større enn N meter".
      stops are minutes at [15, 12, 9, 6, 3] msw; xs marks the rows below
      the page's heavy rule (exceptional exposure, printed with *).
      rnt is the page's own footer row, "Minutter tillegg til bunntid". */
   standard:[
+    {depth:27, rows:[
+      {bt:5,  stops:[0,0,0,0,0],    total:0,  group:'B'},
+      {bt:10, stops:[0,0,0,0,0],    total:0,  group:'C'},
+      {bt:15, stops:[0,0,0,0,0],    total:0,  group:'E'},
+      {bt:20, stops:[0,0,0,0,0],    total:0,  group:'F'},
+      {bt:25, stops:[0,0,0,0,0],    total:0,  group:'G'},
+      {bt:30, stops:[0,0,0,0,5],    total:5,  group:'I'},
+      {bt:40, stops:[0,0,0,5,5],    total:10, group:'L'},   /* the page has no 35 row */
+      {bt:45, stops:[0,0,0,5,10],   total:15, group:'M'},
+      {bt:50, stops:[0,0,0,5,15],   total:20, group:'N'},
+      {bt:55, stops:[0,0,0,5,20],   total:25, group:'O'},
+      {bt:60, stops:[0,0,5,5,20],   total:30, group:'O'},
+      {bt:65, stops:[0,0,5,5,25],   total:35, group:'Z', star:true, beyondRule:true},
+      {bt:70, stops:[0,0,5,10,30],  total:45, group:'Z', star:true, beyondRule:true},
+      {bt:75, stops:[0,0,5,30,45],  total:80, group:'Z', star:true, beyondRule:true}
+    ], rnt:{A:5,B:10,C:10,D:15,E:20,F:20,G:25,H:30,I:35,J:35,K:40,L:45,M:50,N:50,O:55,Z:60}},
+
+    {depth:30, rows:[
+      {bt:5,  stops:[0,0,0,0,0],    total:0,  group:'B'},
+      {bt:10, stops:[0,0,0,0,0],    total:0,  group:'D'},
+      {bt:15, stops:[0,0,0,0,0],    total:0,  group:'E'},
+      {bt:20, stops:[0,0,0,0,0],    total:0,  group:'G'},
+      {bt:25, stops:[0,0,0,0,5],    total:5,  group:'H'},
+      {bt:30, stops:[0,0,0,5,5],    total:10, group:'J'},
+      {bt:35, stops:[0,0,0,5,10],   total:15, group:'L'},
+      {bt:40, stops:[0,0,0,5,15],   total:20, group:'M'},
+      {bt:45, stops:[0,0,0,5,20],   total:25, group:'N'},
+      {bt:50, stops:[0,0,5,5,20],   total:30, group:'O'},
+      {bt:55, stops:[0,0,5,5,25],   total:35, group:'Z', star:true, beyondRule:true},
+      {bt:60, stops:[0,0,5,10,30],  total:45, group:'Z', star:true, beyondRule:true},
+      {bt:65, stops:[0,5,5,30,40],  total:80, group:'Z', star:true, beyondRule:true}
+    ], rnt:{A:5,B:10,C:10,D:15,E:15,F:20,G:25,H:25,I:30,J:35,K:35,L:40,M:45,N:45,O:50,Z:55}},
+
+    {depth:33, rows:[
+      {bt:5,  stops:[0,0,0,0,0],    total:0,  group:'B'},
+      {bt:10, stops:[0,0,0,0,0],    total:0,  group:'D'},
+      {bt:15, stops:[0,0,0,0,0],    total:0,  group:'F'},
+      {bt:20, stops:[0,0,0,0,5],    total:5,  group:'H'},
+      {bt:25, stops:[0,0,0,5,5],    total:10, group:'I'},
+      {bt:30, stops:[0,0,0,5,10],   total:15, group:'K'},
+      {bt:35, stops:[0,0,0,5,15],   total:20, group:'M'},
+      {bt:40, stops:[0,0,0,5,20],   total:25, group:'N'},
+      {bt:45, stops:[0,0,5,5,20],   total:30, group:'O', beyondRule:true},
+      {bt:50, stops:[0,0,5,10,25],  total:40, group:'Z', star:true, beyondRule:true},
+      {bt:55, stops:[0,5,5,20,40],  total:70, group:'Z', star:true, beyondRule:true}
+    ], rnt:{A:5,B:10,C:10,D:15,E:15,F:20,G:20,H:25,I:25,J:30,K:35,L:35,M:40,N:40,O:45,Z:50}},
+
+    {depth:36, rows:[
+      {bt:5,  stops:[0,0,0,0,0],    total:0,  group:'B'},
+      {bt:10, stops:[0,0,0,0,0],    total:0,  group:'D'},
+      {bt:15, stops:[0,0,0,0,5],    total:5,  group:'F'},
+      {bt:20, stops:[0,0,0,0,5],    total:5,  group:'H'},
+      {bt:25, stops:[0,0,0,5,5],    total:10, group:'J'},
+      {bt:30, stops:[0,0,0,5,15],   total:20, group:'L'},
+      {bt:35, stops:[0,0,0,5,20],   total:25, group:'N'},
+      {bt:40, stops:[0,0,5,5,25],   total:35, group:'O', beyondRule:true},
+      {bt:45, stops:[0,0,5,10,25],  total:40, group:'Z', star:true, beyondRule:true},
+      {bt:50, stops:[0,5,10,25,40], total:80, group:'Z', star:true, beyondRule:true}
+    ], rnt:{A:5,B:5,C:10,D:10,E:15,F:15,G:20,H:20,I:25,J:25,K:30,L:30,M:35,N:40,O:40,Z:45}},
+
+    {depth:39, rows:[
+      {bt:5,  stops:[0,0,0,0,0],    total:0,  group:'C'},
+      {bt:10, stops:[0,0,0,0,0],    total:0,  group:'F'},
+      {bt:15, stops:[0,0,0,0,5],    total:5,  group:'G'},
+      {bt:20, stops:[0,0,0,5,5],    total:10, group:'I'},
+      {bt:25, stops:[0,0,0,5,10],   total:15, group:'K'},
+      {bt:30, stops:[0,0,0,5,20],   total:25, group:'M'},
+      {bt:35, stops:[0,0,5,5,20],   total:30, group:'O', star:true, beyondRule:true},
+      {bt:40, stops:[0,0,5,10,25],  total:40, group:'Z', star:true, beyondRule:true},
+      {bt:45, stops:[0,5,10,25,40], total:80, group:'Z', star:true, beyondRule:true}
+    ], rnt:{A:5,B:5,C:10,D:10,E:15,F:15,G:20,H:20,I:20,J:25,K:25,L:30,M:30,N:35,O:35,Z:40}},
+
     {depth:42, rows:[
       {bt:5,  stops:[0,0,0,0,0],   total:0,  group:'C'},
       {bt:10, stops:[0,0,0,0,5],   total:5,  group:'E'},
@@ -613,8 +685,8 @@ var NDBT = {
       {bt:20, stops:[0,0,0,5,10],  total:15, group:'J'},
       {bt:25, stops:[0,0,0,5,15],  total:20, group:'L'},
       {bt:30, stops:[0,0,5,5,20],  total:30, group:'N'},
-      {bt:35, stops:[0,5,10,15,35],total:65, group:'O', xs:true},
-      {bt:40, stops:[0,5,15,20,40],total:80, group:'Z', xs:true}
+      {bt:35, stops:[0,5,10,15,35],total:65, group:'O', star:true, beyondRule:true},
+      {bt:40, stops:[0,5,15,20,40],total:80, group:'Z', star:true, beyondRule:true}
     ], rnt:{A:5,B:5,C:10,D:10,E:10,F:15,G:15,H:20,I:20,J:25,K:25,L:25,M:30,N:30,O:35,Z:35}},
 
     {depth:45, rows:[
@@ -622,8 +694,8 @@ var NDBT = {
       {bt:15, stops:[0,0,0,5,5],   total:10, group:'H'},
       {bt:20, stops:[0,0,0,5,15],  total:20, group:'K'},
       {bt:25, stops:[0,0,5,5,20],  total:30, group:'M'},
-      {bt:30, stops:[0,0,5,10,25], total:40, group:'O', xs:true},
-      {bt:35, stops:[0,5,15,20,40],total:80, group:'Z', xs:true}
+      {bt:30, stops:[0,0,5,10,25], total:40, group:'O', star:true, beyondRule:true},
+      {bt:35, stops:[0,5,15,20,40],total:80, group:'Z', star:true, beyondRule:true}
     ], rnt:{A:5,B:5,C:10,D:10,E:10,F:15,G:15,H:15,I:20,J:20,K:25,L:25,M:30,N:30,O:30,Z:35}},
 
     {depth:48, rows:[
@@ -631,15 +703,15 @@ var NDBT = {
       {bt:15, stops:[0,0,0,5,10],  total:15, group:'I'},
       {bt:20, stops:[0,0,5,5,15],  total:25, group:'L'},
       {bt:25, stops:[0,0,5,10,20], total:35, group:'N'},
-      {bt:30, stops:[0,5,5,10,25], total:45, group:'O', xs:true}
+      {bt:30, stops:[0,5,5,10,25], total:45, group:'O', star:true, beyondRule:true}
     ], rnt:{A:5,B:5,C:5,D:10,E:10,F:15,G:15,H:15,I:20,J:20,K:20,L:25,M:25,N:30,O:30,Z:30}},
 
     {depth:51, rows:[
       {bt:10, stops:[0,0,0,5,5],   total:10, group:'G'},
       {bt:15, stops:[0,0,0,5,10],  total:15, group:'J'},
       {bt:20, stops:[0,0,5,5,15],  total:25, group:'L'},
-      {bt:25, stops:[0,0,5,10,25], total:40, group:'O', xs:true},
-      {bt:30, stops:[5,5,15,25,35],total:85, group:'Z', xs:true}
+      {bt:25, stops:[0,0,5,10,25], total:40, group:'O', star:true, beyondRule:true},
+      {bt:30, stops:[5,5,15,25,35],total:85, group:'Z', star:true, beyondRule:true}
     ], rnt:{A:5,B:5,C:5,D:10,E:10,F:10,G:15,H:15,I:15,J:20,K:20,L:20,M:25,N:25,O:30,Z:30}}
   ],
 
@@ -910,6 +982,17 @@ function siText(m){
   if(h>=24) return Math.floor(h/24)+'d '+(h%24)+'h on surface';
   return h+'h '+pad(r)+'m on surface';
 }
+/* The document marks some rows with * and draws a heavy rule across each page.
+   They are not the same marker — on the 33 and 36 m pages the first row below
+   the rule carries no star — so both are reported as printed, without being
+   given a meaning the transcribed pages do not state. */
+function rowMarks(row){
+  if(!row) return '';
+  var m=[];
+  if(row.star) m.push('marked *');
+  if(row.beyondRule) m.push('below heavy rule');
+  return m.length? '<span class="why warn">'+m.join(' · ')+'</span>' : '';
+}
 /* Every blank group says why it is blank, so "—" is never mistaken for "clean". */
 var NOTE_TEXT={
   'no-tables':'tables not loaded',
@@ -966,7 +1049,7 @@ function renderDives(){
             '<span class="why">'+esc(NOTE_TEXT[d.note]||'no group')+'</span>')+
           (d.rnt? '<span class="why teal">+'+d.rnt+' min residual nitrogen'+
                   (d.startGroup? ' (entered group '+esc(d.startGroup)+')':'')+'</span>' : '')+
-          (d.row&&d.row.xs? '<span class="why warn">exceptional exposure row</span>' : '')+
+          rowMarks(d.row)+
         '</span>'+
         '<span class="dright">'+
           '<span class="dp">'+(d.depth? d.depth+settings.unit : '—')+'</span>'+
