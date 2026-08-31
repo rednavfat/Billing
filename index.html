@@ -128,6 +128,8 @@ button{cursor:pointer;background:none;border:none;padding:0}
 .track i{display:block;height:100%;background:linear-gradient(90deg,var(--amber-deep),var(--amber));border-radius:99px}
 
 /* ---------- period summary ---------- */
+.gauge-head .lbl.locked{color:var(--teal)}
+.sblock.locked > h3{color:var(--teal);background:var(--teal-ghost);border-bottom-color:rgba(53,214,196,.25)}
 .sum{display:flex;flex-direction:column;gap:11px}
 .sblock{border:1px solid var(--line);border-radius:var(--r);background:var(--deep);overflow:hidden}
 .sblock > h3{
@@ -453,6 +455,43 @@ pre.csv{
 .yr-row.on .yl{color:var(--amber);font-weight:600}
 .yr-row .ysub{grid-column:1/-1;font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:2px}
 
+/* ---------- customer report ---------- */
+.paper{background:#fff;color:#10222b;border-radius:var(--r);padding:26px 24px;
+  font-size:14px;line-height:1.6}
+.paper h1{font-size:21px;margin:0 0 4px;letter-spacing:-.02em;color:#06131a}
+.paper .meta{font-family:var(--mono);font-size:11px;color:#5d7581;margin:0 0 20px}
+.paper h2{font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;
+  color:#5d7581;margin:22px 0 8px;padding-bottom:6px;border-bottom:1px solid #d9e3e7}
+.paper table{width:100%;border-collapse:collapse;font-size:13.5px}
+.paper td{padding:7px 0;border-bottom:1px solid #eef3f5}
+.paper td:last-child{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;
+  font-family:var(--mono)}
+.paper tr:last-child td{border-bottom:none}
+.paper tr.tot td{border-top:2px solid #10222b;border-bottom:none;font-weight:700;
+  font-size:16px;padding-top:11px}
+.paper .fine{font-size:11.5px;color:#6c838e;margin-top:18px;line-height:1.55}
+.paper .sig{margin-top:30px;padding-top:12px;border-top:1px solid #d9e3e7;
+  font-size:11.5px;color:#6c838e}
+.optrow{display:flex;align-items:center;gap:11px;width:100%;text-align:left;
+  border:1px solid var(--line);border-radius:11px;background:var(--deep);
+  padding:12px 13px;margin-bottom:8px}
+.optrow.on{border-color:var(--amber);background:var(--amber-ghost)}
+.optrow .box{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--line);
+  flex-shrink:0;display:grid;place-items:center;color:transparent;background:var(--abyss)}
+.optrow.on .box{background:var(--amber);border-color:var(--amber);color:#08202b}
+.optrow .cl{font-size:14px}
+.optrow .cl small{display:block;color:var(--dim);font-size:11.5px;margin-top:1px}
+
+@media print{
+  body{background:#fff}
+  .tabbar,.fab,.topbar,.no-print,.segwide{display:none!important}
+  .screen{display:none!important}
+  .screen#s-report{display:block!important}
+  #s-report > div{padding:0!important}
+  .paper{border-radius:0;padding:0}
+  .app{max-width:none}
+}
+
 /* ---------- dive detail: a logbook page ---------- */
 .dv-head{padding:4px 0 20px;border-bottom:1px solid var(--line);margin-bottom:18px}
 .dv-num{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);margin-bottom:8px}
@@ -732,6 +771,29 @@ hr.rule{border:none;border-top:1px solid var(--line-soft);margin:18px 0 15px}
         <button data-stat="work">Work</button>
       </div>
       <div id="statsBody"></div>
+    </div>
+  </section>
+
+  <!-- ============ CUSTOMER REPORT ============ -->
+  <section class="screen" id="s-report">
+    <div class="topbar">
+      <div class="brand"><b>Report</b><span class="tick" id="repRange">—</span></div>
+      <button class="iconbtn" id="repBack" aria-label="Back">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+    </div>
+    <div style="padding:6px var(--pad) 120px;flex:1">
+      <div class="card no-print">
+        <h3>What to include</h3>
+        <p>This goes to a customer, so nothing personal is included unless you say so.</p>
+        <div id="repOpts"></div>
+        <div style="height:12px"></div>
+        <div class="row2">
+          <button class="btn ghost" style="flex:1" id="repCopy">Copy</button>
+          <button class="btn" style="flex:1" id="repPrint">Print / PDF</button>
+        </div>
+      </div>
+      <div id="reportPaper"></div>
     </div>
   </section>
 
@@ -1369,6 +1431,10 @@ function money(t){
   m.total = m.working + m.overtime + m.diving + m.standby + m.travel + m.perDiem;
   return m;
 }
+function fmtMoneyIn(n, cur){
+  var v = Math.round(n||0);
+  return v.toLocaleString('en-US').replace(/,/g,' ') + ' ' + (cur || settings.currency || 'SEK');
+}
 function fmtMoney(n){
   var v = Math.round(n||0);
   return v.toLocaleString('en-US').replace(/,/g,' ') + ' ' + (settings.currency||'SEK');
@@ -1853,6 +1919,66 @@ function periodEntries(){
                 .sort(function(a,b){ return a.date<b.date?1:a.date>b.date?-1:0; });
 }
 
+/* ================================================================
+   BILLING PERIOD LOCKING
+
+   A closed period is a historical record. Its figures are stamped at
+   the moment of closing, so later changes to rates, the unpaid-break
+   length or the traktamente amounts cannot move a number that has
+   already been invoiced. Reopening is explicit and discards the stamp.
+   ================================================================ */
+function periodKey(p){ return iso(p.start); }
+function periodRecord(p){ return state.periods[periodKey(p)] || null; }
+function isClosed(p){ var r=periodRecord(p); return !!(r && r.status==='closed'); }
+function shiftPeriodKey(e){ return e.date ? iso(periodOf(e.date).start) : null; }
+function shiftLocked(e){
+  var k=shiftPeriodKey(e);
+  return !!(k && state.periods[k] && state.periods[k].status==='closed');
+}
+function closePeriod(p){
+  var list=entries.filter(function(e){ return inPeriod(e,p); });
+  var t=periodTotals(list);
+  state.periods[periodKey(p)] = {
+    status:'closed',
+    closedAt:new Date().toISOString(),
+    range:{from:iso(p.start), to:iso(p.end)},
+    /* Stamped so the report and summary stay stable for ever. */
+    stamped:{
+      shifts:list.length,
+      regular:t.regular, overtime:t.overtime, working:t.working,
+      bottom:t.bottom, dives:t.dives, depth:t.depth,
+      standby:t.standby, travel:t.travel,
+      perDiemFull:t.perDiemFull, perDiemHalf:t.perDiemHalf, perDiemAmount:t.perDiemAmount,
+      workDayCount:t.workDayCount, diveDayCount:t.diveDayCount,
+      currency:settings.currency||'SEK',
+      rates:JSON.parse(JSON.stringify(settings.rates||{})),
+      money:money(t)
+    }
+  };
+  saveState();
+}
+function reopenPeriod(p){
+  delete state.periods[periodKey(p)];
+  saveState();
+}
+/* A closed period reports the figures it was closed with, not today's. */
+function effectiveTotals(p, list){
+  var rec=periodRecord(p);
+  if(rec && rec.status==='closed' && rec.stamped){
+    var st=rec.stamped;
+    return {stamped:true, closedAt:rec.closedAt, regular:st.regular, overtime:st.overtime,
+      working:st.working, bottom:st.bottom, dives:st.dives, depth:st.depth,
+      standby:st.standby, travel:st.travel, perDiemFull:st.perDiemFull,
+      perDiemHalf:st.perDiemHalf, perDiemAmount:st.perDiemAmount,
+      perDiemDuplicates:0, workDayCount:st.workDayCount, diveDayCount:st.diveDayCount,
+      clients:periodTotals(list).clients, money:st.money, rates:st.rates,
+      currency:st.currency};
+  }
+  var t=periodTotals(list);
+  t.stamped=false;
+  return t;
+}
+
 /* ---------------- flat dive log ---------------- */
 /* Dives live inside shifts, but the dive log needs them as one chronological
    series so surface intervals and repetitive groups chain across shifts. */
@@ -1946,12 +2072,14 @@ function altitudeAdvice(st){
 /* ---------------- rendering: log ---------------- */
 
 function renderLog(){
-  var p=activePeriod(), list=periodEntries(), t=periodTotals(list);
+  var p=activePeriod(), list=periodEntries(), t=effectiveTotals(p, list);
 
   document.getElementById('cycleTick').textContent = cycleDay()+' → '+(cycleDay()-1||'end');
   document.getElementById('pRange').textContent = periodLabel(p);
-  document.getElementById('pLabel').textContent =
-    offset===0 ? 'Current period' : (offset<0 ? 'Closed period' : 'Upcoming period');
+  document.getElementById('pLabel').textContent = isClosed(p)
+    ? 'Billed · locked'
+    : (offset===0 ? 'Current period' : (offset<0 ? 'Past period' : 'Upcoming period'));
+  document.getElementById('pLabel').className = isClosed(p) ? 'lbl locked' : 'lbl';
   document.getElementById('pNext').disabled = offset>=1;
 
   /* Working hours and bottom time sit side by side and are never combined. */
@@ -1987,7 +2115,7 @@ function renderLog(){
     }).join('');
   } else sec.hidden=true;
 
-  document.getElementById('summary').innerHTML = summaryHTML(t, list);
+  document.getElementById('summary').innerHTML = summaryHTML(t, list) + lockHTML(p, t);
 
   document.getElementById('daysHead').textContent = list.length? 'Shifts · '+list.length : 'Shifts';
   var host=document.getElementById('dayList');
@@ -2058,8 +2186,9 @@ function summaryHTML(t, list){
       : '')+
   '</div>';
 
-  if(anyRateSet()){
-    var m=money(t), r=settings.rates||{};
+  if(t.stamped ? true : anyRateSet()){
+    var m = t.stamped ? t.money : money(t);
+    var r = t.stamped ? (t.rates||{}) : (settings.rates||{});
     function line(label, hours, rate, amount){
       if(rate==null||rate==='') return row(label, '<span style="color:var(--dim)">no rate set</span>', 'sub');
       return row(label+' <span style="color:var(--dim);font-size:12px">'+dec(hours)+' × '+num(rate)+'</span>',
@@ -2072,7 +2201,7 @@ function summaryHTML(t, list){
       line('Standby', t.standby, r.standby, m.standby)+
       line('Resa', t.travel, r.travel, m.travel)+
       row('Traktamente', fmtMoney(m.perDiem), 'sub')+
-      row('Total', fmtMoney(m.total), 'total')+
+      row('Total', fmtMoneyIn(m.total, t.currency), 'total')+
       '<div class="snote">Each category is billed at its own rate. Regular and övertid together '+
       'are the whole shift, so it is paid once; dyktid is charged separately because it is paid '+
       'differently, not because it is extra time.</div>'+
@@ -2084,6 +2213,26 @@ function summaryHTML(t, list){
 
   html+='</div>';
   return html;
+}
+function lockHTML(p, t){
+  var closed=isClosed(p);
+  var h='<div class="sblock'+(closed?' locked':'')+'"><h3>'+
+    (closed?'Billed · locked':'Period status')+'</h3>';
+  if(closed){
+    var rec=periodRecord(p);
+    h+='<div class="snote">Closed '+esc(clockText(new Date(rec.closedAt)))+'. '+
+       'The figures above are the ones stamped at that moment, so changing a rate '+
+       'or the break length now cannot move them.</div>'+
+       '<div style="padding:12px 14px 14px">'+
+       '<button class="btn ghost" id="reopenPeriod" style="width:100%">Reopen this period</button></div>';
+  } else {
+    h+='<div class="snote">Open. Editing a shift in this period is allowed, and the '+
+       'figures follow your current settings. Closing it stamps them.</div>'+
+       '<div style="padding:12px 14px 14px;display:flex;gap:10px">'+
+       '<button class="btn ghost" style="flex:1" id="openReport">Report</button>'+
+       '<button class="btn" style="flex:1" id="closePeriod">Mark billed</button></div>';
+  }
+  return h+'</div>';
 }
 
 /* ---------------- rendering: dive log ---------------- */
@@ -2546,6 +2695,125 @@ function monthRows(year){
   }).join('')+'</div>';
 }
 
+/* ================================================================
+   CUSTOMER REPORT
+
+   This leaves the device and goes to a client, so it defaults to the
+   commercial facts only. Traktamente is a personal allowance and is
+   off by default; nitrogen groups, flying restrictions, team names and
+   personal notes are never included at all.
+   ================================================================ */
+var repOpts = {perDiem:false, money:true, dives:true, byClient:false};
+var REP_OPTS = [
+  {k:'money',    label:'Amounts',            sub:'Per category and a total, using your rates'},
+  {k:'dives',    label:'Diving detail',      sub:'Number of dives and total bottom time'},
+  {k:'byClient', label:'Split by client',    sub:'Only useful if the period covers more than one'},
+  {k:'perDiem',  label:'Include traktamente', sub:'A personal allowance — usually not the customer’s business'}
+];
+function renderRepOpts(){
+  document.getElementById('repOpts').innerHTML = REP_OPTS.map(function(o){
+    return '<button class="optrow'+(repOpts[o.k]?' on':'')+'" data-opt="'+o.k+'">'+
+      '<span class="box"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>'+
+      '<span class="cl">'+esc(o.label)+'<small>'+esc(o.sub)+'</small></span></button>';
+  }).join('');
+}
+function reportHTML(){
+  var p=activePeriod(), list=periodEntries(), t=effectiveTotals(p,list);
+  var cur = t.currency || settings.currency || 'SEK';
+  var m = t.stamped ? t.money : money(t);
+  var rates = t.stamped ? (t.rates||{}) : (settings.rates||{});
+  var names = Object.keys(t.clients||{});
+  var who = names.length===1 ? names[0] : (names.length? names.length+' clients' : '');
+  function row(k,v){ return '<tr><td>'+k+'</td><td>'+v+'</td></tr>'; }
+  function amt(n){ return Math.round(n).toLocaleString('en-US').replace(/,/g,' ')+' '+cur; }
+
+  var h='<div class="paper">';
+  h+='<h1>'+esc(who||'Work performed')+'</h1>';
+  h+='<p class="meta">'+esc(periodLabel(p))+
+     (t.stamped? ' · billed' : '')+'</p>';
+
+  h+='<h2>Working time</h2><table>'+
+     row('Regular hours', dec(t.regular)+' h')+
+     row('Overtime', dec(t.overtime)+' h')+
+     row('<b>Total working hours</b>', '<b>'+dec(t.working)+' h</b>')+
+     row('Working days', t.workDayCount)+
+     '</table>';
+
+  if(repOpts.dives){
+    h+='<h2>Diving</h2><table>'+
+       row('Dives', t.dives)+
+       row('Total bottom time', dec(t.bottom)+' h')+
+       (t.depth? row('Maximum depth', t.depth+settings.unit) : '')+
+       row('Diving days', t.diveDayCount)+
+       '</table>';
+  }
+  if(t.standby||t.travel){
+    h+='<h2>Other time</h2><table>'+
+       (t.standby? row('Standby', dec(t.standby)+' h') : '')+
+       (t.travel?  row('Travel',  dec(t.travel)+' h')  : '')+
+       '</table>';
+  }
+  if(repOpts.byClient && names.length>1){
+    h+='<h2>By client</h2><table>'+names.map(function(n){
+      var c=t.clients[n];
+      return row(esc(n), dec(c.working)+' h'+(repOpts.dives&&c.bottom? ' · '+dec(c.bottom)+' h bottom':''));
+    }).join('')+'</table>';
+  }
+  if(repOpts.perDiem && (t.perDiemFull||t.perDiemHalf)){
+    h+='<h2>Traktamente</h2><table>'+
+       row('Full days', t.perDiemFull)+
+       row('Half days', t.perDiemHalf)+
+       (repOpts.money && t.perDiemAmount? row('Allowance', amt(t.perDiemAmount)) : '')+
+       '</table>';
+  }
+  if(repOpts.money){
+    var lines=[];
+    function ln(label,hours,rate,val){
+      if(rate==null||rate===''||!hours) return;
+      lines.push(row(label+' <span style="color:#6c838e">'+dec(hours)+' × '+num(rate)+'</span>', amt(val)));
+    }
+    ln('Regular',  t.regular,  rates.working,  m.working);
+    ln('Overtime', t.overtime, rates.overtime, m.overtime);
+    ln('Diving',   t.bottom,   rates.diving,   m.diving);
+    ln('Standby',  t.standby,  rates.standby,  m.standby);
+    ln('Travel',   t.travel,   rates.travel,   m.travel);
+    var total = m.working+m.overtime+m.diving+m.standby+m.travel;
+    if(repOpts.perDiem && m.perDiem){ lines.push(row('Traktamente', amt(m.perDiem))); total+=m.perDiem; }
+    if(lines.length){
+      h+='<h2>Amount</h2><table>'+lines.join('')+
+         '<tr class="tot"><td>Total</td><td>'+amt(total)+'</td></tr></table>';
+      h+='<p class="fine">Each category is charged at its own rate. Regular and overtime '+
+         'together are the working time, charged once; diving is charged separately because '+
+         'it is paid at a different rate, not because it is additional time.</p>';
+    } else {
+      h+='<h2>Amount</h2><p class="fine">No rates are configured, so no amounts are shown.</p>';
+    }
+  }
+  h+='<div class="sig">'+esc(periodLabel(p))+
+     (t.stamped? ' · figures as billed' : ' · figures as of '+esc(clockText(new Date())))+
+     '</div>';
+  return h+'</div>';
+}
+function renderReport(){
+  document.getElementById('repRange').textContent = periodLabel(activePeriod());
+  renderRepOpts();
+  document.getElementById('reportPaper').innerHTML = reportHTML();
+}
+function reportPlainText(){
+  var div=document.createElement('div');
+  div.innerHTML=reportHTML();
+  var out=[];
+  div.querySelectorAll('h1,h2,tr,.fine').forEach(function(el){
+    if(el.tagName==='TR'){
+      var td=el.querySelectorAll('td');
+      out.push(td[0].textContent.trim().replace(/\s+/g,' ')+'\t'+td[1].textContent.trim());
+    } else if(el.tagName==='H1'){ out.push(el.textContent.trim()); }
+    else if(el.tagName==='H2'){ out.push(''); out.push(el.textContent.trim().toUpperCase()); }
+    else out.push('\n'+el.textContent.trim());
+  });
+  return out.join('\n');
+}
+
 /* ---------------- dive detail ---------------- */
 var openDiveId = null;
 
@@ -2881,6 +3149,15 @@ function suggestions(field){
 }
 
 function openWizard(id){
+  if(id){
+    var ex=entries.filter(function(e){ return e.id===id; })[0];
+    if(ex && shiftLocked(ex)){
+      if(!confirm('This shift is in a period you marked billed.\n\nReopen the period to edit it?')) return;
+      reopenPeriod(periodOf(ex.date));
+      renderLog();
+      toast('Period reopened');
+    }
+  }
   editing = id||null;
   if(id){
     var f=entries.filter(function(e){return e.id===id;})[0];
@@ -3449,14 +3726,14 @@ function renderData(){
 
 /* ---------------- nav + toast ---------------- */
 function show(v){
-  ['log','dives','dive','people','search','stats','add','data'].forEach(function(n){
+  ['log','dives','dive','people','search','stats','report','add','data'].forEach(function(n){
     document.getElementById('s-'+n).classList.toggle('on', n===v);
   });
   document.querySelectorAll('.tab').forEach(function(t){
     t.classList.toggle('on', t.getAttribute('data-go')===v);
   });
   /* The wizard and the pushed detail screens own the whole viewport. */
-  var full = (v==='add' || v==='dive' || v==='people');
+  var full = (v==='add' || v==='dive' || v==='people' || v==='report');
   document.getElementById('tabbar').style.display = full?'none':'grid';
   document.getElementById('fabAdd').hidden = full;
   window.scrollTo(0,0);
@@ -3467,6 +3744,7 @@ function show(v){
   if(v==='people') renderDirectory();
   if(v==='search') renderSearch();
   if(v==='stats') renderStats();
+  if(v==='report') renderReport();
 }
 var tt;
 function toast(msg){
@@ -3613,6 +3891,40 @@ document.getElementById('slot').addEventListener('keydown',function(ev){
 });
 
 /* data screen */
+/* period locking */
+document.getElementById('summary').addEventListener('click',function(ev){
+  var p=activePeriod();
+  if(ev.target.closest('#closePeriod')){
+    var list=periodEntries();
+    if(!list.length){ toast('Nothing in this period to bill'); return; }
+    if(!confirm('Mark '+periodLabel(p)+' as billed?\n\nIts figures are stamped now, so later '+
+                'changes to rates or settings will not move them. Shifts in it become read-only '+
+                'until you reopen it.')) return;
+    closePeriod(p); renderLog(); toast('Period marked billed');
+    return;
+  }
+  if(ev.target.closest('#reopenPeriod')){
+    if(!confirm('Reopen '+periodLabel(p)+'?\n\nThe stamped figures are discarded and the period '+
+                'follows your current settings again.')) return;
+    reopenPeriod(p); renderLog(); toast('Period reopened');
+    return;
+  }
+  if(ev.target.closest('#openReport')) show('report');
+});
+
+/* customer report */
+document.getElementById('repBack').addEventListener('click',function(){ show('log'); });
+document.getElementById('repOpts').addEventListener('click',function(ev){
+  var b=ev.target.closest('[data-opt]'); if(!b) return;
+  var k=b.getAttribute('data-opt');
+  repOpts[k]=!repOpts[k];
+  renderReport();
+});
+document.getElementById('repCopy').addEventListener('click',function(){
+  copy(reportPlainText(),'Report');
+});
+document.getElementById('repPrint').addEventListener('click',function(){ window.print(); });
+
 /* search */
 document.getElementById('q').addEventListener('input', renderSearch);
 document.getElementById('filters').addEventListener('click',function(ev){

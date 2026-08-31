@@ -317,6 +317,42 @@ traktamente days, plus working hours by year.
 Bottom time appears in the work scope too, labelled *inside the hours, not
 added*, so the two series can be read together without ever being summed.
 
+## Billing periods: open and billed
+
+A period is **open** until you mark it billed. Marking it billed stamps its
+figures — every category total, the rates in force, and the money — into
+`state.periods`, keyed by the period's start date.
+
+From then on the summary and the report show **the figures it was closed with**,
+not today's. Changing a rate, the unpaid-break length or the traktamente amounts
+cannot move a number that has already been invoiced. Tested directly: with every
+rate set to 9999 and the break tripled, a closed period's total held at 9 450.
+
+Opening a shift inside a billed period offers to reopen the period first.
+Reopening discards the stamp and the period follows current settings again.
+
+## Customer report
+
+**Report** from the period summary produces a print-optimised page for a client.
+It defaults to the commercial facts only:
+
+- working time — regular, overtime, total working hours, working days
+- diving — dives, bottom time, maximum depth, diving days
+- other time — standby and travel, when non-zero
+- amounts — per category at its own rate, with a total
+
+Four toggles: amounts, diving detail, split by client, and **traktamente, which
+is off by default** because a personal allowance is usually not the customer's
+business. Turning amounts off suppresses every figure in currency, the allowance
+line included.
+
+Nitrogen groups, flying restrictions, team names and personal notes are **never**
+included — the report has no option to add them. Verified by asserting each is
+absent.
+
+*Print / PDF* uses the browser's own print path; *Copy* produces a plain-text
+version for pasting into an email.
+
 ## Backup and restore
 
 **Data → Backup** writes a complete JSON copy of every shift, every dive and your settings.
