@@ -50,10 +50,9 @@ Per shift:
 | Dives | Any number, each with in/out times, max depth and task |
 | Standby / tender hours | Optional, billable |
 | Travel hours | Optional, billable |
-| Notes | Optional |
-
 | Övertid / overtime | A **subset** of the shift, not extra time on top |
 | Traktamente | None / half / full; a daily allowance, never an hour |
+| Notes | Optional |
 
 ## Billing categories
 
