@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Bottom Time — simplified Yokohama free-flow helmet, drawn from the
+       reference photo. The silhouette rests on three things: the wide flared
+       breastplate (the widest element, and what separates this from a plain
+       dome), the domed bowl, and the dominant front port. The grilled side
+       port and the two chest bosses are kept because they survive down to
+       about 40px; rivets and brailing studs are dropped because they do not.
+       The front port sits left of centre and the side port to its right, the
+       three-quarter view the photo is taken from. -->
+  <rect width="512" height="512" fill="#05121a"/>
+
+  <!-- breastplate / corselet: widest element, shoulders flaring out -->
+  <path d="M78 414 C78 371 136 349 256 349 C376 349 434 371 434 414
+           C434 421 429 425 422 425 L90 425 C83 425 78 421 78 414 Z"
+        fill="#ffb23f"/>
+  <path d="M78 414 C78 371 136 349 256 349 C376 349 434 371 434 414
+           C434 421 429 425 422 425 L90 425 C83 425 78 421 78 414 Z"
+        fill="none" stroke="#c9821f" stroke-width="9"/>
+  <circle cx="198" cy="392" r="15" fill="#c9821f"/>
+  <circle cx="314" cy="392" r="15" fill="#c9821f"/>
+
+  <!-- neck ring, showing below the bowl -->
+  <rect x="150" y="318" width="212" height="44" rx="14" fill="#c9821f"/>
+
+  <!-- bowl -->
+  <path d="M146 336 C142 200 182 136 256 136 C330 136 370 200 366 336 Z"
+        fill="#ffb23f"/>
+
+  <!-- crown seam -->
+  <path d="M256 136 C206 168 192 250 196 336"
+        fill="none" stroke="#c9821f" stroke-width="9"
+        stroke-linecap="round" opacity=".4"/>
+
+  <!-- side port with protective grille, clear of the front ring -->
+  <circle cx="338" cy="250" r="27" fill="#c9821f"/>
+  <circle cx="338" cy="250" r="18" fill="#071b25"/>
+  <path d="M338 232 V268 M320 250 H356" stroke="#c9821f" stroke-width="6"
+        stroke-linecap="round"/>
+
+  <!-- front port: heavy retaining ring + glass -->
+  <circle cx="238" cy="240" r="72" fill="#c9821f"/>
+  <circle cx="238" cy="240" r="57" fill="#071b25"/>
+  <path d="M206 266 A49 49 0 0 1 222 206"
+        fill="none" stroke="#35d6c4" stroke-width="13"
+        stroke-linecap="round" opacity=".85"/>
+</svg>

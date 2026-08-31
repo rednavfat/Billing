@@ -1,0 +1,1919 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bottom Time</title>
+
+<!-- Installable-app metadata. These resolve when the file is served as a site
+     (GitHub Pages); inside the Claude artifact viewer they simply 404 and are
+     ignored, which is why the app still runs there unchanged. -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<meta name="theme-color" content="#05121a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bottom Time">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+:root{
+  color-scheme: dark;
+  --abyss:#05121a;
+  --deep:#0a1e28;
+  --shelf:#102d3a;
+  --raise:#163a49;
+  --line:#1c3f4e;
+  --line-soft:#14313d;
+  --text:#e8f1f3;
+  --muted:#7d9aa7;
+  --dim:#55747f;
+  --amber:#ffb23f;
+  --amber-deep:#c9821f;
+  --amber-ghost:rgba(255,178,63,.12);
+  --teal:#35d6c4;
+  --teal-ghost:rgba(53,214,196,.12);
+  --rose:#ff6b6b;
+
+  --ui:'Archivo',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+
+  --r:14px;
+  --pad:18px;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--abyss);
+  color:var(--text);
+  font-family:var(--ui);
+  font-size:15px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  -webkit-text-size-adjust:100%;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:none;padding:0}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px;border-radius:6px}
+
+/* ---------- shell ---------- */
+.app{max-width:560px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+.screen{display:none;flex:1;flex-direction:column}
+.screen.on{display:flex}
+
+.topbar{
+  display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+  padding:22px var(--pad) 10px;
+}
+.brand{display:flex;align-items:baseline;gap:9px}
+.brand b{font-size:19px;font-weight:700;letter-spacing:-.015em}
+.brand .tick{
+  font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--amber);
+}
+.iconbtn{
+  width:36px;height:36px;border-radius:10px;border:1px solid var(--line);
+  display:grid;place-items:center;color:var(--muted);background:var(--deep);
+}
+.iconbtn:hover{color:var(--text);border-color:var(--raise)}
+
+/* ---------- period gauge ---------- */
+.gauge{margin:6px var(--pad) 0;border:1px solid var(--line);border-radius:var(--r);background:var(--deep);overflow:hidden}
+.gauge-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--line-soft)}
+.gauge-head .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+.gauge-head .rng{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--text);letter-spacing:-.01em}
+.navb{width:30px;height:30px;border-radius:8px;color:var(--muted);display:grid;place-items:center;border:1px solid transparent}
+.navb:hover{color:var(--amber);border-color:var(--line)}
+.navb[disabled]{opacity:.25;cursor:default}
+
+.readout{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line-soft)}
+.cell{background:var(--deep);padding:14px}
+.cell .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);display:block;margin-bottom:5px}
+.cell .v{font-family:var(--mono);font-size:27px;font-weight:500;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+.cell .u{font-size:12px;color:var(--dim);margin-left:3px;font-weight:400}
+.cell .sub{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:3px;font-variant-numeric:tabular-nums}
+.v.amber{color:var(--amber)} .v.teal{color:var(--teal)}
+
+.minirow{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line-soft);border-top:1px solid var(--line-soft)}
+.mini{background:var(--deep);padding:10px 8px;text-align:center}
+.mini .k{font-family:var(--mono);font-size:8.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);display:block}
+.mini .v{font-family:var(--mono);font-size:15px;font-variant-numeric:tabular-nums;margin-top:3px;font-weight:500}
+
+/* ---------- sections ---------- */
+.sec{padding:22px var(--pad) 0}
+.sec-h{
+  font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--dim);margin:0 0 10px;display:flex;align-items:center;gap:10px;
+}
+.sec-h::after{content:"";flex:1;height:1px;background:var(--line-soft)}
+
+.bar{display:flex;flex-direction:column;gap:14px}
+.bar-row{display:grid;grid-template-columns:1fr auto;gap:7px 12px;align-items:baseline}
+.bar-row .nm{font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-row .hr{font-family:var(--mono);font-size:14px;font-variant-numeric:tabular-nums;color:var(--amber)}
+.track{grid-column:1/-1;height:4px;border-radius:99px;background:var(--shelf);overflow:hidden}
+.track i{display:block;height:100%;background:linear-gradient(90deg,var(--amber-deep),var(--amber));border-radius:99px}
+
+/* ---------- entries ---------- */
+.days{display:flex;flex-direction:column;gap:9px;padding-bottom:96px}
+.day{
+  width:100%;text-align:left;border:1px solid var(--line);border-radius:var(--r);
+  background:var(--deep);padding:13px 14px;display:grid;
+  grid-template-columns:44px 1fr auto;gap:0 13px;align-items:center;
+}
+.day:hover{border-color:var(--raise);background:var(--shelf)}
+.dstamp{text-align:center;font-family:var(--mono);line-height:1.15}
+.dstamp .d{display:block;font-size:19px;font-weight:600;font-variant-numeric:tabular-nums}
+.dstamp .m{display:block;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-top:1px}
+.dmain{min-width:0}
+.dmain .j{display:block;font-weight:600;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dmain .s{display:block;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px}
+.dmain .s:empty{display:none}
+.dnum{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.dnum .w{display:block;font-size:16px;color:var(--amber);font-weight:500}
+.dnum .b{display:block;font-size:11px;color:var(--teal);margin-top:2px}
+.dnum .b.none{color:var(--dim)}
+
+.chipline{grid-column:2/-1;display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;align-items:center}
+.tag{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
+  line-height:1;padding:5px 7px;border-radius:5px;background:var(--shelf);color:var(--muted);
+  white-space:nowrap;
+}
+.tag.dive{background:var(--teal-ghost);color:var(--teal)}
+
+.empty{
+  border:1px dashed var(--line);border-radius:var(--r);padding:34px 22px;text-align:center;color:var(--muted);
+}
+.empty b{display:block;color:var(--text);font-size:15px;margin-bottom:5px}
+.empty p{margin:0;font-size:13.5px;line-height:1.55}
+
+/* ---------- dive log ---------- */
+.banner{
+  display:flex;gap:11px;align-items:flex-start;
+  border:1px solid var(--line);border-left:3px solid var(--amber);
+  border-radius:11px;background:var(--deep);padding:12px 13px;margin-bottom:13px;
+}
+.banner .bi{color:var(--amber);flex-shrink:0;margin-top:1px}
+.banner .bt{font-size:13px;line-height:1.55;color:var(--muted)}
+.banner .bt b{color:var(--text);display:block;font-size:13.5px;margin-bottom:2px;font-weight:600}
+
+.dlog{display:flex;flex-direction:column;gap:9px}
+.si{
+  display:flex;align-items:center;gap:9px;padding:1px 0 1px 6px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);
+}
+.si::before{content:"";width:2px;height:15px;background:var(--line);border-radius:2px;margin-left:16px}
+.si.reset{color:var(--teal)}
+.si.reset::before{background:var(--teal-ghost)}
+
+.drow{
+  width:100%;text-align:left;border:1px solid var(--line);border-radius:var(--r);
+  background:var(--deep);padding:13px 14px;display:grid;
+  grid-template-columns:auto 1fr auto;gap:0 13px;align-items:center;
+}
+.drow:hover{border-color:var(--raise);background:var(--shelf)}
+.dgroup{
+  width:38px;height:38px;border-radius:10px;display:grid;place-items:center;
+  background:var(--teal-ghost);border:1px solid rgba(53,214,196,.3);
+  font-family:var(--mono);font-size:17px;font-weight:600;color:var(--teal);
+}
+.dgroup.none{background:var(--shelf);border-color:var(--line);color:var(--dim);font-size:14px}
+.dbody{min-width:0}
+.dbody .t{display:block;font-weight:600;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dbody .t.untitled{color:var(--muted);font-weight:500;font-style:italic}
+.dbody .m{display:block;font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums}
+.dbody .c{display:block;font-size:11.5px;color:var(--dim);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dbody .why{
+  display:inline-block;margin-top:5px;margin-right:5px;
+  font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;
+  line-height:1;padding:4px 6px;border-radius:5px;background:var(--shelf);color:var(--dim);
+}
+.dbody .why.teal{background:var(--teal-ghost);color:var(--teal)}
+.dbody .why.warn{background:var(--amber-ghost);color:var(--amber)}
+.dright{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.dright .dp{display:block;font-size:16px;color:var(--amber);font-weight:500}
+.dright .bt{display:block;font-size:11px;color:var(--teal);margin-top:2px}
+
+/* after the last dive: flying + altitude */
+.fly{border:1px solid var(--line);border-radius:var(--r);background:var(--deep);overflow:hidden;margin-bottom:13px}
+.fly-h{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line-soft)}
+.fly-h .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);display:block}
+.fly-h .g{font-family:var(--mono);font-size:15px;color:var(--teal);font-weight:600;margin-top:3px}
+.fly-h .g.none{color:var(--dim);font-weight:400;font-size:12px}
+.fly-state{text-align:right}
+.fly-state .s{display:block;font-family:var(--mono);font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.fly-state .s.ok{color:var(--teal)}
+.fly-state .s.wait{color:var(--amber)}
+.fly-state .w{display:block;font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:3px;white-space:nowrap}
+.alt{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--line-soft)}
+.alt div{background:var(--deep);padding:9px 4px;text-align:center}
+.alt .b{font-family:var(--mono);font-size:8px;letter-spacing:.06em;color:var(--dim);display:block;line-height:1.3}
+.alt .w{font-family:var(--mono);font-size:10px;margin-top:4px;display:block;color:var(--amber)}
+.alt .w.now{color:var(--teal)}
+.fly-f{padding:8px 14px;font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);border-top:1px solid var(--line-soft)}
+
+.segwide{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:14px}
+.segwide button{flex:1;padding:9px;font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.segwide button.on{background:var(--amber);color:#08202b}
+
+/* ---------- lunch / checkbox ---------- */
+.checkline{
+  display:flex;align-items:center;gap:11px;margin-top:12px;
+  border:1px solid var(--line);border-radius:12px;background:var(--deep);padding:13px 14px;cursor:pointer;
+}
+.checkline:hover{border-color:var(--raise)}
+.checkline.on{border-color:var(--amber);background:var(--amber-ghost)}
+.box{
+  width:21px;height:21px;border-radius:6px;border:1.5px solid var(--line);flex-shrink:0;
+  display:grid;place-items:center;color:transparent;background:var(--abyss);
+}
+.checkline.on .box{background:var(--amber);border-color:var(--amber);color:#08202b}
+.checkline .cl{font-size:14px;line-height:1.35}
+.checkline .cl small{display:block;color:var(--dim);font-size:11.5px;margin-top:1px}
+
+/* ---------- tabbar ---------- */
+.tabbar{
+  position:sticky;bottom:0;margin-top:auto;z-index:20;
+  display:grid;grid-template-columns:1fr 1fr 1fr;
+  background:rgba(5,18,26,.94);backdrop-filter:blur(12px);
+  border-top:1px solid var(--line);
+  padding:7px 8px calc(7px + env(safe-area-inset-bottom,0px));
+}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;color:var(--dim);border-radius:10px}
+.tab .tl{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase}
+.tab.on{color:var(--amber)}
+
+.fab{
+  position:fixed;right:max(16px,calc(50vw - 280px + 16px));
+  bottom:calc(74px + env(safe-area-inset-bottom,0px));
+  width:54px;height:54px;border-radius:50%;display:grid;place-items:center;z-index:30;
+  background:var(--amber);color:#08202b;border:3px solid var(--abyss);
+  box-shadow:0 6px 20px rgba(255,178,63,.28);
+}
+.fab:hover{background:#ffc366}
+
+/* ---------- wizard ---------- */
+.wiz{flex:1;display:flex;flex-direction:column;position:relative;padding-left:46px}
+.rail{position:absolute;left:22px;top:22px;bottom:96px;width:2px;background:var(--line-soft);border-radius:2px}
+.rail i{position:absolute;left:0;top:0;width:100%;background:linear-gradient(180deg,var(--amber),var(--amber-deep));border-radius:2px;transition:height .32s cubic-bezier(.4,0,.2,1)}
+.rail .tk{position:absolute;left:-3px;width:8px;height:8px;border-radius:50%;background:var(--abyss);border:2px solid var(--line);transform:translateY(-4px)}
+.rail .tk.done{border-color:var(--amber-deep);background:var(--amber-deep)}
+.rail .tk.now{border-color:var(--amber);background:var(--amber);box-shadow:0 0 0 4px var(--amber-ghost)}
+
+.wizhead{display:flex;align-items:center;justify-content:space-between;padding:20px var(--pad) 0 0;gap:12px}
+.stepno{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
+.stepno b{color:var(--amber);font-weight:500}
+.xbtn{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);padding:6px 9px;border-radius:8px;border:1px solid var(--line)}
+.xbtn:hover{color:var(--rose);border-color:var(--rose)}
+
+.slot{flex:1;padding:26px var(--pad) 22px 0;display:flex;flex-direction:column}
+.slot.anim{animation:rise .34s cubic-bezier(.2,.7,.3,1)}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.q{font-size:27px;font-weight:700;letter-spacing:-.025em;margin:0 0 6px;text-wrap:balance;line-height:1.18}
+.hint{color:var(--muted);font-size:13.5px;margin:0 0 20px;max-width:34em}
+
+.fld{
+  width:100%;background:var(--deep);border:1px solid var(--line);border-radius:12px;
+  padding:15px 15px;font-size:17px;color:var(--text);
+}
+.fld:focus{border-color:var(--amber);outline:none;background:var(--shelf)}
+.fld::placeholder{color:var(--dim)}
+input.fld[type=date],input.fld[type=time],input.fld[type=number]{font-family:var(--mono);font-variant-numeric:tabular-nums}
+textarea.fld{resize:vertical;min-height:110px;font-size:15.5px;line-height:1.55}
+
+.sugs{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px}
+.sug{
+  border:1px solid var(--line);background:var(--deep);border-radius:99px;padding:7px 13px;
+  font-size:13px;color:var(--muted);
+}
+.sug:hover{border-color:var(--amber);color:var(--amber);background:var(--amber-ghost)}
+
+.calc{
+  margin-top:15px;border:1px solid var(--line-soft);border-radius:11px;background:var(--deep);
+  padding:12px 14px;display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+}
+.calc .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--dim)}
+.calc .v{font-family:var(--mono);font-size:21px;color:var(--amber);font-variant-numeric:tabular-nums;font-weight:500}
+.calc .v.teal{color:var(--teal)}
+
+/* dives */
+.dives{display:flex;flex-direction:column;gap:9px}
+.dive{border:1px solid var(--line);border-radius:12px;background:var(--deep);padding:12px 13px}
+.dive-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+.dive-h .n{font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--teal)}
+.dive-h .rm{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.dive-h .rm:hover{color:var(--rose)}
+.dgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.dgrid .full{grid-column:1/-1}
+.mlbl{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);display:block;margin-bottom:4px}
+.fld.sm{padding:11px 12px;font-size:15px}
+.dive .dur{font-family:var(--mono);font-size:11px;color:var(--teal);margin-top:8px;text-align:right;font-variant-numeric:tabular-nums}
+.addd{
+  width:100%;border:1px dashed var(--line);border-radius:12px;padding:13px;color:var(--teal);
+  font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;background:transparent;
+}
+.addd:hover{border-color:var(--teal);background:var(--teal-ghost)}
+
+/* review */
+.rev{border:1px solid var(--line);border-radius:var(--r);background:var(--deep);overflow:hidden}
+.rev-r{display:flex;justify-content:space-between;gap:14px;padding:11px 14px;border-bottom:1px solid var(--line-soft);align-items:baseline}
+.rev-r:last-child{border-bottom:none}
+.rev-r .k{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);flex-shrink:0}
+.rev-r .v{text-align:right;font-size:14px;min-width:0;overflow-wrap:anywhere}
+.rev-r .v.num{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--amber)}
+.rev-r .v.num.teal{color:var(--teal)}
+
+.wiznav{display:flex;gap:10px;padding:14px var(--pad) calc(20px + env(safe-area-inset-bottom,0px)) 0}
+.btn{
+  flex:1;padding:15px;border-radius:12px;font-weight:600;font-size:15px;
+  background:var(--amber);color:#08202b;letter-spacing:-.01em;
+}
+.btn:hover{background:#ffc366}
+.btn.ghost{background:var(--deep);color:var(--muted);border:1px solid var(--line);flex:0 0 33%}
+.btn.ghost:hover{color:var(--text);border-color:var(--raise);background:var(--shelf)}
+.btn.danger{background:transparent;border:1px solid var(--line);color:var(--rose)}
+.btn.danger:hover{background:rgba(255,107,107,.1);border-color:var(--rose)}
+.btn[disabled]{opacity:.4;cursor:default}
+
+/* ---------- data screen ---------- */
+.card{border:1px solid var(--line);border-radius:var(--r);background:var(--deep);padding:16px;margin-bottom:12px}
+.card h3{margin:0 0 5px;font-size:15.5px;font-weight:600;letter-spacing:-.01em}
+.card p{margin:0 0 13px;color:var(--muted);font-size:13px;line-height:1.55}
+.card .btn{width:100%;flex:none}
+.row2{display:flex;gap:9px}
+pre.csv{
+  font-family:var(--mono);font-size:10.5px;line-height:1.65;color:var(--muted);
+  background:var(--abyss);border:1px solid var(--line-soft);border-radius:10px;
+  padding:12px;overflow-x:auto;margin:0 0 12px;max-height:190px;white-space:pre;
+}
+.setrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--line-soft)}
+.setrow:last-child{border-bottom:none}
+.setrow .k{font-size:14px}
+.setrow .k small{display:block;color:var(--dim);font-size:11.5px;margin-top:1px}
+.seg{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;flex-shrink:0}
+.seg button{padding:7px 13px;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.seg button.on{background:var(--amber);color:#08202b}
+.num-in{width:70px;text-align:center;padding:8px;background:var(--abyss);border:1px solid var(--line);border-radius:9px;font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+.toast{
+  position:fixed;left:50%;bottom:88px;transform:translate(-50%,14px);
+  background:var(--raise);border:1px solid var(--amber);color:var(--text);
+  padding:11px 17px;border-radius:11px;font-size:13.5px;font-weight:500;
+  opacity:0;pointer-events:none;transition:.24s;z-index:60;max-width:88vw;text-align:center;
+  box-shadow:0 8px 26px rgba(0,0,0,.5);
+}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+</style>
+
+<div class="app">
+
+  <!-- ============ LOG ============ -->
+  <section class="screen on" id="s-log">
+    <div class="topbar">
+      <div class="brand"><b>Bottom Time</b><span class="tick" id="cycleTick">16 → 15</span></div>
+      <button class="iconbtn" id="goData" aria-label="Data and settings">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+      </button>
+    </div>
+
+    <div class="gauge">
+      <div class="gauge-head">
+        <button class="navb" id="pPrev" aria-label="Previous period">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <div style="text-align:center">
+          <span class="lbl" id="pLabel">Billing period</span>
+          <div class="rng" id="pRange">—</div>
+        </div>
+        <button class="navb" id="pNext" aria-label="Next period">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+      </div>
+      <div class="readout">
+        <div class="cell">
+          <span class="k">Hours worked</span>
+          <div class="v amber" id="tWorked">0.00</div>
+          <div class="sub" id="tWorkedHm">—</div>
+        </div>
+        <div class="cell">
+          <span class="k">Bottom time</span>
+          <div class="v teal" id="tDive">0.00</div>
+          <div class="sub" id="tDiveHm">—</div>
+        </div>
+      </div>
+      <div class="minirow">
+        <div class="mini"><span class="k">Dives</span><div class="v" id="tDives">0</div></div>
+        <div class="mini"><span class="k">Days</span><div class="v" id="tDays">0</div></div>
+        <div class="mini"><span class="k">Max depth</span><div class="v" id="tDepth">—</div></div>
+        <div class="mini"><span class="k">Billable</span><div class="v" id="tBill">0.00</div></div>
+      </div>
+    </div>
+
+    <div class="sec" id="jobSec" hidden>
+      <h2 class="sec-h">Hours by client</h2>
+      <div class="bar" id="jobBars"></div>
+    </div>
+
+    <div class="sec" style="flex:1">
+      <h2 class="sec-h" id="daysHead">Shifts</h2>
+      <div class="days" id="dayList"></div>
+    </div>
+  </section>
+
+  <!-- ============ DIVES ============ -->
+  <section class="screen" id="s-dives">
+    <div class="topbar">
+      <div class="brand"><b>Dive Log</b><span class="tick" id="diveTick">—</span></div>
+      <button class="iconbtn" id="divesExport" aria-label="Export dive log">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13m0 0l-4.5-4.5M12 16l4.5-4.5M4 20h16"/></svg>
+      </button>
+    </div>
+    <div style="padding:6px var(--pad) 0;flex:1">
+      <div class="segwide" id="diveScope">
+        <button data-scope="period" class="on">This period</button>
+        <button data-scope="all">Every dive</button>
+      </div>
+      <div id="flyPanel"></div>
+      <div id="ndbtBanner"></div>
+      <div class="dlog" id="diveList"></div>
+      <div style="height:110px"></div>
+    </div>
+  </section>
+
+  <!-- ============ WIZARD ============ -->
+  <section class="screen" id="s-add">
+    <div class="wiz">
+      <div class="rail"><i id="railFill"></i><div id="railTicks"></div></div>
+      <div class="wizhead">
+        <div class="stepno">Step <b id="stepNo">1</b> / <span id="stepTot">9</span></div>
+        <button class="xbtn" id="wizCancel">Cancel</button>
+      </div>
+      <div class="slot" id="slot"></div>
+      <div class="wiznav">
+        <button class="btn ghost" id="wPrev">Back</button>
+        <button class="btn" id="wNext">Next</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DATA ============ -->
+  <section class="screen" id="s-data">
+    <div class="topbar">
+      <div class="brand"><b>Data</b><span class="tick">Export · Import</span></div>
+      <button class="iconbtn" id="dataBack" aria-label="Back to log">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+    </div>
+    <div style="padding:6px var(--pad) 0">
+
+      <div class="card">
+        <h3>Export this period</h3>
+        <p>Spreadsheet-ready CSV for <span id="expRange">—</span>. Copy it, then paste straight into a sheet.</p>
+        <pre class="csv" id="csvPrev">No shifts in this period.</pre>
+        <button class="btn" id="saveFile" hidden style="width:100%;margin-bottom:9px">Save CSV file</button>
+        <div class="row2">
+          <button class="btn" id="copyPeriod" style="flex:1">Copy period</button>
+          <button class="btn ghost" style="flex:1" id="copyAll">Copy all</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Import from your sheet</h3>
+        <p>Paste rows from Google Sheets or Excel — include the header row. Columns are matched by name, so extra columns are ignored.</p>
+        <textarea class="fld" id="impText" placeholder="Date	Job	Vessel	Start	End	Dive in	Dive out	Depth&#10;2026-08-18	Northern Star	MV Kestrel	07:00	17:30	09:15	10:05	18" style="min-height:120px;font-family:var(--mono);font-size:12px"></textarea>
+        <div style="height:11px"></div>
+        <button class="btn" id="impRun">Import rows</button>
+      </div>
+
+      <div class="card">
+        <h3>Settings</h3>
+        <div class="setrow">
+          <div class="k">Billing cycle starts<small>Period runs this day → the day before, next month</small></div>
+          <input class="num-in" id="setCycle" type="number" min="1" max="28" inputmode="numeric">
+        </div>
+        <div class="setrow">
+          <div class="k">Unpaid lunch length<small>Deducted when a shift is marked unpaid lunch</small></div>
+          <input class="num-in" id="setBreak" type="number" min="0" max="480" step="15" inputmode="numeric">
+        </div>
+        <div class="setrow">
+          <div class="k">Depth unit</div>
+          <div class="seg" id="setUnit">
+            <button data-u="m">m</button><button data-u="ft">ft</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Danger zone</h3>
+        <p><span id="cntAll">0</span> shifts stored on this device. Export before you clear — this can't be undone.</p>
+        <button class="btn danger" id="wipe">Erase all shifts</button>
+      </div>
+
+      <div style="height:100px"></div>
+    </div>
+  </section>
+
+  <nav class="tabbar" id="tabbar">
+    <button class="tab on" data-go="log">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v15H4zM4 9h16M9 5v15"/></svg>
+      <span class="tl">Log</span>
+    </button>
+    <button class="tab" data-go="dives">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7c2.5 0 2.5 2 5 2s2.5-2 5-2 2.5 2 5 2 2.5-2 5-2"/><path d="M3 13c2.5 0 2.5 2 5 2s2.5-2 5-2 2.5 2 5 2 2.5-2 5-2"/><path d="M3 19c2.5 0 2.5 2 5 2s2.5-2 5-2 2.5 2 5 2 2.5-2 5-2"/></svg>
+      <span class="tl">Dives</span>
+    </button>
+    <button class="tab" data-go="data">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13m0 0l-4.5-4.5M12 16l4.5-4.5M4 20h16"/></svg>
+      <span class="tl">Data</span>
+    </button>
+  </nav>
+</div>
+
+<button class="fab" id="fabAdd" aria-label="Log a shift">
+  <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+</button>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------------- storage ---------------- */
+var K_E='bottomtime.entries.v1', K_S='bottomtime.settings.v1';
+function load(k,f){ try{var r=localStorage.getItem(k);return r?JSON.parse(r):f;}catch(e){return f;} }
+function save(k,v){ try{localStorage.setItem(k,JSON.stringify(v));}catch(e){} }
+
+var entries = load(K_E,[]);
+var settings = Object.assign({cycleStart:16, unit:'m', breakMin:60}, load(K_S,{}));
+
+/* ---------------- helpers ---------------- */
+var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];}); }
+function pad(n){ return (n<10?'0':'')+n; }
+function iso(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function parseISO(s){ var p=String(s).split('-'); return new Date(+p[0],+p[1]-1,+p[2]); }
+function todayISO(){ return iso(new Date()); }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+
+function minsBetween(a,b){
+  if(!a||!b) return 0;
+  var x=a.split(':'), y=b.split(':');
+  if(x.length<2||y.length<2) return 0;
+  var m=(+y[0]*60 + +y[1]) - (+x[0]*60 + +x[1]);
+  if(isNaN(m)) return 0;
+  if(m<0) m+=1440;            /* shift or dive crossed midnight */
+  return m;
+}
+function hm(mins){
+  mins=Math.round(mins);
+  var s=mins<0?'-':''; mins=Math.abs(mins);
+  return s+Math.floor(mins/60)+'h '+pad(mins%60)+'m';
+}
+function dec(h){ return (Math.round(h*100)/100).toFixed(2); }
+function num(v){ var n=parseFloat(v); return isNaN(n)?0:n; }
+
+/* ---------------- derived entry values ---------------- */
+function breakMins(){ var v=num(settings.breakMin); return v>0? v : 60; }
+/* The deduction is stamped onto the shift when it is saved, so changing the
+   setting later never rewrites hours on a period you have already billed. */
+function lunchMins(e){ return e.lunch ? (num(e.lunchMin) || breakMins()) : 0; }
+function workedMins(e){
+  var m = (e.start && e.end) ? minsBetween(e.start,e.end) : num(e.workedOverride)*60;
+  m -= lunchMins(e);
+  return m>0? m : 0;                     /* never let a deduction push a shift negative */
+}
+function diveMins(e){
+  var t=0,i;
+  if(e.dives) for(i=0;i<e.dives.length;i++) t+=minsBetween(e.dives[i].in, e.dives[i].out);
+  return t + num(e.extraDiveMin);
+}
+function diveCount(e){
+  var n=0,i;
+  if(e.dives) for(i=0;i<e.dives.length;i++) if(e.dives[i].in && e.dives[i].out) n++;
+  return n + num(e.extraDives);
+}
+function maxDepth(e){
+  var d=0,i,v;
+  if(e.dives) for(i=0;i<e.dives.length;i++){ v=num(e.dives[i].depth); if(v>d) d=v; }
+  v=num(e.depthOverride); if(v>d) d=v;
+  return d;
+}
+function billableH(e){ return workedMins(e)/60 + num(e.standby) + num(e.travel); }
+
+/* ================================================================
+   NITROGEN GROUPS — Norske dykke- og behandlingstabeller (NDBT)
+   "Standardtabell" (air, decompression in water) + surface-interval
+   adjustment table.
+
+   Values are transcribed from the user's own copy of the tables.
+   Times are written exactly as the document prints them (H:MM, and
+   whole minutes for bottom time) so this block can be read straight
+   against the printed page. Nothing is interpolated: a lookup that
+   falls outside a transcribed table returns a reason, never a guess.
+
+   COVERAGE IS PARTIAL. Only the depth pages listed in `standard`
+   are loaded. `floorDepth` is the depth at or below which the
+   correct page has NOT been transcribed yet, so shallower dives are
+   reported as uncovered rather than being pushed onto a deeper —
+   and therefore wrong — page.
+   ================================================================ */
+var GROUPS=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','Z'];
+
+var NDBT = {
+  loaded:false,                 /* set by validateNDBT() below, never by hand */
+  edition:'NDBT Standardtabell',
+  unit:'msw',
+  /* Every row of the surface table begins at 0:10, so a shorter interval falls
+     outside what is printed. The code gives no credit for it and carries the
+     group through unchanged, which is the conservative direction. */
+  minSurfaceMin:10,
+  floorDepth:0,                 /* every depth page from 6 m down is transcribed */
+
+  /* "Tid før flyging etter dykking" — minimum hours from the end of the last
+     dive to flying, keyed on the highest N2 group of the last 24 hours.
+     A dive that was never assigned a group requires a 24 h interval. */
+  flying:{A:0,B:0,C:0,D:2,E:5,F:7,G:9,H:11,I:13,J:14,K:16,L:17,M:18,N:19,O:20,Z:21},
+  flyingNoGroupHours:24,
+
+  /* "Forflytning til moderate høyder." Highest N2 group of the last 24 h at or
+     below `none` travels immediately; at or below `after3h` travels once three
+     hours have passed; anything higher waits `hours`. Without a group, wait
+     24 h before going above 250 moh. */
+  altitude:[
+    {band:'250–600 moh',   none:'I', after3h:'L', hours:7},
+    {band:'600–1000 moh',  none:'H', after3h:'J', hours:9},
+    {band:'1000–1250 moh', none:'G', after3h:'I', hours:11},
+    {band:'1250–1500 moh', none:'F', after3h:'H', hours:16},
+    {band:'1500–1750 moh', none:'E', after3h:'G', hours:16}
+  ],
+  altitudeNoGroupHours:24,
+
+  /* Each depth page: "Dybder ikke større enn N meter".
+     stops are minutes at [15, 12, 9, 6, 3] msw; xs marks the rows below
+     the page's heavy rule (exceptional exposure, printed with *).
+     rnt is the page's own footer row, "Minutter tillegg til bunntid". */
+  standard:[
+    /* The 6 and 9 m pages print no decompression stops at all, and no stars.
+       The 6 m footer row stops at K: the page gives no residual nitrogen
+       figure beyond it, so entering a repetitive 6 m dive in group L or
+       higher returns "no residual nitrogen figure" rather than a group. */
+    {depth:6, rows:[
+      {bt:25,  stops:[0,0,0,0,0], total:0, group:'A'},
+      {bt:45,  stops:[0,0,0,0,0], total:0, group:'B'},
+      {bt:60,  stops:[0,0,0,0,0], total:0, group:'C'},
+      {bt:80,  stops:[0,0,0,0,0], total:0, group:'D'},
+      {bt:105, stops:[0,0,0,0,0], total:0, group:'E'},
+      {bt:135, stops:[0,0,0,0,0], total:0, group:'F'},
+      {bt:165, stops:[0,0,0,0,0], total:0, group:'G'},
+      {bt:205, stops:[0,0,0,0,0], total:0, group:'H'},
+      {bt:240, stops:[0,0,0,0,0], total:0, group:'I'},
+      {bt:255, stops:[0,0,0,0,0], total:0, group:'I', beyondRule:true},
+      {bt:330, stops:[0,0,0,0,0], total:0, group:'J', beyondRule:true},
+      {bt:460, stops:[0,0,0,0,0], total:0, group:'K', beyondRule:true}
+    ], rnt:{A:25,B:45,C:60,D:85,E:105,F:135,G:165,H:205,I:255,J:330,K:460}},
+
+    {depth:9, rows:[
+      {bt:15,  stops:[0,0,0,0,0], total:0, group:'A'},
+      {bt:25,  stops:[0,0,0,0,0], total:0, group:'B'},
+      {bt:40,  stops:[0,0,0,0,0], total:0, group:'C'},
+      {bt:50,  stops:[0,0,0,0,0], total:0, group:'D'},
+      {bt:60,  stops:[0,0,0,0,0], total:0, group:'E'},
+      {bt:75,  stops:[0,0,0,0,0], total:0, group:'F'},
+      {bt:90,  stops:[0,0,0,0,0], total:0, group:'G'},
+      {bt:105, stops:[0,0,0,0,0], total:0, group:'H'},
+      {bt:125, stops:[0,0,0,0,0], total:0, group:'I'},
+      {bt:145, stops:[0,0,0,0,0], total:0, group:'J'},
+      {bt:165, stops:[0,0,0,0,0], total:0, group:'K'},
+      {bt:195, stops:[0,0,0,0,0], total:0, group:'L'},
+      {bt:225, stops:[0,0,0,0,0], total:0, group:'M'},
+      {bt:240, stops:[0,0,0,0,0], total:0, group:'N'},
+      {bt:260, stops:[0,0,0,0,0], total:0, group:'N', beyondRule:true},
+      {bt:305, stops:[0,0,0,0,0], total:0, group:'O', beyondRule:true},
+      {bt:370, stops:[0,0,0,0,0], total:0, group:'Z', beyondRule:true}
+    ], rnt:{A:20,B:30,C:40,D:50,E:65,F:75,G:90,H:110,I:125,J:145,K:170,L:195,M:225,N:260,O:310,Z:370}},
+
+    {depth:12, rows:[
+      {bt:10,  stops:[0,0,0,0,0],   total:0,  group:'A'},
+      {bt:20,  stops:[0,0,0,0,0],   total:0,  group:'B'},
+      {bt:25,  stops:[0,0,0,0,0],   total:0,  group:'C'},
+      {bt:35,  stops:[0,0,0,0,0],   total:0,  group:'D'},
+      {bt:45,  stops:[0,0,0,0,0],   total:0,  group:'E'},
+      {bt:55,  stops:[0,0,0,0,0],   total:0,  group:'F'},
+      {bt:65,  stops:[0,0,0,0,0],   total:0,  group:'G'},
+      {bt:75,  stops:[0,0,0,0,0],   total:0,  group:'H'},
+      {bt:85,  stops:[0,0,0,0,0],   total:0,  group:'I'},
+      {bt:95,  stops:[0,0,0,0,0],   total:0,  group:'J'},
+      {bt:110, stops:[0,0,0,0,0],   total:0,  group:'K'},
+      {bt:120, stops:[0,0,0,0,0],   total:0,  group:'L'},
+      {bt:135, stops:[0,0,0,0,0],   total:0,  group:'M'},
+      {bt:150, stops:[0,0,0,0,0],   total:0,  group:'N'},
+      {bt:160, stops:[0,0,0,0,0],   total:0,  group:'O'},
+      {bt:165, stops:[0,0,0,0,5],   total:5,  group:'O'},
+      {bt:195, stops:[0,0,0,0,10],  total:10, group:'Z'},
+      {bt:225, stops:[0,0,0,0,15],  total:15, group:'Z'},
+      {bt:240, stops:[0,0,0,0,35],  total:35, group:'Z'},
+      {bt:270, stops:[0,0,0,0,45],  total:45, group:'Z', star:true, beyondRule:true}
+    ], rnt:{A:15,B:20,C:30,D:35,E:45,F:55,G:65,H:75,I:85,J:95,K:110,L:120,M:135,N:150,O:170,Z:190}},
+
+    {depth:15, rows:[
+      {bt:10,  stops:[0,0,0,0,0],   total:0,  group:'A'},
+      {bt:15,  stops:[0,0,0,0,0],   total:0,  group:'B'},
+      {bt:20,  stops:[0,0,0,0,0],   total:0,  group:'C'},
+      {bt:30,  stops:[0,0,0,0,0],   total:0,  group:'D'},
+      {bt:35,  stops:[0,0,0,0,0],   total:0,  group:'E'},
+      {bt:40,  stops:[0,0,0,0,0],   total:0,  group:'F'},
+      {bt:50,  stops:[0,0,0,0,0],   total:0,  group:'G'},
+      {bt:55,  stops:[0,0,0,0,0],   total:0,  group:'H'},
+      {bt:65,  stops:[0,0,0,0,0],   total:0,  group:'I'},
+      {bt:70,  stops:[0,0,0,0,0],   total:0,  group:'J'},
+      {bt:80,  stops:[0,0,0,0,0],   total:0,  group:'K'},
+      {bt:90,  stops:[0,0,0,0,0],   total:0,  group:'L'},
+      {bt:105, stops:[0,0,0,0,5],   total:5,  group:'O'},   /* page skips M and N here */
+      {bt:120, stops:[0,0,0,0,10],  total:10, group:'O'},
+      {bt:135, stops:[0,0,0,0,15],  total:15, group:'Z'},
+      {bt:145, stops:[0,0,0,0,20],  total:20, group:'Z'},
+      {bt:160, stops:[0,0,0,0,25],  total:25, group:'Z'},
+      {bt:180, stops:[0,0,0,5,25],  total:30, group:'Z', star:true},  /* starred, ABOVE the rule */
+      {bt:190, stops:[0,0,0,20,40], total:60, group:'Z', star:true, beyondRule:true}
+    ], rnt:{A:10,B:15,C:25,D:30,E:35,F:40,G:50,H:55,I:65,J:75,K:80,L:90,M:100,N:110,O:120,Z:130}},
+
+    {depth:18, rows:[
+      {bt:5,   stops:[0,0,0,0,0],   total:0,  group:'A'},
+      {bt:10,  stops:[0,0,0,0,0],   total:0,  group:'B'},
+      {bt:15,  stops:[0,0,0,0,0],   total:0,  group:'C'},
+      {bt:20,  stops:[0,0,0,0,0],   total:0,  group:'D'},
+      {bt:30,  stops:[0,0,0,0,0],   total:0,  group:'E'},
+      {bt:35,  stops:[0,0,0,0,0],   total:0,  group:'F'},
+      {bt:40,  stops:[0,0,0,0,0],   total:0,  group:'G'},
+      {bt:45,  stops:[0,0,0,0,0],   total:0,  group:'H'},
+      {bt:50,  stops:[0,0,0,0,0],   total:0,  group:'I'},
+      {bt:55,  stops:[0,0,0,0,0],   total:0,  group:'J'},
+      {bt:60,  stops:[0,0,0,0,0],   total:0,  group:'K'},
+      {bt:70,  stops:[0,0,0,0,5],   total:5,  group:'L'},
+      {bt:80,  stops:[0,0,0,5,5],   total:10, group:'N'},
+      {bt:90,  stops:[0,0,0,5,10],  total:15, group:'O'},
+      {bt:100, stops:[0,0,0,5,15],  total:20, group:'Z'},
+      {bt:110, stops:[0,0,0,5,20],  total:25, group:'Z'},
+      {bt:120, stops:[0,0,0,5,25],  total:30, group:'Z'},
+      {bt:130, stops:[0,0,0,20,40], total:60, group:'Z', star:true, beyondRule:true},
+      {bt:140, stops:[0,0,5,30,40], total:75, group:'Z', star:true, beyondRule:true}
+    ], rnt:{A:10,B:15,C:20,D:25,E:30,F:35,G:40,H:45,I:50,J:60,K:65,L:70,M:80,N:85,O:95,Z:100}},
+
+    {depth:21, rows:[
+      {bt:5,   stops:[0,0,0,0,0],   total:0,  group:'A'},
+      {bt:10,  stops:[0,0,0,0,0],   total:0,  group:'B'},
+      {bt:15,  stops:[0,0,0,0,0],   total:0,  group:'C'},
+      {bt:20,  stops:[0,0,0,0,0],   total:0,  group:'D'},
+      {bt:25,  stops:[0,0,0,0,0],   total:0,  group:'E'},
+      {bt:30,  stops:[0,0,0,0,0],   total:0,  group:'G'},
+      {bt:35,  stops:[0,0,0,0,0],   total:0,  group:'H'},
+      {bt:40,  stops:[0,0,0,0,0],   total:0,  group:'I'},
+      {bt:45,  stops:[0,0,0,0,0],   total:0,  group:'J'},
+      {bt:50,  stops:[0,0,0,0,5],   total:5,  group:'K'},
+      {bt:55,  stops:[0,0,0,0,5],   total:5,  group:'L'},
+      {bt:60,  stops:[0,0,0,5,5],   total:10, group:'M'},
+      {bt:70,  stops:[0,0,0,5,10],  total:15, group:'N'},
+      {bt:75,  stops:[0,0,0,5,15],  total:20, group:'O'},
+      {bt:85,  stops:[0,0,0,5,20],  total:25, group:'Z'},
+      {bt:90,  stops:[0,0,0,5,25],  total:30, group:'Z'},
+      {bt:95,  stops:[0,0,5,5,25],  total:35, group:'Z', star:true, beyondRule:true},
+      {bt:110, stops:[0,0,5,20,45], total:70, group:'Z', star:true, beyondRule:true}
+    ], rnt:{A:10,B:10,C:15,D:20,E:25,F:30,G:35,H:40,I:45,J:50,K:55,L:60,M:65,N:70,O:75,Z:85}},
+
+    {depth:24, rows:[
+      {bt:5,   stops:[0,0,0,0,0],   total:0,  group:'A'},
+      {bt:10,  stops:[0,0,0,0,0],   total:0,  group:'C'},
+      {bt:15,  stops:[0,0,0,0,0],   total:0,  group:'D'},
+      {bt:20,  stops:[0,0,0,0,0],   total:0,  group:'E'},
+      {bt:25,  stops:[0,0,0,0,0],   total:0,  group:'F'},
+      {bt:30,  stops:[0,0,0,0,0],   total:0,  group:'H'},
+      {bt:35,  stops:[0,0,0,0,0],   total:0,  group:'I'},
+      {bt:40,  stops:[0,0,0,0,5],   total:5,  group:'J'},
+      {bt:50,  stops:[0,0,0,5,5],   total:10, group:'M'},   /* page skips K and L */
+      {bt:55,  stops:[0,0,0,5,10],  total:15, group:'M'},   /* M repeats, as printed */
+      {bt:60,  stops:[0,0,0,5,15],  total:20, group:'N'},
+      {bt:70,  stops:[0,0,0,5,20],  total:25, group:'O'},
+      {bt:80,  stops:[0,0,5,5,30],  total:40, group:'Z', star:true, beyondRule:true},
+      {bt:85,  stops:[0,0,5,20,40], total:65, group:'Z', star:true, beyondRule:true},
+      {bt:90,  stops:[0,5,5,30,45], total:85, group:'Z', star:true, beyondRule:true}
+    ], rnt:{A:5,B:10,C:15,D:20,E:20,F:25,G:30,H:35,I:40,J:40,K:45,L:50,M:55,N:60,O:65,Z:70}},
+
+    {depth:27, rows:[
+      {bt:5,  stops:[0,0,0,0,0],    total:0,  group:'B'},
+      {bt:10, stops:[0,0,0,0,0],    total:0,  group:'C'},
+      {bt:15, stops:[0,0,0,0,0],    total:0,  group:'E'},
+      {bt:20, stops:[0,0,0,0,0],    total:0,  group:'F'},
+      {bt:25, stops:[0,0,0,0,0],    total:0,  group:'G'},
+      {bt:30, stops:[0,0,0,0,5],    total:5,  group:'I'},
+      {bt:40, stops:[0,0,0,5,5],    total:10, group:'L'},   /* the page has no 35 row */
+      {bt:45, stops:[0,0,0,5,10],   total:15, group:'M'},
+      {bt:50, stops:[0,0,0,5,15],   total:20, group:'N'},
+      {bt:55, stops:[0,0,0,5,20],   total:25, group:'O'},
+      {bt:60, stops:[0,0,5,5,20],   total:30, group:'O'},
+      {bt:65, stops:[0,0,5,5,25],   total:35, group:'Z', star:true, beyondRule:true},
+      {bt:70, stops:[0,0,5,10,30],  total:45, group:'Z', star:true, beyondRule:true},
+      {bt:75, stops:[0,0,5,30,45],  total:80, group:'Z', star:true, beyondRule:true}
+    ], rnt:{A:5,B:10,C:10,D:15,E:20,F:20,G:25,H:30,I:35,J:35,K:40,L:45,M:50,N:50,O:55,Z:60}},
+
+    {depth:30, rows:[
+      {bt:5,  stops:[0,0,0,0,0],    total:0,  group:'B'},
+      {bt:10, stops:[0,0,0,0,0],    total:0,  group:'D'},
+      {bt:15, stops:[0,0,0,0,0],    total:0,  group:'E'},
+      {bt:20, stops:[0,0,0,0,0],    total:0,  group:'G'},
+      {bt:25, stops:[0,0,0,0,5],    total:5,  group:'H'},
+      {bt:30, stops:[0,0,0,5,5],    total:10, group:'J'},
+      {bt:35, stops:[0,0,0,5,10],   total:15, group:'L'},
+      {bt:40, stops:[0,0,0,5,15],   total:20, group:'M'},
+      {bt:45, stops:[0,0,0,5,20],   total:25, group:'N'},
+      {bt:50, stops:[0,0,5,5,20],   total:30, group:'O'},
+      {bt:55, stops:[0,0,5,5,25],   total:35, group:'Z', star:true, beyondRule:true},
+      {bt:60, stops:[0,0,5,10,30],  total:45, group:'Z', star:true, beyondRule:true},
+      {bt:65, stops:[0,5,5,30,40],  total:80, group:'Z', star:true, beyondRule:true}
+    ], rnt:{A:5,B:10,C:10,D:15,E:15,F:20,G:25,H:25,I:30,J:35,K:35,L:40,M:45,N:45,O:50,Z:55}},
+
+    {depth:33, rows:[
+      {bt:5,  stops:[0,0,0,0,0],    total:0,  group:'B'},
+      {bt:10, stops:[0,0,0,0,0],    total:0,  group:'D'},
+      {bt:15, stops:[0,0,0,0,0],    total:0,  group:'F'},
+      {bt:20, stops:[0,0,0,0,5],    total:5,  group:'H'},
+      {bt:25, stops:[0,0,0,5,5],    total:10, group:'I'},
+      {bt:30, stops:[0,0,0,5,10],   total:15, group:'K'},
+      {bt:35, stops:[0,0,0,5,15],   total:20, group:'M'},
+      {bt:40, stops:[0,0,0,5,20],   total:25, group:'N'},
+      {bt:45, stops:[0,0,5,5,20],   total:30, group:'O', beyondRule:true},
+      {bt:50, stops:[0,0,5,10,25],  total:40, group:'Z', star:true, beyondRule:true},
+      {bt:55, stops:[0,5,5,20,40],  total:70, group:'Z', star:true, beyondRule:true}
+    ], rnt:{A:5,B:10,C:10,D:15,E:15,F:20,G:20,H:25,I:25,J:30,K:35,L:35,M:40,N:40,O:45,Z:50}},
+
+    {depth:36, rows:[
+      {bt:5,  stops:[0,0,0,0,0],    total:0,  group:'B'},
+      {bt:10, stops:[0,0,0,0,0],    total:0,  group:'D'},
+      {bt:15, stops:[0,0,0,0,5],    total:5,  group:'F'},
+      {bt:20, stops:[0,0,0,0,5],    total:5,  group:'H'},
+      {bt:25, stops:[0,0,0,5,5],    total:10, group:'J'},
+      {bt:30, stops:[0,0,0,5,15],   total:20, group:'L'},
+      {bt:35, stops:[0,0,0,5,20],   total:25, group:'N'},
+      {bt:40, stops:[0,0,5,5,25],   total:35, group:'O', beyondRule:true},
+      {bt:45, stops:[0,0,5,10,25],  total:40, group:'Z', star:true, beyondRule:true},
+      {bt:50, stops:[0,5,10,25,40], total:80, group:'Z', star:true, beyondRule:true}
+    ], rnt:{A:5,B:5,C:10,D:10,E:15,F:15,G:20,H:20,I:25,J:25,K:30,L:30,M:35,N:40,O:40,Z:45}},
+
+    {depth:39, rows:[
+      {bt:5,  stops:[0,0,0,0,0],    total:0,  group:'C'},
+      {bt:10, stops:[0,0,0,0,0],    total:0,  group:'F'},
+      {bt:15, stops:[0,0,0,0,5],    total:5,  group:'G'},
+      {bt:20, stops:[0,0,0,5,5],    total:10, group:'I'},
+      {bt:25, stops:[0,0,0,5,10],   total:15, group:'K'},
+      {bt:30, stops:[0,0,0,5,20],   total:25, group:'M'},
+      {bt:35, stops:[0,0,5,5,20],   total:30, group:'O', star:true, beyondRule:true},
+      {bt:40, stops:[0,0,5,10,25],  total:40, group:'Z', star:true, beyondRule:true},
+      {bt:45, stops:[0,5,10,25,40], total:80, group:'Z', star:true, beyondRule:true}
+    ], rnt:{A:5,B:5,C:10,D:10,E:15,F:15,G:20,H:20,I:20,J:25,K:25,L:30,M:30,N:35,O:35,Z:40}},
+
+    {depth:42, rows:[
+      {bt:5,  stops:[0,0,0,0,0],   total:0,  group:'C'},
+      {bt:10, stops:[0,0,0,0,5],   total:5,  group:'E'},
+      {bt:15, stops:[0,0,0,5,5],   total:10, group:'H'},
+      {bt:20, stops:[0,0,0,5,10],  total:15, group:'J'},
+      {bt:25, stops:[0,0,0,5,15],  total:20, group:'L'},
+      {bt:30, stops:[0,0,5,5,20],  total:30, group:'N'},
+      {bt:35, stops:[0,5,10,15,35],total:65, group:'O', star:true, beyondRule:true},
+      {bt:40, stops:[0,5,15,20,40],total:80, group:'Z', star:true, beyondRule:true}
+    ], rnt:{A:5,B:5,C:10,D:10,E:10,F:15,G:15,H:20,I:20,J:25,K:25,L:25,M:30,N:30,O:35,Z:35}},
+
+    {depth:45, rows:[
+      {bt:10, stops:[0,0,0,0,5],   total:5,  group:'F'},
+      {bt:15, stops:[0,0,0,5,5],   total:10, group:'H'},
+      {bt:20, stops:[0,0,0,5,15],  total:20, group:'K'},
+      {bt:25, stops:[0,0,5,5,20],  total:30, group:'M'},
+      {bt:30, stops:[0,0,5,10,25], total:40, group:'O', star:true, beyondRule:true},
+      {bt:35, stops:[0,5,15,20,40],total:80, group:'Z', star:true, beyondRule:true}
+    ], rnt:{A:5,B:5,C:10,D:10,E:10,F:15,G:15,H:15,I:20,J:20,K:25,L:25,M:30,N:30,O:30,Z:35}},
+
+    {depth:48, rows:[
+      {bt:10, stops:[0,0,0,5,5],   total:10, group:'F'},
+      {bt:15, stops:[0,0,0,5,10],  total:15, group:'I'},
+      {bt:20, stops:[0,0,5,5,15],  total:25, group:'L'},
+      {bt:25, stops:[0,0,5,10,20], total:35, group:'N'},
+      {bt:30, stops:[0,5,5,10,25], total:45, group:'O', star:true, beyondRule:true}
+    ], rnt:{A:5,B:5,C:5,D:10,E:10,F:15,G:15,H:15,I:20,J:20,K:20,L:25,M:25,N:30,O:30,Z:30}},
+
+    {depth:51, rows:[
+      {bt:10, stops:[0,0,0,5,5],   total:10, group:'G'},
+      {bt:15, stops:[0,0,0,5,10],  total:15, group:'J'},
+      {bt:20, stops:[0,0,5,5,15],  total:25, group:'L'},
+      {bt:25, stops:[0,0,5,10,25], total:40, group:'O', star:true, beyondRule:true},
+      {bt:30, stops:[5,5,15,25,35],total:85, group:'Z', star:true, beyondRule:true}
+    ], rnt:{A:5,B:5,C:5,D:10,E:10,F:10,G:15,H:15,I:15,J:20,K:20,L:20,M:25,N:25,O:30,Z:30}}
+  ],
+
+  /* "Justering av N2 gruppe ved opphold på overflaten."
+     For each group you surfaced with, the UPPER bound of each surface-interval
+     band, in the printed H:MM. Bands run left to right in the document, and the
+     resulting group counts DOWN from the entering group towards A — so a row for
+     group X must hold exactly as many bounds as there are groups from X to A.
+     validateNDBT() enforces that, which is what catches a mis-read column. */
+  surface:{
+    A:['2:20'],
+    B:['1:20','3:40'],
+    C:['1:00','2:10','4:30'],
+    D:['0:50','1:50','3:00','5:20'],
+    E:['0:50','1:40','2:40','4:00','6:20'],
+    F:['0:50','1:40','2:40','3:30','4:50','7:10'],
+    G:['0:50','1:40','2:40','3:30','4:20','5:40','8:00'],
+    H:['0:50','1:40','2:40','3:30','4:20','5:20','6:30','8:50'],
+    I:['0:50','1:40','2:40','3:30','4:20','5:10','6:10','7:20','9:40'],
+    J:['0:50','1:40','2:40','3:30','4:20','5:10','6:10','7:00','8:20','10:40'],
+    K:['0:50','1:40','2:40','3:30','4:20','5:10','6:10','7:00','7:50','9:10','11:30'],
+    L:['0:50','1:40','2:40','3:30','4:20','5:10','6:10','7:00','7:50','8:40','10:00','12:20'],
+    M:['0:50','1:40','2:40','3:30','4:20','5:10','6:10','7:00','7:50','8:40','9:40','10:50','13:10'],
+    N:['0:50','1:40','2:40','3:30','4:20','5:10','6:10','7:00','7:50','8:40','9:30','10:30','11:50','14:10'],
+    O:['0:50','1:40','2:40','3:30','4:20','5:10','6:10','7:00','7:50','8:40','9:30','10:30','11:20','12:40','15:00'],
+    Z:['0:50','1:40','2:40','3:30','4:20','5:10','6:10','7:00','7:50','8:40','9:30','10:30','11:20','12:10','13:30','15:50']
+  }
+};
+
+function hhmm(s){ var p=String(s).split(':'); return (+p[0])*60 + (+p[1]); }
+function gIndex(g){ return GROUPS.indexOf(g); }
+
+/* Structural check on the transcription. Anything inconsistent leaves the
+   tables switched off rather than answering from half-read data. */
+function validateNDBT(){
+  var problems=[], i, j, g, row;
+  for(i=0;i<GROUPS.length;i++){
+    g=GROUPS[i];
+    var bounds=NDBT.surface[g];
+    if(!bounds){ problems.push('surface row missing for '+g); continue; }
+    if(bounds.length!==i+1) problems.push('surface row '+g+' has '+bounds.length+' bands, expected '+(i+1));
+    for(j=1;j<bounds.length;j++)
+      if(hhmm(bounds[j])<=hhmm(bounds[j-1])) problems.push('surface row '+g+' bands not ascending at '+bounds[j]);
+  }
+  for(i=0;i<NDBT.standard.length;i++){
+    var page=NDBT.standard[i];
+    if(i>0 && page.depth<=NDBT.standard[i-1].depth) problems.push('depth pages out of order at '+page.depth);
+    for(j=0;j<page.rows.length;j++){
+      row=page.rows[j];
+      if(j>0 && row.bt<=page.rows[j-1].bt) problems.push(page.depth+'m bottom times not ascending at '+row.bt);
+      if(gIndex(row.group)<0) problems.push(page.depth+'m row '+row.bt+' has unknown group '+row.group);
+      var sum=0; for(var k=0;k<row.stops.length;k++) sum+=row.stops[k];
+      if(sum!==row.total) problems.push(page.depth+'m row '+row.bt+' stops sum to '+sum+', printed total is '+row.total);
+    }
+    /* An RNT footer row must start at A and run contiguously, ascending. It may
+       stop short — the 6 m page ends at K — but it may not have holes in it. */
+    var last=null, ended=false;
+    for(j=0;j<GROUPS.length;j++){
+      var v=page.rnt[GROUPS[j]];
+      if(typeof v==='number'){
+        if(ended) problems.push(page.depth+'m RNT row resumes after a gap at '+GROUPS[j]);
+        if(last!==null && v<last) problems.push(page.depth+'m RNT row not ascending at '+GROUPS[j]);
+        last=v;
+      } else ended=true;
+    }
+    if(last===null) problems.push(page.depth+'m RNT row is empty');
+  }
+  NDBT.problems=problems;
+  NDBT.loaded=problems.length===0;
+  return problems;
+}
+
+/* Smallest transcribed page at or beyond this depth ("dybder ikke større enn"). */
+function ndbtPage(depth){
+  var best=null;
+  for(var i=0;i<NDBT.standard.length;i++){
+    var pg=NDBT.standard[i];
+    if(depth<=pg.depth && (!best || pg.depth<best.depth)) best=pg;
+  }
+  return best;
+}
+
+/* Group after `si` minutes on the surface, entering with `group`.
+   Returns {group, note}: group null when the diver is clean again, or when
+   the interval is too short for the tables to treat it as a separate dive. */
+function surfaceAdjust(group, si){
+  if(!NDBT.loaded || !group) return {group:null, note:'no-tables'};
+  if(si < NDBT.minSurfaceMin) return {group:group, note:'too-short'};
+  var bounds=NDBT.surface[group], gi=gIndex(group);
+  for(var i=0;i<bounds.length;i++)
+    if(si <= hhmm(bounds[i])) return {group:GROUPS[gi-i], note:'ok'};
+  /* Past the row's last band, which ends at group A: the diver is off the
+     surface table and starts the next dive without a group. */
+  return {group:null, note:'clean'};
+}
+
+/* Group reached after a dive, entering with `startGroup`.
+   Returns {group, note, rnt, row} — note explains every null. */
+function diveGroup(depth, bt, startGroup){
+  if(!NDBT.loaded) return {group:null, note:'no-tables'};
+  if(!depth || !bt) return {group:null, note:'incomplete'};
+  if(depth <= NDBT.floorDepth) return {group:null, note:'depth-uncovered'};
+  var page=ndbtPage(depth);
+  if(!page) return {group:null, note:'too-deep'};
+  var rnt=0;
+  if(startGroup){
+    rnt=page.rnt[startGroup];
+    if(typeof rnt!=='number') return {group:null, note:'no-rnt'};
+  }
+  var total=bt+rnt;
+  for(var i=0;i<page.rows.length;i++)
+    if(total <= page.rows[i].bt)
+      return {group:page.rows[i].group, note:'ok', rnt:rnt, row:page.rows[i], page:page};
+  return {group:null, note:'beyond-table', rnt:rnt, page:page};
+}
+
+validateNDBT();
+
+/* ---------------- billing periods ---------------- */
+function cycleDay(){ return Math.min(28, Math.max(1, num(settings.cycleStart)||16)); }
+function periodOf(dateISO){
+  var cs=cycleDay(), d=parseISO(dateISO), y=d.getFullYear(), m=d.getMonth();
+  if(d.getDate() < cs){ m--; if(m<0){ m=11; y--; } }
+  return periodFrom(y,m);
+}
+function periodFrom(y,m){
+  var cs=cycleDay(), s=new Date(y,m,cs), e=new Date(y,m+1,cs);
+  e.setDate(e.getDate()-1);
+  return {start:s,end:e};
+}
+var offset=0;                                   /* 0 = current period */
+function activePeriod(){
+  var base=periodOf(todayISO());
+  return periodFrom(base.start.getFullYear(), base.start.getMonth()+offset);
+}
+function periodLabel(p){
+  var a=p.start, b=p.end;
+  var left = a.getDate()+' '+MON[a.getMonth()] + (a.getFullYear()!==b.getFullYear()?' '+a.getFullYear():'');
+  return left+' – '+b.getDate()+' '+MON[b.getMonth()]+' '+b.getFullYear();
+}
+function inPeriod(e,p){
+  if(!e.date) return false;
+  return e.date >= iso(p.start) && e.date <= iso(p.end);
+}
+function periodEntries(){
+  var p=activePeriod();
+  return entries.filter(function(e){ return inPeriod(e,p); })
+                .sort(function(a,b){ return a.date<b.date?1:a.date>b.date?-1:0; });
+}
+
+/* ---------------- flat dive log ---------------- */
+/* Dives live inside shifts, but the dive log needs them as one chronological
+   series so surface intervals and repetitive groups chain across shifts. */
+function diveClock(entry,d){
+  var base=parseISO(entry.date), a=(d.in||'').split(':'), b=(d.out||'').split(':');
+  if(a.length<2||b.length<2) return null;
+  var inDT=new Date(base.getFullYear(),base.getMonth(),base.getDate(),+a[0],+a[1]);
+  var outDT=new Date(base.getFullYear(),base.getMonth(),base.getDate(),+b[0],+b[1]);
+  if(outDT<=inDT) outDT.setDate(outDT.getDate()+1);      /* dive ran past midnight */
+  return {inDT:inDT,outDT:outDT};
+}
+function flatDives(){
+  var out=[];
+  entries.forEach(function(e){
+    if(!e.dives) return;
+    e.dives.forEach(function(d,i){
+      var c=diveClock(e,d);
+      if(!c) return;
+      out.push({
+        entryId:e.id, idx:i, date:e.date, job:e.job||'', site:e.site||'',
+        task:d.task||'', depth:num(d.depth), in:d.in, out:d.out,
+        mins:minsBetween(d.in,d.out), inDT:c.inDT, outDT:c.outDT
+      });
+    });
+  });
+  out.sort(function(a,b){ return a.inDT-b.inDT; });       /* oldest first, to chain forwards */
+
+  var prev=null;
+  out.forEach(function(dv){
+    if(!prev){
+      dv.si=null; dv.startGroup=null; dv.seriesStart=true; dv.siNote='first';
+    } else {
+      dv.si=Math.round((dv.inDT-prev.outDT)/60000);
+      if(dv.si<0) dv.si=0;                                /* overlapping entries: treat as none */
+      var adj=surfaceAdjust(prev.group, dv.si);
+      dv.startGroup=adj.group;
+      dv.siNote=adj.note;
+      /* A diver who has off-gassed past the end of their row starts clean again. */
+      dv.seriesStart = adj.note==='clean';
+    }
+    var res=diveGroup(dv.depth, dv.mins, dv.startGroup);
+    dv.group=res.group; dv.note=res.note; dv.rnt=res.rnt; dv.row=res.row;
+    prev=dv;
+  });
+  return out;
+}
+
+/* State after the most recent dive: the highest N2 group of the 24 hours
+   ending with it, which is what the flying and altitude tables key on. */
+function postDiveStatus(){
+  var all=flatDives();
+  if(!all.length) return null;
+  var last=all[all.length-1];
+  var from=new Date(last.outDT.getTime() - 24*3600*1000);
+  var top=-1, ungrouped=false, n=0;
+  all.forEach(function(d){
+    if(d.outDT < from) return;
+    n++;
+    if(!d.group){ ungrouped=true; return; }
+    var i=gIndex(d.group);
+    if(i>top) top=i;
+  });
+  var group = top>=0 ? GROUPS[top] : null;
+  var hours = ungrouped ? NDBT.flyingNoGroupHours
+                        : (group && NDBT.loaded ? NDBT.flying[group] : null);
+  if(!ungrouped && hours==null) hours=NDBT.flyingNoGroupHours;   /* no group assigned */
+  return {
+    last:last, group:group, ungrouped:ungrouped, dives:n,
+    flyHours:hours,
+    clearAt:new Date(last.outDT.getTime() + hours*3600*1000)
+  };
+}
+/* Each band's required wait, measured from the end of the last dive — so a wait
+   that has already elapsed reads as clear rather than as advice to keep waiting. */
+function altitudeAdvice(st){
+  var now=new Date();
+  return NDBT.altitude.map(function(b){
+    var need;
+    if(st.ungrouped || !st.group) need=NDBT.altitudeNoGroupHours;
+    else if(gIndex(st.group) <= gIndex(b.none)) need=0;
+    else if(gIndex(st.group) <= gIndex(b.after3h)) need=3;
+    else need=b.hours;
+    var readyAt=new Date(st.last.outDT.getTime() + need*3600000);
+    return {band:b.band, hours:need, ready:now>=readyAt};
+  });
+}
+
+/* ---------------- rendering: log ---------------- */
+function totals(list){
+  var t={worked:0,dive:0,dives:0,days:{},depth:0,bill:0,standby:0,travel:0,jobs:{}};
+  list.forEach(function(e){
+    var w=workedMins(e)/60, dm=diveMins(e);
+    t.worked+=w; t.dive+=dm; t.dives+=diveCount(e);
+    t.standby+=num(e.standby); t.travel+=num(e.travel);
+    t.bill+=billableH(e);
+    var d=maxDepth(e); if(d>t.depth) t.depth=d;
+    if(e.date) t.days[e.date]=1;
+    var j=(e.job||'Unassigned').trim()||'Unassigned';
+    t.jobs[j]=(t.jobs[j]||0)+billableH(e);
+  });
+  return t;
+}
+
+function renderLog(){
+  var p=activePeriod(), list=periodEntries(), t=totals(list);
+
+  document.getElementById('cycleTick').textContent = cycleDay()+' → '+(cycleDay()-1||'end');
+  document.getElementById('pRange').textContent = periodLabel(p);
+  document.getElementById('pLabel').textContent =
+    offset===0 ? 'Current period' : (offset<0 ? 'Closed period' : 'Upcoming period');
+  document.getElementById('pNext').disabled = offset>=1;
+
+  document.getElementById('tWorked').textContent = dec(t.worked);
+  document.getElementById('tWorkedHm').textContent = hm(t.worked*60);
+  document.getElementById('tDive').textContent = dec(t.dive/60);
+  document.getElementById('tDiveHm').textContent = t.dive? hm(t.dive) : 'no dives';
+  document.getElementById('tDives').textContent = t.dives;
+  document.getElementById('tDays').textContent = Object.keys(t.days).length;
+  document.getElementById('tDepth').textContent = t.depth? t.depth+settings.unit : '—';
+  document.getElementById('tBill').textContent = dec(t.bill);
+
+  /* hours by client */
+  var jobs=Object.keys(t.jobs).map(function(k){return {n:k,h:t.jobs[k]};})
+              .sort(function(a,b){return b.h-a.h;});
+  var sec=document.getElementById('jobSec');
+  if(jobs.length>1){
+    sec.hidden=false;
+    var top=jobs[0].h||1;
+    document.getElementById('jobBars').innerHTML = jobs.map(function(j){
+      return '<div class="bar-row"><span class="nm">'+esc(j.n)+'</span>'+
+             '<span class="hr">'+dec(j.h)+'</span>'+
+             '<span class="track"><i style="width:'+Math.max(2,(j.h/top)*100)+'%"></i></span></div>';
+    }).join('');
+  } else sec.hidden=true;
+
+  /* shifts */
+  document.getElementById('daysHead').textContent = list.length? 'Shifts · '+list.length : 'Shifts';
+  var host=document.getElementById('dayList');
+  if(!list.length){
+    host.innerHTML='<div class="empty"><b>Nothing logged yet</b><p>Tap the amber <b style="display:inline">+</b> to walk through a shift one question at a time.</p></div>';
+    return;
+  }
+  host.innerHTML = list.map(function(e){
+    var d=parseISO(e.date), dm=diveMins(e), dn=diveCount(e), dep=maxDepth(e);
+    var tags='';
+    if(dn) tags+='<span class="tag dive">'+dn+' dive'+(dn>1?'s':'')+'</span>';
+    if(dep) tags+='<span class="tag dive">'+dep+settings.unit+'</span>';
+    if(e.lunch) tags+='<span class="tag">−'+dec(lunchMins(e)/60)+' lunch</span>';
+    if(num(e.standby)) tags+='<span class="tag">standby '+dec(num(e.standby))+'</span>';
+    if(num(e.travel)) tags+='<span class="tag">travel '+dec(num(e.travel))+'</span>';
+    if(e.notes) tags+='<span class="tag">note</span>';
+    return '<button class="day" data-id="'+e.id+'">'+
+      '<span class="dstamp"><span class="d">'+pad(d.getDate())+'</span><span class="m">'+MON[d.getMonth()]+'</span></span>'+
+      '<span class="dmain"><span class="j">'+esc(e.job||'Unassigned')+'</span>'+
+        '<span class="s">'+esc(e.site||'')+(e.site&&e.start?' · ':'')+
+        (e.start&&e.end?esc(e.start)+'–'+esc(e.end):'')+'</span></span>'+
+      '<span class="dnum"><span class="w">'+dec(workedMins(e)/60)+'</span>'+
+        '<span class="b'+(dm?'':' none')+'">'+(dm?hm(dm):'—')+'</span></span>'+
+      (tags?'<span class="chipline">'+tags+'</span>':'')+
+    '</button>';
+  }).join('');
+}
+
+/* ---------------- rendering: dive log ---------------- */
+var diveScope='period';
+function siText(m){
+  if(m==null) return '';
+  if(m<60) return m+' min on surface';
+  var h=Math.floor(m/60), r=m%60;
+  if(h>=24) return Math.floor(h/24)+'d '+(h%24)+'h on surface';
+  return h+'h '+pad(r)+'m on surface';
+}
+/* The document marks some rows with * and draws a heavy rule across each page.
+   They are not the same marker — on the 33 and 36 m pages the first row below
+   the rule carries no star — so both are reported as printed, without being
+   given a meaning the transcribed pages do not state. */
+function rowMarks(row){
+  if(!row) return '';
+  var m=[];
+  if(row.star) m.push('marked *');
+  if(row.beyondRule) m.push('below heavy rule');
+  return m.length? '<span class="why warn">'+m.join(' · ')+'</span>' : '';
+}
+/* Every blank group says why it is blank, so "—" is never mistaken for "clean". */
+var NOTE_TEXT={
+  'no-tables':'tables not loaded',
+  'depth-uncovered':'no table for this depth yet',
+  'too-deep':'deeper than the loaded tables',
+  'beyond-table':'bottom time past the table',
+  'no-rnt':'no residual nitrogen figure',
+  'incomplete':'needs depth and times'
+};
+function visibleDives(){
+  var all=flatDives();
+  if(diveScope==='all') return all.slice().reverse();
+  var p=activePeriod(), s=iso(p.start), e=iso(p.end);
+  return all.filter(function(d){ return d.date>=s && d.date<=e; }).reverse();
+}
+function clockText(d){
+  return pad(d.getDate())+' '+MON[d.getMonth()]+' '+pad(d.getHours())+':'+pad(d.getMinutes());
+}
+function renderFlyPanel(){
+  var host=document.getElementById('flyPanel'), st=postDiveStatus();
+  if(!st){ host.innerHTML=''; return; }
+  var now=new Date(), clear=now>=st.clearAt;
+  var alt=altitudeAdvice(st);
+  host.innerHTML='<div class="fly">'+
+    '<div class="fly-h">'+
+      '<div><span class="k">Highest group, last 24 h</span>'+
+        '<span class="g'+(st.group?'':' none')+'">'+
+        (st.group? esc(st.group)+(st.ungrouped?' + ungrouped dives':'')
+                 : (st.ungrouped?'no group assigned':'—'))+'</span></div>'+
+      '<div class="fly-state"><span class="s '+(clear?'ok':'wait')+'">'+
+        (clear? 'Clear to fly' : st.flyHours+' h before flying')+'</span>'+
+        '<span class="w">'+(clear? 'since '+esc(clockText(st.clearAt))
+                                 : 'from '+esc(clockText(st.clearAt)))+'</span></div>'+
+    '</div>'+
+    '<div class="alt">'+alt.map(function(a){
+      return '<div><span class="b">'+esc(a.band.replace(' moh',''))+'<br>moh</span>'+
+             '<span class="w'+(a.ready?' now':'')+'">'+
+             (a.ready? 'now' : a.hours+' h')+'</span></div>';
+    }).join('')+'</div>'+
+    '<div class="fly-f">after last dive · '+esc(clockText(st.last.outDT))+'</div>'+
+  '</div>';
+}
+function renderDives(){
+  var list=visibleDives(), p=activePeriod();
+  document.getElementById('diveTick').textContent =
+    diveScope==='all' ? 'all time' : periodLabel(p);
+  document.querySelectorAll('#diveScope button').forEach(function(b){
+    b.classList.toggle('on', b.getAttribute('data-scope')===diveScope);
+  });
+
+  renderFlyPanel();
+
+  var depths=NDBT.standard.map(function(pg){ return pg.depth; });
+  var msg = !NDBT.loaded
+    ? '<b>Dive tables not loaded</b>'+
+      (NDBT.problems && NDBT.problems.length
+        ? 'The transcribed tables failed their consistency check, so groups are switched off: '+esc(NDBT.problems[0])+'.'
+        : 'Nitrogen groups stay blank until the NDBT tables are added. Nothing here is estimated.')
+    : NDBT.floorDepth>0
+      ? '<b>Tables loaded for '+(NDBT.floorDepth+1)+'–'+depths[depths.length-1]+' m</b>'+
+        'Nitrogen groups come from the NDBT Standardtabell pages for '+depths.join(', ')+' m. '+
+        'Dives to '+NDBT.floorDepth+' m or shallower show no group, because the page covering them has not been added yet.'
+      : '<b>All depth pages loaded · to '+depths[depths.length-1]+' m</b>'+
+        'Nitrogen groups come from the NDBT Standardtabell pages for '+depths.join(', ')+' m, '+
+        'with residual nitrogen and surface-interval adjustment applied to repetitive dives.';
+  document.getElementById('ndbtBanner').innerHTML =
+    '<div class="banner"><span class="bi">'+
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>'+
+    '</span><span class="bt">'+msg+'</span></div>';
+
+  var host=document.getElementById('diveList');
+  if(!list.length){
+    host.innerHTML='<div class="empty"><b>No dives logged</b><p>'+
+      (diveScope==='period'? 'Nothing in this billing period. Try <b style="display:inline">Every dive</b>, or add a shift with dives.'
+                           : 'Dives you add to a shift appear here as their own log.')+'</p></div>';
+    return;
+  }
+  host.innerHTML=list.map(function(d){
+    var when=parseISO(d.date), grp=d.group||'—';
+    return '<button class="drow" data-eid="'+esc(d.entryId)+'">'+
+        '<span class="dgroup'+(d.group?'':' none')+'" title="Nitrogen group">'+esc(grp)+'</span>'+
+        '<span class="dbody">'+
+          '<span class="t'+(d.task?'':' untitled')+'">'+esc(d.task||'No task recorded')+'</span>'+
+          '<span class="m">'+pad(when.getDate())+' '+MON[when.getMonth()]+' · '+esc(d.in)+'–'+esc(d.out)+'</span>'+
+          '<span class="c">'+esc([d.job,d.site].filter(Boolean).join(' · '))+'</span>'+
+          (d.group||d.note==='ok' ? '' :
+            '<span class="why">'+esc(NOTE_TEXT[d.note]||'no group')+'</span>')+
+          (d.rnt? '<span class="why teal">+'+d.rnt+' min residual nitrogen'+
+                  (d.startGroup? ' (entered group '+esc(d.startGroup)+')':'')+'</span>' : '')+
+          rowMarks(d.row)+
+        '</span>'+
+        '<span class="dright">'+
+          '<span class="dp">'+(d.depth? d.depth+settings.unit : '—')+'</span>'+
+          '<span class="bt">'+hm(d.mins)+'</span>'+
+        '</span>'+
+      '</button>'+
+      /* The list runs newest-first, so a dive's preceding surface interval is
+         drawn BELOW it — between this dive and the older one it followed. */
+      (d.si!=null? '<div class="si'+(d.seriesStart?' reset':'')+'">'+esc(siText(d.si))+
+        (d.seriesStart?' · new series':'')+'</div>' : '');
+  }).join('');
+}
+
+var DCOLS=['Date','In','Out','Bottom time (min)','Max depth','Task','Client','Site',
+           'Surface interval (min)','Nitrogen group'];
+function divesCSV(list){
+  var rows=[DCOLS.join(',')];
+  list.slice().sort(function(a,b){ return a.inDT-b.inDT; }).forEach(function(d){
+    rows.push([d.date,d.in,d.out,d.mins,d.depth||'',d.task,d.job,d.site,
+               d.si==null?'':d.si, d.group||''].map(q).join(','));
+  });
+  return rows.join('\n');
+}
+
+/* ---------------- wizard ---------------- */
+var STEPS=[
+  {k:'date',  t:'date',    q:'What day was this?',        h:'Shifts that run past midnight still belong to the day they started.'},
+  {k:'job',   t:'text',    q:'Who was it for?',           h:'Client or job name. This is what your period totals get grouped by.', sug:'job', ph:'e.g. Northern Star Marine'},
+  {k:'site',  t:'text',    q:'Where?',                    h:'Vessel, rig, berth or site. Optional.', sug:'site', ph:'e.g. MV Kestrel'},
+  {k:'start', t:'time',    q:'On shift at?',              h:'When you started work — not when you got in the water.'},
+  {k:'end',   t:'time',    q:'Off shift at?',             h:'Crossing midnight is handled for you.'},
+  {k:'dives', t:'dives',   q:'Dives this shift',          h:'Each dive is logged separately in the Dive Log, with its own depth, task and times.'},
+  {k:'extra', t:'extra',   q:'Standby and travel',        h:'Billable hours outside the main shift. Leave at zero if not applicable.'},
+  {k:'notes', t:'textarea',q:'Anything to note?',         h:'Conditions, tasks, equipment, incidents. Optional.', ph:'Hull inspection, 2kt current, viz 3m…'},
+  {k:'review',t:'review',  q:'Look right?',               h:'Check it over, then save to your log.'}
+];
+var step=0, draft=null, editing=null;
+
+function blank(){
+  return {id:uid(), date:todayISO(), job:'', site:'', start:'', end:'',
+          dives:[], standby:'', travel:'', notes:'', lunch:false};
+}
+function suggestions(field){
+  var seen={}, out=[];
+  for(var i=entries.length-1;i>=0 && out.length<6;i--){
+    var v=(entries[i][field]||'').trim();
+    if(v && !seen[v.toLowerCase()]){ seen[v.toLowerCase()]=1; out.push(v); }
+  }
+  return out;
+}
+
+function openWizard(id){
+  editing = id||null;
+  if(id){
+    var f=entries.filter(function(e){return e.id===id;})[0];
+    draft = JSON.parse(JSON.stringify(f));
+    if(!draft.dives) draft.dives=[];
+  } else draft = blank();
+  step=0;
+  show('add');
+  renderStep(true);
+}
+
+function renderRail(){
+  document.getElementById('railFill').style.height = (step/(STEPS.length-1)*100)+'%';
+  var ticks='';
+  for(var i=0;i<STEPS.length;i++){
+    var cls = i<step?'done':(i===step?'now':'');
+    ticks+='<span class="tk '+cls+'" style="top:'+(i/(STEPS.length-1)*100)+'%"></span>';
+  }
+  document.getElementById('railTicks').innerHTML=ticks;
+}
+
+function renderStep(animate){
+  var s=STEPS[step], host=document.getElementById('slot'), html='';
+  document.getElementById('stepNo').textContent=step+1;
+  document.getElementById('stepTot').textContent=STEPS.length;
+  renderRail();
+
+  html+='<h2 class="q">'+esc(s.q)+'</h2><p class="hint">'+esc(s.h)+'</p>';
+
+  if(s.t==='date'){
+    html+='<input class="fld" type="date" id="f" value="'+esc(draft.date)+'">';
+  }
+  else if(s.t==='text'||s.t==='textarea'){
+    html += s.t==='textarea'
+      ? '<textarea class="fld" id="f" placeholder="'+esc(s.ph||'')+'">'+esc(draft[s.k]||'')+'</textarea>'
+      : '<input class="fld" type="text" id="f" autocomplete="off" placeholder="'+esc(s.ph||'')+'" value="'+esc(draft[s.k]||'')+'">';
+    if(s.sug){
+      var sg=suggestions(s.sug);
+      if(sg.length) html+='<div class="sugs">'+sg.map(function(v){
+        return '<button class="sug" data-sug="'+esc(v)+'">'+esc(v)+'</button>';}).join('')+'</div>';
+    }
+  }
+  else if(s.t==='time'){
+    html+='<input class="fld" type="time" id="f" value="'+esc(draft[s.k]||'')+'">';
+    if(s.k==='end'){
+      html+='<button class="checkline'+(draft.lunch?' on':'')+'" id="lunchToggle" type="button" aria-pressed="'+(draft.lunch?'true':'false')+'">'+
+        '<span class="box"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>'+
+        '<span class="cl">Unpaid lunch<small>Takes '+breakMins()+' min off the hours billed</small></span></button>';
+      html+='<div class="calc"><span class="k">Hours worked</span><span class="v">'+
+            (draft.end? dec(workedMins(draft)/60)+'  ·  '+hm(workedMins(draft)) : '—')+'</span></div>';
+    }
+  }
+  else if(s.t==='dives'){
+    html+='<div class="dives" id="diveList">'+draft.dives.map(function(d,i){
+      var m=minsBetween(d.in,d.out);
+      return '<div class="dive"><div class="dive-h"><span class="n">Dive '+(i+1)+'</span>'+
+        '<button class="rm" data-rmdive="'+i+'">Remove</button></div>'+
+        '<div class="dgrid">'+
+          '<label><span class="mlbl">In</span><input class="fld sm" type="time" data-dv="in" data-i="'+i+'" value="'+esc(d.in||'')+'"></label>'+
+          '<label><span class="mlbl">Out</span><input class="fld sm" type="time" data-dv="out" data-i="'+i+'" value="'+esc(d.out||'')+'"></label>'+
+          '<label class="full"><span class="mlbl">Max depth ('+settings.unit+')</span><input class="fld sm" type="number" inputmode="decimal" step="0.1" min="0" data-dv="depth" data-i="'+i+'" value="'+esc(d.depth||'')+'"></label>'+
+          '<label class="full"><span class="mlbl">Worked on</span><input class="fld sm" type="text" autocomplete="off" placeholder="e.g. anode replacement" data-dv="task" data-i="'+i+'" value="'+esc(d.task||'')+'"></label>'+
+        '</div>'+(m?'<div class="dur">'+hm(m)+'</div>':'')+'</div>';
+    }).join('')+'</div>';
+    html+='<div style="height:9px"></div><button class="addd" id="addDive">+ Add a dive</button>';
+    var tot=diveMins(draft);
+    html+='<div class="calc"><span class="k">Total bottom time</span><span class="v teal">'+
+          (tot? dec(tot/60)+'  ·  '+hm(tot) : '—')+'</span></div>';
+  }
+  else if(s.t==='extra'){
+    html+='<div class="dgrid">'+
+      '<label><span class="mlbl">Standby / tender (hrs)</span><input class="fld" type="number" inputmode="decimal" step="0.25" min="0" id="f" data-x="standby" value="'+esc(draft.standby||'')+'" placeholder="0"></label>'+
+      '<label><span class="mlbl">Travel (hrs)</span><input class="fld" type="number" inputmode="decimal" step="0.25" min="0" data-x="travel" value="'+esc(draft.travel||'')+'" placeholder="0"></label>'+
+      '</div>';
+    html+='<div class="calc"><span class="k">Total billable</span><span class="v">'+dec(billableH(draft))+'</span></div>';
+  }
+  else if(s.t==='review'){
+    var w=workedMins(draft), dm=diveMins(draft), dn=diveCount(draft), dep=maxDepth(draft);
+    var d=parseISO(draft.date);
+    var row=function(k,v,cls){ return '<div class="rev-r"><span class="k">'+k+'</span><span class="v '+(cls||'')+'">'+v+'</span></div>'; };
+    html+='<div class="rev">'+
+      row('Date', d.getDate()+' '+MON[d.getMonth()]+' '+d.getFullYear())+
+      row('Client', esc(draft.job||'—'))+
+      (draft.site? row('Site', esc(draft.site)) : '')+
+      row('Shift', (draft.start&&draft.end)? esc(draft.start)+' – '+esc(draft.end) : '—')+
+      (draft.lunch? row('Unpaid lunch', '− '+dec(lunchMins(draft)/60), 'num') : '')+
+      row('Hours worked', dec(w/60), 'num')+
+      row('Dives', dn||'—', 'num teal')+
+      row('Bottom time', dm? dec(dm/60)+' · '+hm(dm) : '—', 'num teal')+
+      (dep? row('Max depth', dep+settings.unit, 'num teal') : '')+
+      (num(draft.standby)? row('Standby', dec(num(draft.standby)), 'num') : '')+
+      (num(draft.travel)? row('Travel', dec(num(draft.travel)), 'num') : '')+
+      row('Total billable', dec(billableH(draft)), 'num')+
+      (draft.notes? row('Notes', esc(draft.notes)) : '')+
+    '</div>';
+    html+='<div style="margin-top:12px;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)">Lands in '+esc(periodLabel(periodOf(draft.date)))+'</div>';
+    if(editing) html+='<div style="height:12px"></div><button class="btn danger" id="delEntry" style="width:100%">Delete this shift</button>';
+  }
+
+  host.className='slot'+(animate?' anim':'');
+  host.innerHTML=html;
+
+  document.getElementById('wPrev').disabled = step===0;
+  document.getElementById('wNext').textContent = (step===STEPS.length-1) ? (editing?'Save changes':'Save shift') : 'Next';
+
+  var f=document.getElementById('f');
+  if(f && s.t!=='dives' && window.matchMedia('(min-width:700px)').matches) f.focus();
+}
+
+/* capture current step's input into the draft */
+function capture(){
+  var s=STEPS[step], f=document.getElementById('f');
+  if(s.t==='date'){ if(f&&f.value) draft.date=f.value; }
+  else if(s.t==='text'||s.t==='textarea'){ if(f) draft[s.k]=f.value.trim(); }
+  else if(s.t==='time'){ if(f) draft[s.k]=f.value; }
+  else if(s.t==='extra'){
+    document.querySelectorAll('[data-x]').forEach(function(el){ draft[el.getAttribute('data-x')]=el.value; });
+  }
+}
+function validate(){
+  var s=STEPS[step];
+  if(s.k==='date' && !draft.date){ toast('Pick a date to continue'); return false; }
+  if(s.k==='job' && !draft.job){ toast('Add a client or job name'); return false; }
+  if(s.k==='start' && !draft.start){ toast('Enter your shift start time'); return false; }
+  if(s.k==='end' && !draft.end){ toast('Enter your shift end time'); return false; }
+  return true;
+}
+function commit(){
+  var i, found=-1;
+  for(i=0;i<entries.length;i++) if(entries[i].id===draft.id){ found=i; break; }
+  if(found>=0) entries[found]=draft; else entries.push(draft);
+  save(K_E,entries);
+  var p=periodOf(draft.date), cur=periodOf(todayISO());
+  offset = (p.start.getFullYear()-cur.start.getFullYear())*12 + (p.start.getMonth()-cur.start.getMonth());
+  draft=null; editing=null;
+  show('log'); renderLog();
+  toast(found>=0?'Shift updated':'Shift saved');
+}
+
+/* ---------------- CSV ---------------- */
+var COLS=['Date','Client','Site','On shift','Off shift','Unpaid lunch (h)','Hours worked','Dives',
+          'Bottom time (min)','Bottom time (h)','Max depth','Standby (h)','Travel (h)',
+          'Total billable (h)','Notes'];
+function q(v){ v=String(v==null?'':v); return /[",\n]/.test(v)? '"'+v.replace(/"/g,'""')+'"' : v; }
+function toCSV(list){
+  var rows=[COLS.join(',')];
+  list.slice().sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;}).forEach(function(e){
+    var dm=diveMins(e);
+    rows.push([e.date,e.job||'',e.site||'',e.start||'',e.end||'',
+      dec(lunchMins(e)/60), dec(workedMins(e)/60),
+      diveCount(e),dm,dec(dm/60),maxDepth(e)||'',dec(num(e.standby)),dec(num(e.travel)),
+      dec(billableH(e)),e.notes||''].map(q).join(','));
+  });
+  return rows.join('\n');
+}
+function copy(text,label){
+  function fallback(){
+    var ta=document.createElement('textarea');
+    ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    var ok=false; try{ ok=document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta);
+    toast(ok? label+' copied' : 'Select the CSV above to copy it');
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){ toast(label+' copied'); }, fallback);
+  } else fallback();
+}
+
+/* ---------------- import ---------------- */
+function splitRow(line,delim){
+  var out=[],cur='',inQ=false,i,c;
+  for(i=0;i<line.length;i++){
+    c=line[i];
+    if(inQ){
+      if(c==='"'){ if(line[i+1]==='"'){cur+='"';i++;} else inQ=false; }
+      else cur+=c;
+    } else if(c==='"') inQ=true;
+    else if(c===delim){ out.push(cur); cur=''; }
+    else cur+=c;
+  }
+  out.push(cur);
+  return out.map(function(s){return s.trim();});
+}
+var ALIAS={
+  date:['date','day','shift date'],
+  job:['job','client','customer','project','contract','company'],
+  site:['site','vessel','location','rig','boat','platform','place'],
+  start:['on shift','start','start time','shift start','time in','time on','in'],
+  end:['off shift','end','end time','shift end','time out','time off','out'],
+  worked:['hours worked','hours','worked','total hours','hrs','man hours'],
+  diveIn:['dive in','in water','descent','bottom in'],
+  diveOut:['dive out','out water','ascent','bottom out'],
+  diveMin:['bottom time (min)','bottom time','dive time','dive minutes','dive mins','divetime','bt'],
+  dives:['dives','number of dives','no of dives','dive count','no. of dives'],
+  depth:['max depth','depth','maximum depth','msw','fsw','depth (m)'],
+  standby:['standby','standby (h)','tender','stand by','standby hours'],
+  travel:['travel','travel (h)','transit','travel hours'],
+  task:['task','worked on','work','job description','scope','operation'],
+  lunch:['unpaid lunch','lunch','break','unpaid break'],
+  notes:['notes','note','comment','comments','remarks','description']
+};
+/* "yes"/"1"/"0.5"/"60" all mean a lunch was taken; blank, "no" and "0" mean none. */
+function truthy(v){
+  v=String(v||'').trim().toLowerCase();
+  if(!v) return false;
+  if(/^(no|n|false|0|0\.0+|nei)$/.test(v)) return false;
+  return /^(yes|y|true|x|ja|1)$/.test(v) || num(v)>0;
+}
+function normHead(h){ return String(h).toLowerCase().replace(/[_\-]/g,' ').replace(/\s+/g,' ').trim(); }
+/* Exact header matches win outright, so a column like "Worked on" binds to the
+   task field instead of being swallowed by the "worked" prefix of hours-worked.
+   Only then do unclaimed columns fall back to prefix matching. */
+function mapHeaders(cells){
+  var map={}, taken={}, i, k, j, n, names=[];
+  for(k in ALIAS) names.push(k);
+
+  function bind(exact){
+    for(i=0;i<cells.length;i++){
+      if(taken[i]) continue;
+      n=normHead(cells[i]);
+      if(!n) continue;
+      for(var a=0;a<names.length;a++){
+        k=names[a];
+        if(map[k]!==undefined) continue;
+        for(j=0;j<ALIAS[k].length;j++){
+          var al=ALIAS[k][j];
+          if(exact ? n===al : n.indexOf(al)===0){ map[k]=i; taken[i]=1; break; }
+        }
+        if(map[k]!==undefined) break;
+      }
+    }
+  }
+  bind(true);
+  bind(false);
+  return map;
+}
+function normDate(v){
+  v=String(v||'').trim();
+  if(!v) return '';
+  var m=v.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+  if(m) return m[1]+'-'+pad(+m[2])+'-'+pad(+m[3]);
+  m=v.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{2,4})/);        /* D/M/Y */
+  if(m){ var y=+m[3]; if(y<100) y+=2000; return y+'-'+pad(+m[2])+'-'+pad(+m[1]); }
+  var d=new Date(v);
+  return isNaN(d.getTime())? '' : iso(d);
+}
+function normTime(v){
+  v=String(v||'').trim();
+  if(!v) return '';
+  var m=v.match(/^(\d{1,2}):(\d{2})/);
+  if(m) return pad(+m[1])+':'+m[2];
+  m=v.match(/^(\d{3,4})$/);                                    /* 0730 / 730 */
+  if(m){ var s=m[1].length===3?'0'+m[1]:m[1]; return s.slice(0,2)+':'+s.slice(2); }
+  return '';
+}
+function runImport(text){
+  var lines=text.replace(/\r/g,'').split('\n').filter(function(l){return l.trim();});
+  if(lines.length<2){ toast('Paste a header row plus at least one row'); return; }
+  var delim = (lines[0].indexOf('\t')>-1)?'\t':',';
+  var map=mapHeaders(splitRow(lines[0],delim));
+  if(map.date===undefined){ toast('No “Date” column found in that header row'); return; }
+
+  var added=0, skipped=0;
+  for(var i=1;i<lines.length;i++){
+    var c=splitRow(lines[i],delim);
+    var g=(function(cells){ return function(k){ return map[k]===undefined? '' : (cells[map[k]]||''); }; })(c);
+    var date=normDate(g('date'));
+    if(!date){ skipped++; continue; }
+    var e=blank();
+    e.date=date;
+    e.job=g('job'); e.site=g('site');
+    e.start=normTime(g('start')); e.end=normTime(g('end'));
+    if(!(e.start&&e.end) && g('worked')) e.workedOverride=num(g('worked'));
+    e.lunch=truthy(g('lunch'));
+    var di=normTime(g('diveIn')), doo=normTime(g('diveOut'));
+    if(di&&doo) e.dives=[{in:di,out:doo,depth:num(g('depth'))||'',task:g('task')}];
+    else {
+      if(g('diveMin')) e.extraDiveMin=num(g('diveMin'));
+      if(g('depth')) e.depthOverride=num(g('depth'));
+    }
+    var dc=num(g('dives'));
+    if(dc){ e.extraDives = Math.max(0, dc - (e.dives?e.dives.length:0)); }
+    e.standby=g('standby'); e.travel=g('travel'); e.notes=g('notes');
+    entries.push(e); added++;
+  }
+  save(K_E,entries);
+  renderLog(); renderData();
+  toast(added+' shift'+(added===1?'':'s')+' imported'+(skipped?' · '+skipped+' skipped':''));
+}
+
+/* ---------------- data screen ---------------- */
+function renderData(){
+  var p=activePeriod(), list=periodEntries();
+  document.getElementById('expRange').textContent=periodLabel(p);
+  var prev=document.getElementById('csvPrev');
+  prev.textContent = list.length? toCSV(list) : 'No shifts in this period.';
+  document.getElementById('cntAll').textContent=entries.length;
+  document.getElementById('setCycle').value=cycleDay();
+  document.getElementById('setBreak').value=breakMins();
+  document.querySelectorAll('#setUnit button').forEach(function(b){
+    b.classList.toggle('on', b.getAttribute('data-u')===settings.unit);
+  });
+}
+
+/* ---------------- nav + toast ---------------- */
+function show(v){
+  ['log','dives','add','data'].forEach(function(n){
+    document.getElementById('s-'+n).classList.toggle('on', n===v);
+  });
+  document.querySelectorAll('.tab').forEach(function(t){
+    t.classList.toggle('on', t.getAttribute('data-go')===v);
+  });
+  var inWizard = v==='add';
+  document.getElementById('tabbar').style.display = inWizard?'none':'grid';
+  document.getElementById('fabAdd').hidden = inWizard;
+  window.scrollTo(0,0);
+  if(v==='data') renderData();
+  if(v==='log') renderLog();
+  if(v==='dives') renderDives();
+}
+var tt;
+function toast(msg){
+  var el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('on');
+  clearTimeout(tt); tt=setTimeout(function(){ el.classList.remove('on'); },2100);
+}
+
+/* ---------------- events ---------------- */
+document.querySelectorAll('.tab').forEach(function(t){
+  t.addEventListener('click',function(){ show(t.getAttribute('data-go')); });
+});
+document.getElementById('fabAdd').addEventListener('click',function(){ openWizard(null); });
+
+/* dive log */
+document.getElementById('diveScope').addEventListener('click',function(ev){
+  var b=ev.target.closest('[data-scope]'); if(!b) return;
+  diveScope=b.getAttribute('data-scope');
+  renderDives();
+});
+document.getElementById('diveList').addEventListener('click',function(ev){
+  var b=ev.target.closest('.drow'); if(b) openWizard(b.getAttribute('data-eid'));
+});
+document.getElementById('divesExport').addEventListener('click',function(){
+  var list=visibleDives();
+  if(!list.length){ toast('No dives to export'); return; }
+  var csv=divesCSV(list);
+  var name='dive-log_'+(diveScope==='all'? 'all' : iso(activePeriod().start)+'_to_'+iso(activePeriod().end))+'.csv';
+  if(downloads){
+    downloads.save({filename:name,data:csv}).then(function(){ toast('Dive log saved'); },function(err){
+      if(err && err.code==='declined') return;
+      copy(csv,'Dive log');
+    });
+  } else copy(csv,'Dive log');
+});
+document.getElementById('goData').addEventListener('click',function(){ show('data'); });
+document.getElementById('dataBack').addEventListener('click',function(){ show('log'); });
+document.getElementById('pPrev').addEventListener('click',function(){ offset--; renderLog(); });
+document.getElementById('pNext').addEventListener('click',function(){ if(offset<1){offset++; renderLog();} });
+
+document.getElementById('dayList').addEventListener('click',function(ev){
+  var b=ev.target.closest('.day'); if(b) openWizard(b.getAttribute('data-id'));
+});
+
+document.getElementById('wNext').addEventListener('click',function(){
+  capture();
+  if(!validate()) return;
+  if(step===STEPS.length-1){ commit(); return; }
+  step++; renderStep(true);
+});
+document.getElementById('wPrev').addEventListener('click',function(){
+  if(step===0) return;
+  capture(); step--; renderStep(true);
+});
+document.getElementById('wizCancel').addEventListener('click',function(){
+  draft=null; editing=null; show('log');
+});
+
+/* wizard body: delegated interactions */
+document.getElementById('slot').addEventListener('click',function(ev){
+  var t=ev.target;
+  var sug=t.closest('[data-sug]');
+  if(sug){
+    var f=document.getElementById('f');
+    if(f){ f.value=sug.getAttribute('data-sug'); f.focus(); }
+    return;
+  }
+  if(t.closest('#lunchToggle')){
+    capture();
+    draft.lunch=!draft.lunch;
+    if(draft.lunch) draft.lunchMin=breakMins();    /* stamp the length in force right now */
+    renderStep(false);
+    return;
+  }
+  if(t.closest('#addDive')){
+    capture();
+    draft.dives.push({in:'',out:'',depth:'',task:''});
+    renderStep(false);
+    return;
+  }
+  var rm=t.closest('[data-rmdive]');
+  if(rm){
+    draft.dives.splice(+rm.getAttribute('data-rmdive'),1);
+    renderStep(false);
+    return;
+  }
+  if(t.closest('#delEntry')){
+    if(!confirm('Delete this shift? This cannot be undone.')) return;
+    entries=entries.filter(function(e){ return e.id!==draft.id; });
+    save(K_E,entries);
+    draft=null; editing=null;
+    show('log'); toast('Shift deleted');
+  }
+});
+document.getElementById('slot').addEventListener('input',function(ev){
+  var el=ev.target, i=el.getAttribute('data-i');
+  if(el.hasAttribute('data-dv')){
+    draft.dives[+i][el.getAttribute('data-dv')]=el.value;
+    var box=el.closest('.dive'), d=draft.dives[+i], m=minsBetween(d.in,d.out);
+    var dur=box.querySelector('.dur');
+    if(m){
+      if(!dur){ dur=document.createElement('div'); dur.className='dur'; box.appendChild(dur); }
+      dur.textContent=hm(m);
+    } else if(dur) dur.remove();
+    var tot=diveMins(draft), c=document.querySelector('.calc .v.teal');
+    if(c) c.textContent = tot? dec(tot/60)+'  ·  '+hm(tot) : '—';
+  }
+  if(el.hasAttribute('data-x')){
+    draft[el.getAttribute('data-x')]=el.value;
+    var cb=document.querySelector('.calc .v');
+    if(cb) cb.textContent=dec(billableH(draft));
+  }
+  if(el.id==='f' && STEPS[step].k==='end'){
+    draft.end=el.value;
+    var w=minsBetween(draft.start,draft.end), ce=document.querySelector('.calc .v');
+    if(ce) ce.textContent = draft.end? dec(w/60)+'  ·  '+hm(w) : '—';
+  }
+});
+document.getElementById('slot').addEventListener('keydown',function(ev){
+  if(ev.key==='Enter' && ev.target.tagName!=='TEXTAREA'){
+    ev.preventDefault();
+    document.getElementById('wNext').click();
+  }
+});
+
+/* data screen */
+document.getElementById('copyPeriod').addEventListener('click',function(){
+  var l=periodEntries();
+  if(!l.length){ toast('Nothing to export in this period'); return; }
+  copy(toCSV(l),'Period CSV');
+});
+document.getElementById('copyAll').addEventListener('click',function(){
+  if(!entries.length){ toast('No shifts stored yet'); return; }
+  copy(toCSV(entries),'Full log');
+});
+document.getElementById('impRun').addEventListener('click',function(){
+  var ta=document.getElementById('impText');
+  if(!ta.value.trim()){ toast('Paste your rows first'); return; }
+  runImport(ta.value);
+  ta.value='';
+});
+document.getElementById('setCycle').addEventListener('change',function(){
+  var v=Math.min(28,Math.max(1,Math.round(num(this.value))||16));
+  settings.cycleStart=v; this.value=v; save(K_S,settings);
+  offset=0; renderLog(); renderData();
+  toast('Billing cycle starts on the '+v+'th');
+});
+document.getElementById('setBreak').addEventListener('change',function(){
+  var v=Math.min(480,Math.max(0,Math.round(num(this.value))));
+  settings.breakMin=v||60; this.value=breakMins(); save(K_S,settings);
+  renderLog(); renderData();
+  toast('Unpaid lunch set to '+breakMins()+' min');
+});
+document.getElementById('setUnit').addEventListener('click',function(ev){
+  var b=ev.target.closest('[data-u]'); if(!b) return;
+  settings.unit=b.getAttribute('data-u'); save(K_S,settings);
+  renderLog(); renderData();
+});
+document.getElementById('wipe').addEventListener('click',function(){
+  if(!entries.length){ toast('Nothing stored to erase'); return; }
+  if(!confirm('Erase all '+entries.length+' shifts? This cannot be undone.')) return;
+  entries=[]; save(K_E,entries);
+  renderLog(); renderData(); toast('All shifts erased');
+});
+
+/* ---------------- optional: hand the viewer a real .csv file ---------------- */
+/* Available only inside the claude.ai viewer; the copy buttons carry the page otherwise. */
+var downloads=null;
+if(window.claude && typeof window.claude.use==='function'){
+  window.claude.use('downloads').then(function(d){
+    if(!d) return;                                  /* not granted here — leave the button hidden */
+    downloads=d;
+    var b=document.getElementById('saveFile');
+    b.hidden=false;
+    document.getElementById('copyPeriod').classList.add('ghost');
+  }, function(){});
+}
+document.getElementById('saveFile').addEventListener('click',function(){
+  if(!downloads) return;
+  var list=periodEntries();
+  if(!list.length){ toast('Nothing to export in this period'); return; }
+  var p=activePeriod();
+  downloads.save({
+    filename:'bottom-time_'+iso(p.start)+'_to_'+iso(p.end)+'.csv',
+    data:toCSV(list)
+  }).then(function(){
+    toast('CSV saved');
+  },function(err){
+    var c=err && err.code;
+    if(c==='declined') return;                      /* viewer said no — say nothing */
+    if(c==='rate_limited') toast('Hang on a moment, then try again');
+    else if(c==='too_large') toast('That period is too big to save as one file');
+    else toast('Saving files is not available here — use Copy period');
+  });
+});
+
+/* ---------------- offline ---------------- */
+/* Registered only over https on a real origin. Inside the artifact viewer
+   there is no sw.js to fetch, so the promise rejects and is swallowed —
+   the app runs identically either way, just without offline caching. */
+if('serviceWorker' in navigator && window.isSecureContext){
+  window.addEventListener('load',function(){
+    try{ navigator.serviceWorker.register('sw.js').catch(function(){}); }catch(e){}
+  });
+}
+
+/* ---------------- go ---------------- */
+renderLog();
+})();
+</script>
