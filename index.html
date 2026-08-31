@@ -183,6 +183,24 @@ button{cursor:pointer;background:none;border:none;padding:0}
 .dright .dp{display:block;font-size:16px;color:var(--amber);font-weight:500}
 .dright .bt{display:block;font-size:11px;color:var(--teal);margin-top:2px}
 
+/* after the last dive: flying + altitude */
+.fly{border:1px solid var(--line);border-radius:var(--r);background:var(--deep);overflow:hidden;margin-bottom:13px}
+.fly-h{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line-soft)}
+.fly-h .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);display:block}
+.fly-h .g{font-family:var(--mono);font-size:15px;color:var(--teal);font-weight:600;margin-top:3px}
+.fly-h .g.none{color:var(--dim);font-weight:400;font-size:12px}
+.fly-state{text-align:right}
+.fly-state .s{display:block;font-family:var(--mono);font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.fly-state .s.ok{color:var(--teal)}
+.fly-state .s.wait{color:var(--amber)}
+.fly-state .w{display:block;font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:3px;white-space:nowrap}
+.alt{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--line-soft)}
+.alt div{background:var(--deep);padding:9px 4px;text-align:center}
+.alt .b{font-family:var(--mono);font-size:8px;letter-spacing:.06em;color:var(--dim);display:block;line-height:1.3}
+.alt .w{font-family:var(--mono);font-size:10px;margin-top:4px;display:block;color:var(--amber)}
+.alt .w.now{color:var(--teal)}
+.fly-f{padding:8px 14px;font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);border-top:1px solid var(--line-soft)}
+
 .segwide{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:14px}
 .segwide button{flex:1;padding:9px;font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
 .segwide button.on{background:var(--amber);color:#08202b}
@@ -408,6 +426,7 @@ pre.csv{
         <button data-scope="period" class="on">This period</button>
         <button data-scope="all">Every dive</button>
       </div>
+      <div id="flyPanel"></div>
       <div id="ndbtBanner"></div>
       <div class="dlog" id="diveList"></div>
       <div style="height:110px"></div>
@@ -599,13 +618,71 @@ var NDBT = {
   edition:'NDBT Standardtabell',
   unit:'msw',
   minSurfaceMin:10,             /* under 0:10 the tables do not treat it as a repetitive dive */
-  floorDepth:9,                 /* pages for 9 m and shallower are not transcribed yet */
+  floorDepth:0,                 /* every depth page from 6 m down is transcribed */
+
+  /* "Tid før flyging etter dykking" — minimum hours from the end of the last
+     dive to flying, keyed on the highest N2 group of the last 24 hours.
+     A dive that was never assigned a group requires a 24 h interval. */
+  flying:{A:0,B:0,C:0,D:2,E:5,F:7,G:9,H:11,I:13,J:14,K:16,L:17,M:18,N:19,O:20,Z:21},
+  flyingNoGroupHours:24,
+
+  /* "Forflytning til moderate høyder." Highest N2 group of the last 24 h at or
+     below `none` travels immediately; at or below `after3h` travels once three
+     hours have passed; anything higher waits `hours`. Without a group, wait
+     24 h before going above 250 moh. */
+  altitude:[
+    {band:'250–600 moh',   none:'I', after3h:'L', hours:7},
+    {band:'600–1000 moh',  none:'H', after3h:'J', hours:9},
+    {band:'1000–1250 moh', none:'G', after3h:'I', hours:11},
+    {band:'1250–1500 moh', none:'F', after3h:'H', hours:16},
+    {band:'1500–1750 moh', none:'E', after3h:'G', hours:16}
+  ],
+  altitudeNoGroupHours:24,
 
   /* Each depth page: "Dybder ikke større enn N meter".
      stops are minutes at [15, 12, 9, 6, 3] msw; xs marks the rows below
      the page's heavy rule (exceptional exposure, printed with *).
      rnt is the page's own footer row, "Minutter tillegg til bunntid". */
   standard:[
+    /* The 6 and 9 m pages print no decompression stops at all, and no stars.
+       The 6 m footer row stops at K: the page gives no residual nitrogen
+       figure beyond it, so entering a repetitive 6 m dive in group L or
+       higher returns "no residual nitrogen figure" rather than a group. */
+    {depth:6, rows:[
+      {bt:25,  stops:[0,0,0,0,0], total:0, group:'A'},
+      {bt:45,  stops:[0,0,0,0,0], total:0, group:'B'},
+      {bt:60,  stops:[0,0,0,0,0], total:0, group:'C'},
+      {bt:80,  stops:[0,0,0,0,0], total:0, group:'D'},
+      {bt:105, stops:[0,0,0,0,0], total:0, group:'E'},
+      {bt:135, stops:[0,0,0,0,0], total:0, group:'F'},
+      {bt:165, stops:[0,0,0,0,0], total:0, group:'G'},
+      {bt:205, stops:[0,0,0,0,0], total:0, group:'H'},
+      {bt:240, stops:[0,0,0,0,0], total:0, group:'I'},
+      {bt:255, stops:[0,0,0,0,0], total:0, group:'I', beyondRule:true},
+      {bt:330, stops:[0,0,0,0,0], total:0, group:'J', beyondRule:true},
+      {bt:460, stops:[0,0,0,0,0], total:0, group:'K', beyondRule:true}
+    ], rnt:{A:25,B:45,C:60,D:85,E:105,F:135,G:165,H:205,I:255,J:330,K:460}},
+
+    {depth:9, rows:[
+      {bt:15,  stops:[0,0,0,0,0], total:0, group:'A'},
+      {bt:25,  stops:[0,0,0,0,0], total:0, group:'B'},
+      {bt:40,  stops:[0,0,0,0,0], total:0, group:'C'},
+      {bt:50,  stops:[0,0,0,0,0], total:0, group:'D'},
+      {bt:60,  stops:[0,0,0,0,0], total:0, group:'E'},
+      {bt:75,  stops:[0,0,0,0,0], total:0, group:'F'},
+      {bt:90,  stops:[0,0,0,0,0], total:0, group:'G'},
+      {bt:105, stops:[0,0,0,0,0], total:0, group:'H'},
+      {bt:125, stops:[0,0,0,0,0], total:0, group:'I'},
+      {bt:145, stops:[0,0,0,0,0], total:0, group:'J'},
+      {bt:165, stops:[0,0,0,0,0], total:0, group:'K'},
+      {bt:195, stops:[0,0,0,0,0], total:0, group:'L'},
+      {bt:225, stops:[0,0,0,0,0], total:0, group:'M'},
+      {bt:240, stops:[0,0,0,0,0], total:0, group:'N'},
+      {bt:260, stops:[0,0,0,0,0], total:0, group:'N', beyondRule:true},
+      {bt:305, stops:[0,0,0,0,0], total:0, group:'O', beyondRule:true},
+      {bt:370, stops:[0,0,0,0,0], total:0, group:'Z', beyondRule:true}
+    ], rnt:{A:20,B:30,C:40,D:50,E:65,F:75,G:90,H:110,I:125,J:145,K:170,L:195,M:225,N:260,O:310,Z:370}},
+
     {depth:12, rows:[
       {bt:10,  stops:[0,0,0,0,0],   total:0,  group:'A'},
       {bt:20,  stops:[0,0,0,0,0],   total:0,  group:'B'},
@@ -872,8 +949,18 @@ function validateNDBT(){
       var sum=0; for(var k=0;k<row.stops.length;k++) sum+=row.stops[k];
       if(sum!==row.total) problems.push(page.depth+'m row '+row.bt+' stops sum to '+sum+', printed total is '+row.total);
     }
-    for(j=0;j<GROUPS.length;j++)
-      if(typeof page.rnt[GROUPS[j]]!=='number') problems.push(page.depth+'m RNT row missing group '+GROUPS[j]);
+    /* An RNT footer row must start at A and run contiguously, ascending. It may
+       stop short — the 6 m page ends at K — but it may not have holes in it. */
+    var last=null, ended=false;
+    for(j=0;j<GROUPS.length;j++){
+      var v=page.rnt[GROUPS[j]];
+      if(typeof v==='number'){
+        if(ended) problems.push(page.depth+'m RNT row resumes after a gap at '+GROUPS[j]);
+        if(last!==null && v<last) problems.push(page.depth+'m RNT row not ascending at '+GROUPS[j]);
+        last=v;
+      } else ended=true;
+    }
+    if(last===null) problems.push(page.depth+'m RNT row is empty');
   }
   NDBT.problems=problems;
   NDBT.loaded=problems.length===0;
@@ -1003,6 +1090,46 @@ function flatDives(){
   return out;
 }
 
+/* State after the most recent dive: the highest N2 group of the 24 hours
+   ending with it, which is what the flying and altitude tables key on. */
+function postDiveStatus(){
+  var all=flatDives();
+  if(!all.length) return null;
+  var last=all[all.length-1];
+  var from=new Date(last.outDT.getTime() - 24*3600*1000);
+  var top=-1, ungrouped=false, n=0;
+  all.forEach(function(d){
+    if(d.outDT < from) return;
+    n++;
+    if(!d.group){ ungrouped=true; return; }
+    var i=gIndex(d.group);
+    if(i>top) top=i;
+  });
+  var group = top>=0 ? GROUPS[top] : null;
+  var hours = ungrouped ? NDBT.flyingNoGroupHours
+                        : (group && NDBT.loaded ? NDBT.flying[group] : null);
+  if(!ungrouped && hours==null) hours=NDBT.flyingNoGroupHours;   /* no group assigned */
+  return {
+    last:last, group:group, ungrouped:ungrouped, dives:n,
+    flyHours:hours,
+    clearAt:new Date(last.outDT.getTime() + hours*3600*1000)
+  };
+}
+/* Each band's required wait, measured from the end of the last dive — so a wait
+   that has already elapsed reads as clear rather than as advice to keep waiting. */
+function altitudeAdvice(st){
+  var now=new Date();
+  return NDBT.altitude.map(function(b){
+    var need;
+    if(st.ungrouped || !st.group) need=NDBT.altitudeNoGroupHours;
+    else if(gIndex(st.group) <= gIndex(b.none)) need=0;
+    else if(gIndex(st.group) <= gIndex(b.after3h)) need=3;
+    else need=b.hours;
+    var readyAt=new Date(st.last.outDT.getTime() + need*3600000);
+    return {band:b.band, hours:need, ready:now>=readyAt};
+  });
+}
+
 /* ---------------- rendering: log ---------------- */
 function totals(list){
   var t={worked:0,dive:0,dives:0,days:{},depth:0,bill:0,standby:0,travel:0,jobs:{}};
@@ -1114,6 +1241,33 @@ function visibleDives(){
   var p=activePeriod(), s=iso(p.start), e=iso(p.end);
   return all.filter(function(d){ return d.date>=s && d.date<=e; }).reverse();
 }
+function clockText(d){
+  return pad(d.getDate())+' '+MON[d.getMonth()]+' '+pad(d.getHours())+':'+pad(d.getMinutes());
+}
+function renderFlyPanel(){
+  var host=document.getElementById('flyPanel'), st=postDiveStatus();
+  if(!st){ host.innerHTML=''; return; }
+  var now=new Date(), clear=now>=st.clearAt;
+  var alt=altitudeAdvice(st);
+  host.innerHTML='<div class="fly">'+
+    '<div class="fly-h">'+
+      '<div><span class="k">Highest group, last 24 h</span>'+
+        '<span class="g'+(st.group?'':' none')+'">'+
+        (st.group? esc(st.group)+(st.ungrouped?' + ungrouped dives':'')
+                 : (st.ungrouped?'no group assigned':'—'))+'</span></div>'+
+      '<div class="fly-state"><span class="s '+(clear?'ok':'wait')+'">'+
+        (clear? 'Clear to fly' : st.flyHours+' h before flying')+'</span>'+
+        '<span class="w">'+(clear? 'since '+esc(clockText(st.clearAt))
+                                 : 'from '+esc(clockText(st.clearAt)))+'</span></div>'+
+    '</div>'+
+    '<div class="alt">'+alt.map(function(a){
+      return '<div><span class="b">'+esc(a.band.replace(' moh',''))+'<br>moh</span>'+
+             '<span class="w'+(a.ready?' now':'')+'">'+
+             (a.ready? 'now' : a.hours+' h')+'</span></div>';
+    }).join('')+'</div>'+
+    '<div class="fly-f">after last dive · '+esc(clockText(st.last.outDT))+'</div>'+
+  '</div>';
+}
 function renderDives(){
   var list=visibleDives(), p=activePeriod();
   document.getElementById('diveTick').textContent =
@@ -1122,15 +1276,21 @@ function renderDives(){
     b.classList.toggle('on', b.getAttribute('data-scope')===diveScope);
   });
 
+  renderFlyPanel();
+
   var depths=NDBT.standard.map(function(pg){ return pg.depth; });
   var msg = !NDBT.loaded
     ? '<b>Dive tables not loaded</b>'+
       (NDBT.problems && NDBT.problems.length
         ? 'The transcribed tables failed their consistency check, so groups are switched off: '+esc(NDBT.problems[0])+'.'
         : 'Nitrogen groups stay blank until the NDBT tables are added. Nothing here is estimated.')
-    : '<b>Tables loaded for '+(NDBT.floorDepth+1)+'–'+depths[depths.length-1]+' m</b>'+
-      'Nitrogen groups are calculated from the NDBT Standardtabell pages for '+depths.join(', ')+' m. '+
-      'Dives to '+NDBT.floorDepth+' m or shallower show no group, because the page that covers them has not been added yet.';
+    : NDBT.floorDepth>0
+      ? '<b>Tables loaded for '+(NDBT.floorDepth+1)+'–'+depths[depths.length-1]+' m</b>'+
+        'Nitrogen groups come from the NDBT Standardtabell pages for '+depths.join(', ')+' m. '+
+        'Dives to '+NDBT.floorDepth+' m or shallower show no group, because the page covering them has not been added yet.'
+      : '<b>All depth pages loaded · to '+depths[depths.length-1]+' m</b>'+
+        'Nitrogen groups come from the NDBT Standardtabell pages for '+depths.join(', ')+' m, '+
+        'with residual nitrogen and surface-interval adjustment applied to repetitive dives.';
   document.getElementById('ndbtBanner').innerHTML =
     '<div class="banner"><span class="bi">'+
     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>'+

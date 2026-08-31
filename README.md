@@ -51,10 +51,9 @@ Each dive shows its N2 group, calculated from the *Norske dykke- og
 behandlingstabeller* Standardtabell pages and the surface-interval adjustment
 table, transcribed from the printed document.
 
-**Coverage.** The pages for **12 to 51 m** are loaded (12, 15, 18, 21, 24, 27,
-30, 33, 36, 39, 42, 45, 48, 51), covering dives from 10 m down to 51 m. Dives
-to **9 m or shallower show no group** and say why — that page has not been
-transcribed yet. A shallow dive is never pushed onto a deeper, wrong page.
+**Coverage is complete**: every Standardtabell depth page from 6 m to 51 m is
+loaded (6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48, 51), 201 rows
+in total.
 
 Every blank group carries a reason, so a dash is never mistaken for "clean":
 no table for this depth, deeper than the loaded tables, bottom time past the
@@ -78,6 +77,11 @@ read on the next longer row. Group letters do not always advance by one: the
 24 m page goes J at 40 min straight to M at 50 min and then repeats M at
 55 min, and the 15 m page goes L at 90 min straight to O at 105 min.
 
+Residual-nitrogen footer rows may also stop short: the 6 m page ends at K, so
+a repetitive 6 m dive entered in group L or higher reports "no residual
+nitrogen figure" rather than a group. The validator allows a short row but
+rejects one with a hole in it.
+
 Rows carry the document's own two markers separately: `*` and "below the heavy
 rule". They are independent: on the 33 and 36 m pages the first row below the
 rule carries no star, and on the 15 m page the 180 min row is starred while
@@ -97,7 +101,7 @@ structural invariant holds:
 - **each row's individual stop times sum to its printed total**
 
 That last check is independent evidence of correct transcription: the "Total
-dekomp. tid" column is redundant in the source, so agreement across all 172
+dekomp. tid" column is redundant in the source, so agreement across all 201
 rows is a real cross-check rather than a restatement. If any check fails the
 tables switch off entirely and the app says so, rather than answering from
 half-read data.
@@ -110,8 +114,25 @@ stops at 15/12/9/6/3 m, the printed total, the group, the `star` and
 lower `floorDepth` to the next depth still missing. The validator will catch a
 malformed page.
 
-Still missing: the 9 m page and anything shallower, and the legend for the
-`*` and heavy-rule markers.
+Still missing: the legend explaining the `*` and heavy-rule markers.
+
+## After the last dive
+
+The Dives tab shows the highest N2 group of the 24 hours ending with your most
+recent dive, and what it means for travel:
+
+- **Flying** — the minimum hours from the end of that dive, per *Tid før
+  flyging etter dykking*. A dive that was never assigned a group requires 24 h.
+- **Altitude** — the five bands from *Forflytning til moderate høyder*, each
+  showing when you may travel to it.
+
+Both count elapsed time, so a wait that has already passed reads as clear
+rather than as advice to keep waiting.
+
+The multi-level dive table (*flernivå-dykk*) is **not** implemented. It is a
+planning table rather than a logging one, and the regulations printed beside it
+require a dive computer with continuous depth monitoring and digital profile
+recording — conditions this app cannot verify.
 
 ## Getting existing data in
 
