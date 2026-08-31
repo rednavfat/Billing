@@ -103,7 +103,7 @@ button{cursor:pointer;background:none;border:none;padding:0}
 .track i{display:block;height:100%;background:linear-gradient(90deg,var(--amber-deep),var(--amber));border-radius:99px}
 
 /* ---------- entries ---------- */
-.days{display:flex;flex-direction:column;gap:9px;padding-bottom:10px}
+.days{display:flex;flex-direction:column;gap:9px;padding-bottom:96px}
 .day{
   width:100%;text-align:left;border:1px solid var(--line);border-radius:var(--r);
   background:var(--deep);padding:13px 14px;display:grid;
@@ -136,9 +136,68 @@ button{cursor:pointer;background:none;border:none;padding:0}
 .empty b{display:block;color:var(--text);font-size:15px;margin-bottom:5px}
 .empty p{margin:0;font-size:13.5px;line-height:1.55}
 
+/* ---------- dive log ---------- */
+.banner{
+  display:flex;gap:11px;align-items:flex-start;
+  border:1px solid var(--line);border-left:3px solid var(--amber);
+  border-radius:11px;background:var(--deep);padding:12px 13px;margin-bottom:13px;
+}
+.banner .bi{color:var(--amber);flex-shrink:0;margin-top:1px}
+.banner .bt{font-size:13px;line-height:1.55;color:var(--muted)}
+.banner .bt b{color:var(--text);display:block;font-size:13.5px;margin-bottom:2px;font-weight:600}
+
+.dlog{display:flex;flex-direction:column;gap:9px}
+.si{
+  display:flex;align-items:center;gap:9px;padding:1px 0 1px 6px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);
+}
+.si::before{content:"";width:2px;height:15px;background:var(--line);border-radius:2px;margin-left:16px}
+.si.reset{color:var(--teal)}
+.si.reset::before{background:var(--teal-ghost)}
+
+.drow{
+  width:100%;text-align:left;border:1px solid var(--line);border-radius:var(--r);
+  background:var(--deep);padding:13px 14px;display:grid;
+  grid-template-columns:auto 1fr auto;gap:0 13px;align-items:center;
+}
+.drow:hover{border-color:var(--raise);background:var(--shelf)}
+.dgroup{
+  width:38px;height:38px;border-radius:10px;display:grid;place-items:center;
+  background:var(--teal-ghost);border:1px solid rgba(53,214,196,.3);
+  font-family:var(--mono);font-size:17px;font-weight:600;color:var(--teal);
+}
+.dgroup.none{background:var(--shelf);border-color:var(--line);color:var(--dim);font-size:14px}
+.dbody{min-width:0}
+.dbody .t{display:block;font-weight:600;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dbody .t.untitled{color:var(--muted);font-weight:500;font-style:italic}
+.dbody .m{display:block;font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums}
+.dbody .c{display:block;font-size:11.5px;color:var(--dim);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dright{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.dright .dp{display:block;font-size:16px;color:var(--amber);font-weight:500}
+.dright .bt{display:block;font-size:11px;color:var(--teal);margin-top:2px}
+
+.segwide{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:14px}
+.segwide button{flex:1;padding:9px;font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.segwide button.on{background:var(--amber);color:#08202b}
+
+/* ---------- lunch / checkbox ---------- */
+.checkline{
+  display:flex;align-items:center;gap:11px;margin-top:12px;
+  border:1px solid var(--line);border-radius:12px;background:var(--deep);padding:13px 14px;cursor:pointer;
+}
+.checkline:hover{border-color:var(--raise)}
+.checkline.on{border-color:var(--amber);background:var(--amber-ghost)}
+.box{
+  width:21px;height:21px;border-radius:6px;border:1.5px solid var(--line);flex-shrink:0;
+  display:grid;place-items:center;color:transparent;background:var(--abyss);
+}
+.checkline.on .box{background:var(--amber);border-color:var(--amber);color:#08202b}
+.checkline .cl{font-size:14px;line-height:1.35}
+.checkline .cl small{display:block;color:var(--dim);font-size:11.5px;margin-top:1px}
+
 /* ---------- tabbar ---------- */
 .tabbar{
-  position:sticky;bottom:0;margin-top:auto;
+  position:sticky;bottom:0;margin-top:auto;z-index:20;
   display:grid;grid-template-columns:1fr 1fr 1fr;
   background:rgba(5,18,26,.94);backdrop-filter:blur(12px);
   border-top:1px solid var(--line);
@@ -147,12 +206,15 @@ button{cursor:pointer;background:none;border:none;padding:0}
 .tab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;color:var(--dim);border-radius:10px}
 .tab .tl{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase}
 .tab.on{color:var(--amber)}
-.tab.mid .ring{
-  width:36px;height:36px;border-radius:50%;display:grid;place-items:center;
-  background:var(--amber);color:#0a1e28;margin-top:-14px;border:3px solid var(--abyss);
-  box-shadow:0 4px 14px rgba(255,178,63,.3);
+
+.fab{
+  position:fixed;right:max(16px,calc(50vw - 280px + 16px));
+  bottom:calc(74px + env(safe-area-inset-bottom,0px));
+  width:54px;height:54px;border-radius:50%;display:grid;place-items:center;z-index:30;
+  background:var(--amber);color:#08202b;border:3px solid var(--abyss);
+  box-shadow:0 6px 20px rgba(255,178,63,.28);
 }
-.tab.mid .tl{margin-top:-1px}
+.fab:hover{background:#ffc366}
 
 /* ---------- wizard ---------- */
 .wiz{flex:1;display:flex;flex-direction:column;position:relative;padding-left:46px}
@@ -326,6 +388,25 @@ pre.csv{
     </div>
   </section>
 
+  <!-- ============ DIVES ============ -->
+  <section class="screen" id="s-dives">
+    <div class="topbar">
+      <div class="brand"><b>Dive Log</b><span class="tick" id="diveTick">—</span></div>
+      <button class="iconbtn" id="divesExport" aria-label="Export dive log">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13m0 0l-4.5-4.5M12 16l4.5-4.5M4 20h16"/></svg>
+      </button>
+    </div>
+    <div style="padding:6px var(--pad) 0;flex:1">
+      <div class="segwide" id="diveScope">
+        <button data-scope="period" class="on">This period</button>
+        <button data-scope="all">Every dive</button>
+      </div>
+      <div id="ndbtBanner"></div>
+      <div class="dlog" id="diveList"></div>
+      <div style="height:110px"></div>
+    </div>
+  </section>
+
   <!-- ============ WIZARD ============ -->
   <section class="screen" id="s-add">
     <div class="wiz">
@@ -378,6 +459,10 @@ pre.csv{
           <input class="num-in" id="setCycle" type="number" min="1" max="28" inputmode="numeric">
         </div>
         <div class="setrow">
+          <div class="k">Unpaid lunch length<small>Deducted when a shift is marked unpaid lunch</small></div>
+          <input class="num-in" id="setBreak" type="number" min="0" max="480" step="15" inputmode="numeric">
+        </div>
+        <div class="setrow">
           <div class="k">Depth unit</div>
           <div class="seg" id="setUnit">
             <button data-u="m">m</button><button data-u="ft">ft</button>
@@ -391,7 +476,7 @@ pre.csv{
         <button class="btn danger" id="wipe">Erase all shifts</button>
       </div>
 
-      <div style="height:20px"></div>
+      <div style="height:100px"></div>
     </div>
   </section>
 
@@ -400,9 +485,9 @@ pre.csv{
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v15H4zM4 9h16M9 5v15"/></svg>
       <span class="tl">Log</span>
     </button>
-    <button class="tab mid" data-go="add">
-      <span class="ring"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
-      <span class="tl">Add</span>
+    <button class="tab" data-go="dives">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7c2.5 0 2.5 2 5 2s2.5-2 5-2 2.5 2 5 2 2.5-2 5-2"/><path d="M3 13c2.5 0 2.5 2 5 2s2.5-2 5-2 2.5 2 5 2 2.5-2 5-2"/><path d="M3 19c2.5 0 2.5 2 5 2s2.5-2 5-2 2.5 2 5 2 2.5-2 5-2"/></svg>
+      <span class="tl">Dives</span>
     </button>
     <button class="tab" data-go="data">
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13m0 0l-4.5-4.5M12 16l4.5-4.5M4 20h16"/></svg>
@@ -410,6 +495,10 @@ pre.csv{
     </button>
   </nav>
 </div>
+
+<button class="fab" id="fabAdd" aria-label="Log a shift">
+  <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+</button>
 
 <div class="toast" id="toast"></div>
 
@@ -423,7 +512,7 @@ function load(k,f){ try{var r=localStorage.getItem(k);return r?JSON.parse(r):f;}
 function save(k,v){ try{localStorage.setItem(k,JSON.stringify(v));}catch(e){} }
 
 var entries = load(K_E,[]);
-var settings = Object.assign({cycleStart:16, unit:'m'}, load(K_S,{}));
+var settings = Object.assign({cycleStart:16, unit:'m', breakMin:60}, load(K_S,{}));
 
 /* ---------------- helpers ---------------- */
 var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -452,9 +541,14 @@ function dec(h){ return (Math.round(h*100)/100).toFixed(2); }
 function num(v){ var n=parseFloat(v); return isNaN(n)?0:n; }
 
 /* ---------------- derived entry values ---------------- */
+function breakMins(){ var v=num(settings.breakMin); return v>0? v : 60; }
+/* The deduction is stamped onto the shift when it is saved, so changing the
+   setting later never rewrites hours on a period you have already billed. */
+function lunchMins(e){ return e.lunch ? (num(e.lunchMin) || breakMins()) : 0; }
 function workedMins(e){
-  if(e.start && e.end) return minsBetween(e.start,e.end);
-  return num(e.workedOverride)*60;
+  var m = (e.start && e.end) ? minsBetween(e.start,e.end) : num(e.workedOverride)*60;
+  m -= lunchMins(e);
+  return m>0? m : 0;                     /* never let a deduction push a shift negative */
 }
 function diveMins(e){
   var t=0,i;
@@ -473,6 +567,84 @@ function maxDepth(e){
   return d;
 }
 function billableH(e){ return workedMins(e)/60 + num(e.standby) + num(e.travel); }
+
+/* ================================================================
+   NITROGEN GROUPS — Norske dykke- og behandlingstabeller (NDBT)
+
+   The machinery below is complete; the TABLES ARE DELIBERATELY EMPTY.
+   Repetitive-group values are decompression data: a wrong letter is
+   worse than no letter, so nothing here is guessed or ported from a
+   different table set (US Navy / PADI RDP are NOT interchangeable
+   with NDBT). Until the official tables are transcribed in, every
+   lookup returns null and the app shows "—" rather than a number.
+
+   To enable, fill these three from the official NDBT edition and set
+   `loaded:true` plus the `edition` string:
+
+   1. noDecoGroup — group letter reached by a single dive.
+        depth  = table depth row, in msw
+        rows   = ascending bottom-time bands, in minutes
+        e.g. {depth:12, rows:[{maxBt:60,group:'D'},{maxBt:90,group:'E'}]}
+        A dive is matched to the FIRST row whose maxBt >= bottom time,
+        and to the first depth row >= actual depth (round deeper).
+
+   2. surfaceCredit — group after off-gassing on the surface.
+        {'E':[{maxSi:60,group:'E'},{maxSi:180,group:'D'}]}
+        maxSi in minutes, ascending; first row whose maxSi >= interval.
+
+   3. residualNitrogen — RNT in minutes added to the next dive's
+      bottom time before looking it up in noDecoGroup.
+        {'D':[{depth:12,rnt:25},{depth:18,rnt:17}]}
+
+   `seriesResetMin` is the surface interval after which a diver is
+   treated as clean again — confirm the correct value against the
+   tables rather than assuming the 12 h used by other table sets.
+   ================================================================ */
+var NDBT = {
+  loaded: false,
+  edition: '',
+  unit: 'msw',
+  seriesResetMin: null,
+  noDecoGroup: [],
+  surfaceCredit: {},
+  residualNitrogen: {}
+};
+
+/* First row at or beyond the given key — tables are "round to the harder case". */
+function ndbtBand(rows,key,keyName){
+  if(!rows) return null;
+  for(var i=0;i<rows.length;i++) if(key <= rows[i][keyName]) return rows[i];
+  return null;                            /* beyond the table: no answer, not an extrapolation */
+}
+function ndbtDepthRow(depth){
+  var best=null;
+  for(var i=0;i<NDBT.noDecoGroup.length;i++){
+    var r=NDBT.noDecoGroup[i];
+    if(depth <= r.depth && (!best || r.depth < best.depth)) best=r;
+  }
+  return best;
+}
+/* Group reached after a dive to `depth` for `bt` minutes, entering with `startGroup`. */
+function groupAfterDive(depth, bt, startGroup){
+  if(!NDBT.loaded || !depth || !bt) return null;
+  var row=ndbtDepthRow(depth);
+  if(!row) return null;
+  var total=bt;
+  if(startGroup){
+    var rnt=ndbtBand(NDBT.residualNitrogen[startGroup], depth, 'depth');
+    if(!rnt) return null;                 /* no RNT for this pairing — refuse to invent one */
+    total+=rnt.rnt;
+  }
+  var band=ndbtBand(row.rows,total,'maxBt');
+  return band? band.group : null;         /* past the no-deco limit: not a plain group */
+}
+/* Group after `si` minutes on the surface. */
+function groupAfterSurface(group, si){
+  if(!NDBT.loaded || !group) return null;
+  if(NDBT.seriesResetMin && si >= NDBT.seriesResetMin) return null;
+  var band=ndbtBand(NDBT.surfaceCredit[group], si, 'maxSi');
+  return band? band.group : null;
+}
 
 /* ---------------- billing periods ---------------- */
 function cycleDay(){ return Math.min(28, Math.max(1, num(settings.cycleStart)||16)); }
@@ -504,6 +676,48 @@ function periodEntries(){
   var p=activePeriod();
   return entries.filter(function(e){ return inPeriod(e,p); })
                 .sort(function(a,b){ return a.date<b.date?1:a.date>b.date?-1:0; });
+}
+
+/* ---------------- flat dive log ---------------- */
+/* Dives live inside shifts, but the dive log needs them as one chronological
+   series so surface intervals and repetitive groups chain across shifts. */
+function diveClock(entry,d){
+  var base=parseISO(entry.date), a=(d.in||'').split(':'), b=(d.out||'').split(':');
+  if(a.length<2||b.length<2) return null;
+  var inDT=new Date(base.getFullYear(),base.getMonth(),base.getDate(),+a[0],+a[1]);
+  var outDT=new Date(base.getFullYear(),base.getMonth(),base.getDate(),+b[0],+b[1]);
+  if(outDT<=inDT) outDT.setDate(outDT.getDate()+1);      /* dive ran past midnight */
+  return {inDT:inDT,outDT:outDT};
+}
+function flatDives(){
+  var out=[];
+  entries.forEach(function(e){
+    if(!e.dives) return;
+    e.dives.forEach(function(d,i){
+      var c=diveClock(e,d);
+      if(!c) return;
+      out.push({
+        entryId:e.id, idx:i, date:e.date, job:e.job||'', site:e.site||'',
+        task:d.task||'', depth:num(d.depth), in:d.in, out:d.out,
+        mins:minsBetween(d.in,d.out), inDT:c.inDT, outDT:c.outDT
+      });
+    });
+  });
+  out.sort(function(a,b){ return a.inDT-b.inDT; });       /* oldest first, to chain forwards */
+
+  var prev=null;
+  out.forEach(function(dv){
+    if(!prev){ dv.si=null; dv.startGroup=null; dv.seriesStart=true; }
+    else{
+      dv.si=Math.round((dv.inDT-prev.outDT)/60000);
+      if(dv.si<0) dv.si=0;                                /* overlapping entries: treat as none */
+      dv.seriesStart = NDBT.seriesResetMin ? dv.si>=NDBT.seriesResetMin : false;
+      dv.startGroup = groupAfterSurface(prev.group, dv.si);
+    }
+    dv.group = groupAfterDive(dv.depth, dv.mins, dv.startGroup);
+    prev=dv;
+  });
+  return out;
 }
 
 /* ---------------- rendering: log ---------------- */
@@ -566,6 +780,7 @@ function renderLog(){
     var tags='';
     if(dn) tags+='<span class="tag dive">'+dn+' dive'+(dn>1?'s':'')+'</span>';
     if(dep) tags+='<span class="tag dive">'+dep+settings.unit+'</span>';
+    if(e.lunch) tags+='<span class="tag">−'+dec(lunchMins(e)/60)+' lunch</span>';
     if(num(e.standby)) tags+='<span class="tag">standby '+dec(num(e.standby))+'</span>';
     if(num(e.travel)) tags+='<span class="tag">travel '+dec(num(e.travel))+'</span>';
     if(e.notes) tags+='<span class="tag">note</span>';
@@ -581,6 +796,75 @@ function renderLog(){
   }).join('');
 }
 
+/* ---------------- rendering: dive log ---------------- */
+var diveScope='period';
+function siText(m){
+  if(m==null) return '';
+  if(m<60) return m+' min on surface';
+  var h=Math.floor(m/60), r=m%60;
+  if(h>=24) return Math.floor(h/24)+'d '+(h%24)+'h on surface';
+  return h+'h '+pad(r)+'m on surface';
+}
+function visibleDives(){
+  var all=flatDives();
+  if(diveScope==='all') return all.slice().reverse();
+  var p=activePeriod(), s=iso(p.start), e=iso(p.end);
+  return all.filter(function(d){ return d.date>=s && d.date<=e; }).reverse();
+}
+function renderDives(){
+  var list=visibleDives(), p=activePeriod();
+  document.getElementById('diveTick').textContent =
+    diveScope==='all' ? 'all time' : periodLabel(p);
+  document.querySelectorAll('#diveScope button').forEach(function(b){
+    b.classList.toggle('on', b.getAttribute('data-scope')===diveScope);
+  });
+
+  document.getElementById('ndbtBanner').innerHTML = NDBT.loaded ? '' :
+    '<div class="banner"><span class="bi">'+
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>'+
+    '</span><span class="bt"><b>Dive tables not loaded</b>'+
+    'Surface intervals are calculated, but nitrogen groups stay blank until the official NDBT tables are added. Nothing here is estimated.'+
+    '</span></div>';
+
+  var host=document.getElementById('diveList');
+  if(!list.length){
+    host.innerHTML='<div class="empty"><b>No dives logged</b><p>'+
+      (diveScope==='period'? 'Nothing in this billing period. Try <b style="display:inline">Every dive</b>, or add a shift with dives.'
+                           : 'Dives you add to a shift appear here as their own log.')+'</p></div>';
+    return;
+  }
+  host.innerHTML=list.map(function(d){
+    var when=parseISO(d.date), grp=d.group||'—';
+    return '<button class="drow" data-eid="'+esc(d.entryId)+'">'+
+        '<span class="dgroup'+(d.group?'':' none')+'" title="Nitrogen group">'+esc(grp)+'</span>'+
+        '<span class="dbody">'+
+          '<span class="t'+(d.task?'':' untitled')+'">'+esc(d.task||'No task recorded')+'</span>'+
+          '<span class="m">'+pad(when.getDate())+' '+MON[when.getMonth()]+' · '+esc(d.in)+'–'+esc(d.out)+'</span>'+
+          '<span class="c">'+esc([d.job,d.site].filter(Boolean).join(' · '))+'</span>'+
+        '</span>'+
+        '<span class="dright">'+
+          '<span class="dp">'+(d.depth? d.depth+settings.unit : '—')+'</span>'+
+          '<span class="bt">'+hm(d.mins)+'</span>'+
+        '</span>'+
+      '</button>'+
+      /* The list runs newest-first, so a dive's preceding surface interval is
+         drawn BELOW it — between this dive and the older one it followed. */
+      (d.si!=null? '<div class="si'+(d.seriesStart?' reset':'')+'">'+esc(siText(d.si))+
+        (d.seriesStart?' · new series':'')+'</div>' : '');
+  }).join('');
+}
+
+var DCOLS=['Date','In','Out','Bottom time (min)','Max depth','Task','Client','Site',
+           'Surface interval (min)','Nitrogen group'];
+function divesCSV(list){
+  var rows=[DCOLS.join(',')];
+  list.slice().sort(function(a,b){ return a.inDT-b.inDT; }).forEach(function(d){
+    rows.push([d.date,d.in,d.out,d.mins,d.depth||'',d.task,d.job,d.site,
+               d.si==null?'':d.si, d.group||''].map(q).join(','));
+  });
+  return rows.join('\n');
+}
+
 /* ---------------- wizard ---------------- */
 var STEPS=[
   {k:'date',  t:'date',    q:'What day was this?',        h:'Shifts that run past midnight still belong to the day they started.'},
@@ -588,7 +872,7 @@ var STEPS=[
   {k:'site',  t:'text',    q:'Where?',                    h:'Vessel, rig, berth or site. Optional.', sug:'site', ph:'e.g. MV Kestrel'},
   {k:'start', t:'time',    q:'On shift at?',              h:'When you started work — not when you got in the water.'},
   {k:'end',   t:'time',    q:'Off shift at?',             h:'Crossing midnight is handled for you.'},
-  {k:'dives', t:'dives',   q:'Dives this shift',          h:'Add each dive with its in and out times. Skip if you stayed dry.'},
+  {k:'dives', t:'dives',   q:'Dives this shift',          h:'Each dive is logged separately in the Dive Log, with its own depth, task and times.'},
   {k:'extra', t:'extra',   q:'Standby and travel',        h:'Billable hours outside the main shift. Leave at zero if not applicable.'},
   {k:'notes', t:'textarea',q:'Anything to note?',         h:'Conditions, tasks, equipment, incidents. Optional.', ph:'Hull inspection, 2kt current, viz 3m…'},
   {k:'review',t:'review',  q:'Look right?',               h:'Check it over, then save to your log.'}
@@ -597,7 +881,7 @@ var step=0, draft=null, editing=null;
 
 function blank(){
   return {id:uid(), date:todayISO(), job:'', site:'', start:'', end:'',
-          dives:[], standby:'', travel:'', notes:''};
+          dives:[], standby:'', travel:'', notes:'', lunch:false};
 }
 function suggestions(field){
   var seen={}, out=[];
@@ -654,9 +938,11 @@ function renderStep(animate){
   else if(s.t==='time'){
     html+='<input class="fld" type="time" id="f" value="'+esc(draft[s.k]||'')+'">';
     if(s.k==='end'){
-      var w=minsBetween(draft.start,draft.end);
+      html+='<button class="checkline'+(draft.lunch?' on':'')+'" id="lunchToggle" type="button" aria-pressed="'+(draft.lunch?'true':'false')+'">'+
+        '<span class="box"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>'+
+        '<span class="cl">Unpaid lunch<small>Takes '+breakMins()+' min off the hours billed</small></span></button>';
       html+='<div class="calc"><span class="k">Hours worked</span><span class="v">'+
-            (draft.end? dec(w/60)+'  ·  '+hm(w) : '—')+'</span></div>';
+            (draft.end? dec(workedMins(draft)/60)+'  ·  '+hm(workedMins(draft)) : '—')+'</span></div>';
     }
   }
   else if(s.t==='dives'){
@@ -668,6 +954,7 @@ function renderStep(animate){
           '<label><span class="mlbl">In</span><input class="fld sm" type="time" data-dv="in" data-i="'+i+'" value="'+esc(d.in||'')+'"></label>'+
           '<label><span class="mlbl">Out</span><input class="fld sm" type="time" data-dv="out" data-i="'+i+'" value="'+esc(d.out||'')+'"></label>'+
           '<label class="full"><span class="mlbl">Max depth ('+settings.unit+')</span><input class="fld sm" type="number" inputmode="decimal" step="0.1" min="0" data-dv="depth" data-i="'+i+'" value="'+esc(d.depth||'')+'"></label>'+
+          '<label class="full"><span class="mlbl">Worked on</span><input class="fld sm" type="text" autocomplete="off" placeholder="e.g. anode replacement" data-dv="task" data-i="'+i+'" value="'+esc(d.task||'')+'"></label>'+
         '</div>'+(m?'<div class="dur">'+hm(m)+'</div>':'')+'</div>';
     }).join('')+'</div>';
     html+='<div style="height:9px"></div><button class="addd" id="addDive">+ Add a dive</button>';
@@ -691,6 +978,7 @@ function renderStep(animate){
       row('Client', esc(draft.job||'—'))+
       (draft.site? row('Site', esc(draft.site)) : '')+
       row('Shift', (draft.start&&draft.end)? esc(draft.start)+' – '+esc(draft.end) : '—')+
+      (draft.lunch? row('Unpaid lunch', '− '+dec(lunchMins(draft)/60), 'num') : '')+
       row('Hours worked', dec(w/60), 'num')+
       row('Dives', dn||'—', 'num teal')+
       row('Bottom time', dm? dec(dm/60)+' · '+hm(dm) : '—', 'num teal')+
@@ -745,14 +1033,16 @@ function commit(){
 }
 
 /* ---------------- CSV ---------------- */
-var COLS=['Date','Client','Site','On shift','Off shift','Hours worked','Dives','Bottom time (min)',
-          'Bottom time (h)','Max depth','Standby (h)','Travel (h)','Total billable (h)','Notes'];
+var COLS=['Date','Client','Site','On shift','Off shift','Unpaid lunch (h)','Hours worked','Dives',
+          'Bottom time (min)','Bottom time (h)','Max depth','Standby (h)','Travel (h)',
+          'Total billable (h)','Notes'];
 function q(v){ v=String(v==null?'':v); return /[",\n]/.test(v)? '"'+v.replace(/"/g,'""')+'"' : v; }
 function toCSV(list){
   var rows=[COLS.join(',')];
   list.slice().sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;}).forEach(function(e){
     var dm=diveMins(e);
-    rows.push([e.date,e.job||'',e.site||'',e.start||'',e.end||'',dec(workedMins(e)/60),
+    rows.push([e.date,e.job||'',e.site||'',e.start||'',e.end||'',
+      dec(lunchMins(e)/60), dec(workedMins(e)/60),
       diveCount(e),dm,dec(dm/60),maxDepth(e)||'',dec(num(e.standby)),dec(num(e.travel)),
       dec(billableH(e)),e.notes||''].map(q).join(','));
   });
@@ -801,22 +1091,43 @@ var ALIAS={
   depth:['max depth','depth','maximum depth','msw','fsw','depth (m)'],
   standby:['standby','standby (h)','tender','stand by','standby hours'],
   travel:['travel','travel (h)','transit','travel hours'],
+  task:['task','worked on','work','job description','scope','operation'],
+  lunch:['unpaid lunch','lunch','break','unpaid break'],
   notes:['notes','note','comment','comments','remarks','description']
 };
+/* "yes"/"1"/"0.5"/"60" all mean a lunch was taken; blank, "no" and "0" mean none. */
+function truthy(v){
+  v=String(v||'').trim().toLowerCase();
+  if(!v) return false;
+  if(/^(no|n|false|0|0\.0+|nei)$/.test(v)) return false;
+  return /^(yes|y|true|x|ja|1)$/.test(v) || num(v)>0;
+}
 function normHead(h){ return String(h).toLowerCase().replace(/[_\-]/g,' ').replace(/\s+/g,' ').trim(); }
+/* Exact header matches win outright, so a column like "Worked on" binds to the
+   task field instead of being swallowed by the "worked" prefix of hours-worked.
+   Only then do unclaimed columns fall back to prefix matching. */
 function mapHeaders(cells){
-  var map={},i,j,k,n;
-  for(i=0;i<cells.length;i++){
-    n=normHead(cells[i]);
-    if(!n) continue;
-    for(k in ALIAS){
-      if(map[k]!==undefined) continue;
-      for(j=0;j<ALIAS[k].length;j++){
-        if(n===ALIAS[k][j] || n.indexOf(ALIAS[k][j])===0){ map[k]=i; break; }
+  var map={}, taken={}, i, k, j, n, names=[];
+  for(k in ALIAS) names.push(k);
+
+  function bind(exact){
+    for(i=0;i<cells.length;i++){
+      if(taken[i]) continue;
+      n=normHead(cells[i]);
+      if(!n) continue;
+      for(var a=0;a<names.length;a++){
+        k=names[a];
+        if(map[k]!==undefined) continue;
+        for(j=0;j<ALIAS[k].length;j++){
+          var al=ALIAS[k][j];
+          if(exact ? n===al : n.indexOf(al)===0){ map[k]=i; taken[i]=1; break; }
+        }
+        if(map[k]!==undefined) break;
       }
-      if(map[k]!==undefined) break;
     }
   }
+  bind(true);
+  bind(false);
   return map;
 }
 function normDate(v){
@@ -856,8 +1167,9 @@ function runImport(text){
     e.job=g('job'); e.site=g('site');
     e.start=normTime(g('start')); e.end=normTime(g('end'));
     if(!(e.start&&e.end) && g('worked')) e.workedOverride=num(g('worked'));
+    e.lunch=truthy(g('lunch'));
     var di=normTime(g('diveIn')), doo=normTime(g('diveOut'));
-    if(di&&doo) e.dives=[{in:di,out:doo,depth:num(g('depth'))||''}];
+    if(di&&doo) e.dives=[{in:di,out:doo,depth:num(g('depth'))||'',task:g('task')}];
     else {
       if(g('diveMin')) e.extraDiveMin=num(g('diveMin'));
       if(g('depth')) e.depthOverride=num(g('depth'));
@@ -880,6 +1192,7 @@ function renderData(){
   prev.textContent = list.length? toCSV(list) : 'No shifts in this period.';
   document.getElementById('cntAll').textContent=entries.length;
   document.getElementById('setCycle').value=cycleDay();
+  document.getElementById('setBreak').value=breakMins();
   document.querySelectorAll('#setUnit button').forEach(function(b){
     b.classList.toggle('on', b.getAttribute('data-u')===settings.unit);
   });
@@ -887,16 +1200,19 @@ function renderData(){
 
 /* ---------------- nav + toast ---------------- */
 function show(v){
-  ['log','add','data'].forEach(function(n){
+  ['log','dives','add','data'].forEach(function(n){
     document.getElementById('s-'+n).classList.toggle('on', n===v);
   });
   document.querySelectorAll('.tab').forEach(function(t){
     t.classList.toggle('on', t.getAttribute('data-go')===v);
   });
-  document.getElementById('tabbar').style.display = (v==='add')?'none':'grid';
+  var inWizard = v==='add';
+  document.getElementById('tabbar').style.display = inWizard?'none':'grid';
+  document.getElementById('fabAdd').hidden = inWizard;
   window.scrollTo(0,0);
   if(v==='data') renderData();
   if(v==='log') renderLog();
+  if(v==='dives') renderDives();
 }
 var tt;
 function toast(msg){
@@ -907,10 +1223,30 @@ function toast(msg){
 
 /* ---------------- events ---------------- */
 document.querySelectorAll('.tab').forEach(function(t){
-  t.addEventListener('click',function(){
-    var v=t.getAttribute('data-go');
-    if(v==='add') openWizard(null); else show(v);
-  });
+  t.addEventListener('click',function(){ show(t.getAttribute('data-go')); });
+});
+document.getElementById('fabAdd').addEventListener('click',function(){ openWizard(null); });
+
+/* dive log */
+document.getElementById('diveScope').addEventListener('click',function(ev){
+  var b=ev.target.closest('[data-scope]'); if(!b) return;
+  diveScope=b.getAttribute('data-scope');
+  renderDives();
+});
+document.getElementById('diveList').addEventListener('click',function(ev){
+  var b=ev.target.closest('.drow'); if(b) openWizard(b.getAttribute('data-eid'));
+});
+document.getElementById('divesExport').addEventListener('click',function(){
+  var list=visibleDives();
+  if(!list.length){ toast('No dives to export'); return; }
+  var csv=divesCSV(list);
+  var name='dive-log_'+(diveScope==='all'? 'all' : iso(activePeriod().start)+'_to_'+iso(activePeriod().end))+'.csv';
+  if(downloads){
+    downloads.save({filename:name,data:csv}).then(function(){ toast('Dive log saved'); },function(err){
+      if(err && err.code==='declined') return;
+      copy(csv,'Dive log');
+    });
+  } else copy(csv,'Dive log');
 });
 document.getElementById('goData').addEventListener('click',function(){ show('data'); });
 document.getElementById('dataBack').addEventListener('click',function(){ show('log'); });
@@ -944,9 +1280,16 @@ document.getElementById('slot').addEventListener('click',function(ev){
     if(f){ f.value=sug.getAttribute('data-sug'); f.focus(); }
     return;
   }
+  if(t.closest('#lunchToggle')){
+    capture();
+    draft.lunch=!draft.lunch;
+    if(draft.lunch) draft.lunchMin=breakMins();    /* stamp the length in force right now */
+    renderStep(false);
+    return;
+  }
   if(t.closest('#addDive')){
     capture();
-    draft.dives.push({in:'',out:'',depth:''});
+    draft.dives.push({in:'',out:'',depth:'',task:''});
     renderStep(false);
     return;
   }
@@ -1016,6 +1359,12 @@ document.getElementById('setCycle').addEventListener('change',function(){
   settings.cycleStart=v; this.value=v; save(K_S,settings);
   offset=0; renderLog(); renderData();
   toast('Billing cycle starts on the '+v+'th');
+});
+document.getElementById('setBreak').addEventListener('change',function(){
+  var v=Math.min(480,Math.max(0,Math.round(num(this.value))));
+  settings.breakMin=v||60; this.value=breakMins(); save(K_S,settings);
+  renderLog(); renderData();
+  toast('Unpaid lunch set to '+breakMins()+' min');
 });
 document.getElementById('setUnit').addEventListener('click',function(ev){
   var b=ev.target.closest('[data-u]'); if(!b) return;

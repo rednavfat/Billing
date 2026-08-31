@@ -21,7 +21,8 @@ Per shift:
 | Client / job | Period totals are grouped by this |
 | Vessel / site | Optional |
 | On shift → off shift | Hours worked; midnight crossings handled |
-| Dives | Any number, each with in/out times and max depth |
+| Unpaid lunch | Checkbox; deducts the break length from hours worked |
+| Dives | Any number, each with in/out times, max depth and task |
 | Standby / tender hours | Optional, billable |
 | Travel hours | Optional, billable |
 | Notes | Optional |
@@ -29,7 +30,44 @@ Per shift:
 Per billing period: hours worked, total bottom time, dive count, days worked,
 max depth, total billable hours, and a per-client hours breakdown.
 
-`Total billable = hours worked + standby + travel`.
+`Total billable = hours worked + standby + travel`, where
+`hours worked = shift length − unpaid lunch`.
+
+The unpaid-break length is configurable (default 60 min), but the deduction
+actually applied is **stamped onto each shift when it is saved**, so changing
+the setting never rewrites hours on a period you have already billed.
+
+## Dive log
+
+The **Dives** tab lists every dive as its own record — depth, task worked on,
+in/out times, duration, client and site — scoped to the current billing period
+or all time, and exportable as its own CSV. Dives are entered as part of a
+shift but chained into one chronological series across shifts, so the
+**surface interval** between consecutive dives is shown between them.
+
+### Nitrogen groups — not yet enabled
+
+The repetitive-group machinery is built (surface-interval chaining, residual
+nitrogen time, repetitive-dive lookup) but **the tables ship empty**, so every
+group reads `—`.
+
+This is deliberate. Repetitive-group values are decompression data, and a
+plausible-looking wrong letter is more dangerous than a blank one. Nothing is
+guessed, and no other table set is substituted — US Navy and PADI RDP values
+are *not* interchangeable with NDBT.
+
+To enable, fill the three tables in the `NDBT` block near the top of the
+script from the official *Norske dykke- og behandlingstabeller*, and set
+`loaded: true` with the `edition` string. The block documents the exact shape
+each table expects:
+
+- `noDecoGroup` — group letter by depth (msw) and bottom-time band
+- `surfaceCredit` — group after a surface interval
+- `residualNitrogen` — RNT in minutes, by group and depth
+- `seriesResetMin` — interval after which a diver counts as clean
+
+Lookups round to the harder case (deeper depth row, longer time band) and
+return `null` rather than extrapolating past the end of a table.
 
 ## Billing periods
 
@@ -51,13 +89,20 @@ columns are ignored and order doesn't matter. Recognised headers include:
 - **Hours worked** — used when start/end times are absent
 - **Dive in** / **Dive out**, or **Bottom time** in minutes
 - **Dives** (count), **Max depth**
+- **Worked on** / Task — what the dive was for
+- **Lunch** / Unpaid break — `yes`, `1`, `0.5`, `60` all count as taken
 - **Standby**, **Travel**, **Notes**
+
+Exact header matches win over partial ones, so a `Worked on` column binds to
+the dive task rather than being swallowed by `Hours worked`.
 
 ## Getting data out
 
 **Data → Export** shows the current period as CSV. *Copy period* / *Copy all*
-put it on the clipboard, ready to paste into a spreadsheet. Inside the claude.ai
-viewer a *Save CSV file* button also appears, which hands you a real `.csv`.
+put it on the clipboard, ready to paste into a spreadsheet. The **Dives** tab
+has its own export button for the dive log, with surface interval and nitrogen
+group columns. Inside the claude.ai viewer a *Save CSV file* button also
+appears, which hands you a real `.csv`.
 
 ## Where data lives
 
