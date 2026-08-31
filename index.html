@@ -617,7 +617,10 @@ var NDBT = {
   loaded:false,                 /* set by validateNDBT() below, never by hand */
   edition:'NDBT Standardtabell',
   unit:'msw',
-  minSurfaceMin:10,             /* under 0:10 the tables do not treat it as a repetitive dive */
+  /* Every row of the surface table begins at 0:10, so a shorter interval falls
+     outside what is printed. The code gives no credit for it and carries the
+     group through unchanged, which is the conservative direction. */
+  minSurfaceMin:10,
   floorDepth:0,                 /* every depth page from 6 m down is transcribed */
 
   /* "Tid før flyging etter dykking" — minimum hours from the end of the last
@@ -986,7 +989,9 @@ function surfaceAdjust(group, si){
   var bounds=NDBT.surface[group], gi=gIndex(group);
   for(var i=0;i<bounds.length;i++)
     if(si <= hhmm(bounds[i])) return {group:GROUPS[gi-i], note:'ok'};
-  return {group:null, note:'clean'};          /* past the row's last band */
+  /* Past the row's last band, which ends at group A: the diver is off the
+     surface table and starts the next dive without a group. */
+  return {group:null, note:'clean'};
 }
 
 /* Group reached after a dive, entering with `startGroup`.

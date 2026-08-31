@@ -70,24 +70,26 @@ Lookups round to the harder case — the next deeper page and the next longer
 bottom-time row — and return a reason instead of extrapolating past the end of
 a table.
 
-The pages are not uniform, and are transcribed exactly as printed rather than
-regularised. Bottom-time rows are not evenly spaced and some are absent — the
-27 m page has no 35 min row, the 24 m page no 45 min row — so those times are
-read on the next longer row. Group letters do not always advance by one: the
-24 m page goes J at 40 min straight to M at 50 min and then repeats M at
-55 min, and the 15 m page goes L at 90 min straight to O at 105 min.
+The tables are transcribed exactly as printed and are treated as correct as
+they read. Bottom-time rows are spaced as the tables space them rather than at
+a fixed interval, and group letters advance as the tables advance them — the
+27 m page has no 35 min row, the 24 m page runs J at 40 min to M at 50 min and
+repeats M at 55 min, the 15 m page runs L at 90 min to O at 105 min. A bottom
+time between printed rows is read on the next longer row, and a depth between
+pages on the next deeper page, which is the direction these conservatively
+based tables already lean.
 
-Residual-nitrogen footer rows may also stop short: the 6 m page ends at K, so
-a repetitive 6 m dive entered in group L or higher reports "no residual
-nitrogen figure" rather than a group. The validator allows a short row but
-rejects one with a hole in it.
+Residual-nitrogen footer rows may also stop short: the 6 m page ends at K, so a
+repetitive 6 m dive entered in group L or higher reports "no residual nitrogen
+figure" rather than a group. The validator allows a short row but rejects one
+with a hole in it.
 
 Rows carry the document's own two markers separately: `*` and "below the heavy
-rule". They are independent: on the 33 and 36 m pages the first row below the
-rule carries no star, and on the 15 m page the 180 min row is starred while
-sitting above the rule. The app reports both as printed, without assigning
-them a meaning the transcribed pages do not state — the legend explaining
-them has not been transcribed.
+rule". They are independent markers: on the 33 and 36 m pages the first row
+below the rule carries no star, and on the 15 m page the 180 min row is
+starred while sitting above the rule. The app reports both exactly as printed
+and assigns them no meaning, since the legend defining them is not among the
+transcribed pages.
 
 #### The validator
 
@@ -113,8 +115,6 @@ stops at 15/12/9/6/3 m, the printed total, the group, the `star` and
 `beyondRule` markers, and the page's own residual-nitrogen footer row — then
 lower `floorDepth` to the next depth still missing. The validator will catch a
 malformed page.
-
-Still missing: the legend explaining the `*` and heavy-rule markers.
 
 ## After the last dive
 
