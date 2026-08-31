@@ -406,6 +406,72 @@ pre.csv{
   background:var(--abyss);border:1px solid var(--line-soft);border-radius:10px;
   padding:12px;overflow-x:auto;margin:0 0 12px;max-height:190px;white-space:pre;
 }
+/* ---------- dive detail: a logbook page ---------- */
+.dv-head{padding:4px 0 20px;border-bottom:1px solid var(--line);margin-bottom:18px}
+.dv-num{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);margin-bottom:8px}
+.dv-date{font-size:23px;font-weight:700;letter-spacing:-.02em;margin:0 0 14px;text-wrap:balance}
+.dv-times{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.dv-times .t{font-family:var(--mono);font-size:27px;font-weight:500;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;color:var(--text)}
+.dv-times .bt{font-family:var(--mono);font-size:13px;color:var(--teal);letter-spacing:.04em}
+
+.dv-block{border:1px solid var(--line);border-radius:var(--r);background:var(--deep);
+  overflow:hidden;margin-bottom:12px}
+.dv-block > h3{margin:0;padding:11px 14px;font-family:var(--mono);font-size:9.5px;
+  letter-spacing:.17em;text-transform:uppercase;color:var(--dim);font-weight:500;
+  border-bottom:1px solid var(--line-soft)}
+.dv-block.n2 > h3{color:var(--teal);background:var(--teal-ghost);border-bottom-color:rgba(53,214,196,.25)}
+.dv-r{display:flex;justify-content:space-between;align-items:baseline;gap:14px;
+  padding:11px 14px;border-bottom:1px solid var(--line-soft);font-size:14.5px}
+.dv-r:last-child{border-bottom:none}
+.dv-r .k{color:var(--dim);font-family:var(--mono);font-size:10px;letter-spacing:.13em;
+  text-transform:uppercase;flex-shrink:0;padding-top:3px}
+.dv-r .v{text-align:right;overflow-wrap:anywhere}
+.dv-r .v.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.dv-r .v.teal{color:var(--teal)}
+.dv-r .v.big{font-family:var(--mono);font-size:22px;font-weight:600;color:var(--teal)}
+.dv-r .v.none{color:var(--dim);font-style:italic}
+.dv-note{padding:12px 14px;font-size:14px;line-height:1.6;color:var(--muted);white-space:pre-wrap}
+.dv-why{padding:10px 14px;font-size:12.5px;line-height:1.5;color:var(--dim);
+  border-top:1px solid var(--line-soft)}
+.dv-acts{display:flex;gap:10px;margin-top:6px}
+.dv-acts .btn{flex:1}
+
+/* ---------- picker sheet ---------- */
+.sheet{position:fixed;inset:0;z-index:70;background:rgba(3,10,15,.72);
+  display:flex;align-items:flex-end;justify-content:center;padding:0}
+.sheet-card{width:100%;max-width:560px;max-height:86vh;overflow-y:auto;
+  background:var(--abyss);border:1px solid var(--line);border-bottom:none;
+  border-radius:18px 18px 0 0;padding:16px var(--pad) calc(20px + env(safe-area-inset-bottom,0px))}
+.sheet-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.sheet-role{font-size:19px;font-weight:700;letter-spacing:-.02em}
+.pick-sec{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--dim);margin:16px 0 8px}
+.pick-list{display:flex;flex-direction:column;gap:7px}
+.prow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+  border:1px solid var(--line);border-radius:11px;background:var(--deep);padding:12px 13px}
+.prow:hover{border-color:var(--raise);background:var(--shelf)}
+.prow.on{border-color:var(--amber);background:var(--amber-ghost)}
+.prow .av{width:34px;height:34px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;
+  background:var(--shelf);color:var(--teal);font-family:var(--mono);font-size:12px;font-weight:600}
+.prow.on .av{background:var(--amber);color:#08202b}
+.prow .nm{flex:1;min-width:0}
+.prow .nm b{display:block;font-size:14.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prow .nm small{display:block;font-size:12px;color:var(--dim);margin-top:1px}
+.prow .rm{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);padding:5px 7px}
+.prow .rm:hover{color:var(--rose)}
+.pick-empty{color:var(--dim);font-size:13.5px;padding:14px 2px;line-height:1.55}
+
+/* team row inside the dive editor */
+.teamrow{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;
+  text-align:left;border:1px solid var(--line);border-radius:11px;background:var(--deep);
+  padding:11px 13px;margin-top:8px}
+.teamrow:hover{border-color:var(--raise)}
+.teamrow .rl{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.teamrow .pn{font-size:14px;margin-top:2px}
+.teamrow .pn.none{color:var(--dim);font-style:italic}
+.teamrow .go{color:var(--muted);flex-shrink:0}
+
 /* ---------- migration overlay ---------- */
 .migrate{
   position:fixed;inset:0;z-index:80;background:var(--abyss);
@@ -564,6 +630,37 @@ hr.rule{border:none;border-top:1px solid var(--line-soft);margin:18px 0 15px}
     </div>
   </section>
 
+  <!-- ============ DIVE DETAIL ============ -->
+  <section class="screen" id="s-dive">
+    <div class="topbar">
+      <button class="iconbtn" id="diveBack" aria-label="Back to dive log">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <div class="brand" style="flex:1;justify-content:flex-end"><span class="tick" id="diveNo">—</span></div>
+    </div>
+    <div id="diveDetail" style="padding:0 var(--pad) 120px"></div>
+  </section>
+
+  <!-- ============ PEOPLE & CUSTOMERS ============ -->
+  <section class="screen" id="s-people">
+    <div class="topbar">
+      <div class="brand"><b id="dirTitle">People</b></div>
+      <button class="iconbtn" id="peopleBack" aria-label="Back">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+    </div>
+    <div style="padding:6px var(--pad) 120px;flex:1">
+      <div class="segwide" id="dirScope">
+        <button data-dir="people" class="on">Personer</button>
+        <button data-dir="customers">Kunder</button>
+      </div>
+      <input class="fld" id="dirSearch" type="search" placeholder="Search…" autocomplete="off" style="margin-bottom:12px">
+      <button class="addd" id="dirAdd">+ Add</button>
+      <div style="height:12px"></div>
+      <div id="dirList"></div>
+    </div>
+  </section>
+
   <!-- ============ WIZARD ============ -->
   <section class="screen" id="s-add">
     <div class="wiz">
@@ -662,6 +759,16 @@ hr.rule{border:none;border-top:1px solid var(--line-soft);margin:18px 0 15px}
       </div>
 
       <div class="card">
+        <h3>People and customers</h3>
+        <p>Everyone you dive with and everyone you work for, entered once and reused.
+           Assign a person to any role on any dive — nobody is tied to a single role.</p>
+        <div class="row2">
+          <button class="btn ghost" style="flex:1" id="openPeople">Personer</button>
+          <button class="btn ghost" style="flex:1" id="openCustomers">Kunder</button>
+        </div>
+      </div>
+
+      <div class="card">
         <h3>Rates</h3>
         <p>Optional. Leave any of these blank and the app simply shows hours with no
            amounts. Each category bills at its own rate — bottom time is charged separately
@@ -698,6 +805,27 @@ hr.rule{border:none;border-top:1px solid var(--line-soft);margin:18px 0 15px}
       <span class="tl">Data</span>
     </button>
   </nav>
+</div>
+
+<div class="sheet" id="editSheet" hidden>
+  <div class="sheet-card">
+    <div class="sheet-h">
+      <div><span class="sheet-role">Edit dive</span></div>
+      <button class="xbtn" id="editClose">Close</button>
+    </div>
+    <div id="editBody"></div>
+  </div>
+</div>
+
+<div class="sheet" id="pickerSheet" hidden style="z-index:75">
+  <div class="sheet-card">
+    <div class="sheet-h">
+      <div><span class="sheet-role" id="pickRole">Dykare</span></div>
+      <button class="xbtn" id="pickClose">Close</button>
+    </div>
+    <input class="fld" id="pickSearch" type="search" placeholder="Search or type a new name…" autocomplete="off">
+    <div id="pickBody"></div>
+  </div>
 </div>
 
 <div class="migrate" id="migrateOverlay" hidden>
@@ -929,6 +1057,71 @@ function ensureCustomer(name){
   var c={id:uid(), name:n, notes:''};
   state.customers.push(c);
   return c.id;
+}
+
+function personName(id){ var p=personById(id); return p? p.name : ''; }
+function ensurePerson(name, company){
+  var n=(name||'').trim();
+  if(!n) return null;
+  var k=n.toLowerCase(), i;
+  for(i=0;i<state.people.length;i++)
+    if(state.people[i].name.trim().toLowerCase()===k) return state.people[i].id;
+  var p={id:uid(), name:n, company:(company||'').trim(), notes:''};
+  state.people.push(p);
+  return p.id;
+}
+/* The four roles a person can hold on a dive. A person is never tied to one
+   role — the same name can be diver today and tender tomorrow. */
+var ROLES = [
+  {k:'diverId',        label:'Dykare',       en:'Diver'},
+  {k:'reserveDiverId', label:'Reservdykare', en:'Reserve diver'},
+  {k:'diveLeaderId',   label:'Dykledare',    en:'Dive leader'},
+  {k:'tenderId',       label:'Dykskötare',   en:'Tender'}
+];
+/* A short "who was on this dive" line for compact rows. */
+function teamSummary(d){
+  var names=[];
+  ROLES.forEach(function(r){ var n=personName(d[r.k]); if(n) names.push(n); });
+  if(!names.length) return '';
+  return names.length<=2 ? names.join(', ')
+       : names[0]+' +'+(names.length-1);
+}
+/* Most recently used people for a role, newest first, for one-tap reuse. */
+function recentPeople(roleKey, limit){
+  var seen={}, out=[], i, j;
+  var byDate = entries.slice().sort(function(a,b){ return a.date<b.date?1:a.date>b.date?-1:0; });
+  for(i=0;i<byDate.length && out.length<(limit||5);i++){
+    var ds=byDate[i].dives||[];
+    for(j=ds.length-1;j>=0 && out.length<(limit||5);j--){
+      var id=ds[j][roleKey];
+      if(id && !seen[id] && personById(id)){ seen[id]=1; out.push(id); }
+    }
+  }
+  return out;
+}
+function recentValues(field, limit){
+  var seen={}, out=[];
+  for(var i=entries.length-1;i>=0 && out.length<(limit||6);i--){
+    var v=(entries[i][field]||'').trim();
+    if(v && !seen[v.toLowerCase()]){ seen[v.toLowerCase()]=1; out.push(v); }
+  }
+  return out;
+}
+
+/* ---------------- locating a dive ---------------- */
+/* Dives are addressed by their own id now, not by position, so deleting one
+   never renumbers another. */
+function findDive(diveId){
+  for(var i=0;i<entries.length;i++){
+    var ds=entries[i].dives||[];
+    for(var j=0;j<ds.length;j++) if(ds[j].id===diveId) return {shift:entries[i], dive:ds[j], index:j};
+  }
+  return null;
+}
+function flatDiveById(diveId){
+  var all=flatDives();
+  for(var i=0;i<all.length;i++) if(all[i].diveId===diveId) return all[i];
+  return null;
 }
 
 /* ---------------- shift field accessors ---------------- */
@@ -1606,7 +1799,7 @@ function flatDives(){
   out.sort(function(a,b){ return a.inDT-b.inDT; });       /* oldest first, to chain forwards */
 
   var prev=null;
-  out.forEach(function(dv){
+  out.forEach(function(dv,i){
     if(!prev){
       dv.si=null; dv.startGroup=null; dv.seriesStart=true; dv.siNote='first';
     } else {
@@ -1619,7 +1812,9 @@ function flatDives(){
       dv.seriesStart = adj.note==='clean';
     }
     var res=diveGroup(dv.depth, dv.mins, dv.startGroup);
-    dv.group=res.group; dv.note=res.note; dv.rnt=res.rnt; dv.row=res.row;
+    dv.group=res.group; dv.note=res.note; dv.rnt=res.rnt; dv.row=res.row; dv.page=res.page;
+    dv.prevId = prev ? prev.diveId : null;
+    dv.no = i+1;                    /* dive number, chronological across the whole log */
     prev=dv;
   });
   return out;
@@ -1907,7 +2102,7 @@ function renderDives(){
   }
   host.innerHTML=list.map(function(d){
     var when=parseISO(d.date), grp=d.group||'—';
-    return '<button class="drow" data-eid="'+esc(d.entryId)+'">'+
+    return '<button class="drow" data-did="'+esc(d.diveId)+'" data-eid="'+esc(d.entryId)+'">'+
         '<span class="dgroup'+(d.group?'':' none')+'" title="Nitrogen group">'+esc(grp)+'</span>'+
         '<span class="dbody">'+
           '<span class="t'+(d.task?'':' untitled')+'">'+esc(d.task||'No task recorded')+'</span>'+
@@ -1940,6 +2135,304 @@ function divesCSV(list){
                d.si==null?'':d.si, d.group||''].map(q).join(','));
   });
   return rows.join('\n');
+}
+
+/* ---------------- dive detail ---------------- */
+var openDiveId = null;
+
+function siClock(mins){
+  if(mins==null) return '—';
+  return Math.floor(mins/60)+':'+pad(mins%60);
+}
+function renderDive(){
+  var d = openDiveId && flatDiveById(openDiveId);
+  var host = document.getElementById('diveDetail');
+  if(!d){ host.innerHTML='<div class="empty"><b>Dive not found</b><p>It may have been deleted.</p></div>'; return; }
+  var found = findDive(openDiveId), shift = found ? found.shift : null;
+  var when = parseISO(d.date);
+  /* The page heading carries the dive number, so the bar carries the client. */
+  document.getElementById('diveNo').textContent = d.job || 'Dive log';
+
+  function r(k,v,cls){
+    return '<div class="dv-r"><span class="k">'+k+'</span>'+
+           '<span class="v '+(cls||'')+'">'+v+'</span></div>';
+  }
+  function val(v, fallback){
+    return v ? esc(v) : '<span class="v none">'+(fallback||'not recorded')+'</span>';
+  }
+
+  var h='';
+  h+='<div class="dv-head">'+
+      '<div class="dv-num">Dive #'+d.no+'</div>'+
+      '<h2 class="dv-date">'+d.date.split('-')[2]+' '+MON[when.getMonth()].toUpperCase()+' '+when.getFullYear()+'</h2>'+
+      '<div class="dv-times"><span class="t">'+esc(d.in)+' → '+esc(d.out)+'</span>'+
+      '<span class="bt">'+hm(d.mins)+' bottom time</span></div>'+
+     '</div>';
+
+  h+='<div class="dv-block"><h3>Dive</h3>'+
+      r('Max depth', d.depth? '<span class="v mono">'+d.depth+settings.unit+'</span>' : val(null))+
+      r('Client', val(d.job))+
+      (shift && shift.project ? r('Project', esc(shift.project)) : '')+
+      r('Site', val(d.site))+
+      r('Work performed', val(d.task))+
+     '</div>';
+
+  h+='<div class="dv-block"><h3>Dyklag · team</h3>'+
+      ROLES.map(function(role){
+        var nm = shift ? personName(found.dive[role.k]) : '';
+        return r(role.label, val(nm, 'not assigned'));
+      }).join('')+
+     '</div>';
+
+  /* Everything here is read from the chain the app already computes; nothing
+     is recalculated for display. */
+  h+='<div class="dv-block n2"><h3>Kvävegrupp · nitrogen</h3>'+
+      r('Surface interval', d.si==null
+          ? '<span class="v none">first dive of the series</span>'
+          : '<span class="v mono">'+siClock(d.si)+'</span>'+(d.seriesStart?' <span class="v none">· clean</span>':''))+
+      r('Entering group', d.startGroup
+          ? '<span class="v mono teal">'+esc(d.startGroup)+'</span>'
+          : val(null,'none — started clean'))+
+      (d.rnt ? r('Residual nitrogen', '<span class="v mono teal">+'+d.rnt+' min</span>') : '')+
+      (d.rnt ? r('Adjusted bottom time', '<span class="v mono">'+d.mins+' + '+d.rnt+' = '+(d.mins+d.rnt)+' min</span>') : '')+
+      r('Group after dive', d.group
+          ? '<span class="v big">'+esc(d.group)+'</span>'
+          : '<span class="v none">'+esc(NOTE_TEXT[d.note]||'no group')+'</span>')+
+      (d.page ? r('Table page', '<span class="v mono">'+d.page.depth+' m</span>') : '')+
+      (d.row ? r('Table row', '<span class="v mono">'+d.row.bt+' min'+
+          (d.row.total? ' · '+d.row.total+' min deco' : ' · no stops')+'</span>') : '')+
+      (d.row && rowMarksText(d.row) ? '<div class="dv-why">Printed row markers: '+esc(rowMarksText(d.row))+'.</div>' : '')+
+     '</div>';
+
+  var dnotes = found ? (found.dive.notes||'') : '';
+  if(dnotes || (shift && shift.notes)){
+    h+='<div class="dv-block"><h3>Notes</h3>'+
+       (dnotes? '<div class="dv-note">'+esc(dnotes)+'</div>' : '')+
+       (shift && shift.notes? '<div class="dv-why">From the shift: '+esc(shift.notes)+'</div>' : '')+
+       '</div>';
+  }
+
+  h+='<div class="dv-acts">'+
+      '<button class="btn ghost" id="diveDup">Duplicate</button>'+
+      '<button class="btn" id="diveEdit">Edit dive</button>'+
+     '</div>';
+  h+='<div style="height:10px"></div>'+
+     '<button class="btn ghost" id="diveShift" style="width:100%">Open the whole shift</button>';
+
+  host.innerHTML=h;
+}
+function rowMarksText(row){
+  var m=[];
+  if(row.star) m.push('marked *');
+  if(row.beyondRule) m.push('below the heavy rule');
+  return m.join(' · ');
+}
+function openDive(diveId){
+  openDiveId = diveId;
+  show('dive');
+}
+
+/* Duplicating copies the context that repeats and clears what must not be
+   assumed. Nitrogen is never copied — it is recomputed from the new times. */
+function duplicateDive(diveId){
+  var f = findDive(diveId);
+  if(!f) return;
+  var src = f.dive;
+  var copy = newDive();
+  copy.task = src.task || '';
+  copy.notes = src.notes || '';
+  copy.depth = null;                    /* depth must be entered again */
+  ROLES.forEach(function(role){ copy[role.k] = src[role.k] || null; });
+  f.shift.dives.push(copy);
+  saveState();
+  toast('Dive duplicated — set its times and depth');
+  editDiveId = copy.id;
+  openDiveId = copy.id;
+  show('dive');
+  openDiveEditor(copy.id);
+}
+
+/* ---------------- dive editor sheet ---------------- */
+var editDiveId = null;
+
+function openDiveEditor(diveId){
+  editDiveId = diveId;
+  renderDiveEditor();
+  document.getElementById('editSheet').hidden = false;
+}
+function closeDiveEditor(){
+  document.getElementById('editSheet').hidden = true;
+  editDiveId = null;
+  saveState();
+  renderDive(); renderDives(); renderLog();
+}
+function renderDiveEditor(){
+  var f = findDive(editDiveId);
+  var body = document.getElementById('editBody');
+  if(!f){ body.innerHTML='<div class="pick-empty">That dive no longer exists.</div>'; return; }
+  var d = f.dive, m = minsBetween(d.in, d.out);
+  body.innerHTML =
+    '<div class="dgrid">'+
+      '<label><span class="mlbl">In</span><input class="fld sm" type="time" data-ed="in" value="'+esc(d.in||'')+'"></label>'+
+      '<label><span class="mlbl">Out</span><input class="fld sm" type="time" data-ed="out" value="'+esc(d.out||'')+'"></label>'+
+      '<label class="full"><span class="mlbl">Max depth ('+settings.unit+')</span>'+
+        '<input class="fld sm" type="number" inputmode="decimal" step="0.1" min="0" data-ed="depth" value="'+(d.depth==null?'':esc(String(d.depth)))+'"></label>'+
+      '<label class="full"><span class="mlbl">Worked on</span>'+
+        '<input class="fld sm" type="text" autocomplete="off" data-ed="task" value="'+esc(d.task||'')+'" placeholder="e.g. anode replacement"></label>'+
+      '<label class="full"><span class="mlbl">Dive notes</span>'+
+        '<textarea class="fld sm" data-ed="notes" style="min-height:70px">'+esc(d.notes||'')+'</textarea></label>'+
+    '</div>'+
+    (m? '<div class="dur" style="text-align:right;margin-top:8px">'+hm(m)+'</div>' : '')+
+    '<div class="pick-sec">Dyklag · team</div>'+
+    ROLES.map(function(role){
+      var nm = personName(d[role.k]);
+      return '<button class="teamrow" data-role="'+role.k+'">'+
+        '<span><span class="rl">'+esc(role.label)+'</span>'+
+        '<span class="pn'+(nm?'':' none')+'">'+esc(nm||'not assigned')+'</span></span>'+
+        '<span class="go"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></span>'+
+      '</button>';
+    }).join('')+
+    '<div style="height:16px"></div>'+
+    '<button class="btn danger" id="editDelete" style="width:100%">Delete this dive</button>';
+}
+
+/* ---------------- person picker ---------------- */
+/* Holds a direct reference to the dive being edited, because in the shift
+   wizard the dive is still only in the draft and cannot be looked up by id. */
+var pickCtx = null;    /* {roleKey, dive, after} while the sheet is open */
+
+function initials(name){
+  var parts=(name||'').trim().split(/\s+/).slice(0,2);
+  return parts.map(function(p){ return p.charAt(0).toUpperCase(); }).join('') || '?';
+}
+function openPicker(roleKey, dive, after){
+  var role = ROLES.filter(function(r){ return r.k===roleKey; })[0];
+  pickCtx = {roleKey:roleKey, dive:dive, after:after};
+  document.getElementById('pickRole').textContent = role.label+' · '+role.en;
+  document.getElementById('pickSearch').value='';
+  document.getElementById('pickSearch').hidden = false;
+  renderPicker();
+  document.getElementById('pickerSheet').hidden = false;
+  document.getElementById('pickSearch').focus();
+}
+function closePicker(){
+  document.getElementById('pickerSheet').hidden = true;
+  pickCtx = null;
+}
+function renderPicker(){
+  if(!pickCtx) return;
+  var current = pickCtx.dive ? pickCtx.dive[pickCtx.roleKey] : null;
+  var q = document.getElementById('pickSearch').value.trim().toLowerCase();
+  var all = state.people.slice().sort(function(a,b){ return a.name.localeCompare(b.name); });
+  var matches = q ? all.filter(function(p){
+    return (p.name+' '+(p.company||'')).toLowerCase().indexOf(q)>=0;
+  }) : all;
+  var recents = q ? [] : recentPeople(pickCtx.roleKey, 5).map(personById).filter(Boolean);
+
+  function prow(p){
+    return '<button class="prow'+(p.id===current?' on':'')+'" data-person="'+esc(p.id)+'">'+
+      '<span class="av">'+esc(initials(p.name))+'</span>'+
+      '<span class="nm"><b>'+esc(p.name)+'</b>'+(p.company?'<small>'+esc(p.company)+'</small>':'')+'</span>'+
+    '</button>';
+  }
+  var h='';
+  /* An unknown name is added straight from the search box — one tap, no detour. */
+  var exact = all.some(function(p){ return p.name.trim().toLowerCase()===q; });
+  if(q && !exact){
+    h+='<div class="pick-sec">New</div><div class="pick-list">'+
+       '<button class="prow" data-newperson="1"><span class="av">+</span>'+
+       '<span class="nm"><b>Add “'+esc(document.getElementById('pickSearch').value.trim())+'”</b>'+
+       '<small>saved to your people list</small></span></button></div>';
+  }
+  if(recents.length){
+    h+='<div class="pick-sec">Recent for this role</div><div class="pick-list">'+
+       recents.map(prow).join('')+'</div>';
+  }
+  h+='<div class="pick-sec">'+(q?'Matches':'All people')+'</div>';
+  h+= matches.length
+    ? '<div class="pick-list">'+matches.map(prow).join('')+'</div>'
+    : '<div class="pick-empty">'+(state.people.length
+        ? 'Nobody matches that. Type a full name to add them.'
+        : 'No people yet. Type a name above to add the first one.')+'</div>';
+  if(current){
+    h+='<div style="height:14px"></div>'+
+       '<button class="btn ghost" id="pickClear" style="width:100%">Clear this role</button>';
+  }
+  document.getElementById('pickBody').innerHTML=h;
+}
+/* In the wizard there is no dive-detail page to hang four role rows off, so the
+   sheet asks which role first, then who. Two taps instead of a crowded card. */
+function pickRoleThenPerson(dive){
+  pickCtx = {roleKey:null, dive:dive, after:null};
+  document.getElementById('pickRole').textContent = 'Dyklag · team';
+  document.getElementById('pickSearch').value='';
+  document.getElementById('pickSearch').hidden = true;
+  document.getElementById('pickBody').innerHTML =
+    '<div class="pick-sec">Which role?</div><div class="pick-list">'+
+    ROLES.map(function(r){
+      var nm=personName(dive[r.k]);
+      return '<button class="prow" data-pickrole="'+r.k+'">'+
+        '<span class="av">'+esc(r.label.charAt(0))+'</span>'+
+        '<span class="nm"><b>'+esc(r.label)+'</b><small>'+esc(nm||'not assigned')+'</small></span>'+
+      '</button>';
+    }).join('')+'</div>';
+  document.getElementById('pickerSheet').hidden = false;
+}
+function assignPerson(personId){
+  if(!pickCtx || !pickCtx.dive) return;
+  pickCtx.dive[pickCtx.roleKey] = personId;
+  var after = pickCtx.after;
+  closePicker();
+  if(after) after();
+}
+
+/* ---------------- people & customers directory ---------------- */
+var dirScope = 'people';
+
+function diveUsesPerson(id){
+  var n=0;
+  entries.forEach(function(e){ (e.dives||[]).forEach(function(d){
+    ROLES.forEach(function(r){ if(d[r.k]===id) n++; });
+  }); });
+  return n;
+}
+function shiftsForCustomer(id){
+  return entries.filter(function(e){ return e.clientId===id; }).length;
+}
+function renderDirectory(){
+  document.getElementById('dirTitle').textContent = dirScope==='people' ? 'People' : 'Customers';
+  document.querySelectorAll('#dirScope button').forEach(function(b){
+    b.classList.toggle('on', b.getAttribute('data-dir')===dirScope);
+  });
+  document.getElementById('dirAdd').textContent =
+    dirScope==='people' ? '+ Add person' : '+ Add customer';
+  var q = document.getElementById('dirSearch').value.trim().toLowerCase();
+  var list = (dirScope==='people' ? state.people : state.customers).slice()
+    .sort(function(a,b){ return a.name.localeCompare(b.name); });
+  if(q) list = list.filter(function(x){
+    return (x.name+' '+(x.company||'')+' '+(x.notes||'')).toLowerCase().indexOf(q)>=0;
+  });
+  var host = document.getElementById('dirList');
+  if(!list.length){
+    host.innerHTML='<div class="pick-empty">'+
+      (q ? 'Nothing matches that.'
+         : dirScope==='people'
+            ? 'No people yet. They are added as you assign dive teams, or with the button above.'
+            : 'No customers yet. They are created as you log shifts.')+'</div>';
+    return;
+  }
+  host.innerHTML='<div class="pick-list">'+list.map(function(x){
+    var used = dirScope==='people' ? diveUsesPerson(x.id) : shiftsForCustomer(x.id);
+    var sub = dirScope==='people'
+      ? [x.company, used? used+' dive role'+(used===1?'':'s') : 'not used yet'].filter(Boolean).join(' · ')
+      : (used? used+' shift'+(used===1?'':'s') : 'not used yet');
+    return '<div class="prow" data-dirid="'+esc(x.id)+'">'+
+      '<span class="av">'+esc(initials(x.name))+'</span>'+
+      '<span class="nm"><b>'+esc(x.name)+'</b><small>'+esc(sub)+'</small></span>'+
+      '<button class="rm" data-diredit="'+esc(x.id)+'">Edit</button>'+
+      '<button class="rm" data-dirdel="'+esc(x.id)+'">Delete</button>'+
+    '</div>';
+  }).join('')+'</div>';
 }
 
 /* ---------------- wizard ---------------- */
@@ -2041,7 +2534,12 @@ function renderStep(animate){
           '<label><span class="mlbl">Out</span><input class="fld sm" type="time" data-dv="out" data-i="'+i+'" value="'+esc(d.out||'')+'"></label>'+
           '<label class="full"><span class="mlbl">Max depth ('+settings.unit+')</span><input class="fld sm" type="number" inputmode="decimal" step="0.1" min="0" data-dv="depth" data-i="'+i+'" value="'+esc(d.depth||'')+'"></label>'+
           '<label class="full"><span class="mlbl">Worked on</span><input class="fld sm" type="text" autocomplete="off" placeholder="e.g. anode replacement" data-dv="task" data-i="'+i+'" value="'+esc(d.task||'')+'"></label>'+
-        '</div>'+(m?'<div class="dur">'+hm(m)+'</div>':'')+'</div>';
+        '</div>'+
+        '<button class="teamrow" data-wizteam="'+i+'"><span>'+
+          '<span class="rl">Dyklag · team</span>'+
+          '<span class="pn'+(teamSummary(d)?'':' none')+'">'+esc(teamSummary(d)||'nobody assigned')+'</span>'+
+        '</span><span class="go"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></span></button>'+
+        (m?'<div class="dur">'+hm(m)+'</div>':'')+'</div>';
     }).join('')+'</div>';
     html+='<div style="height:9px"></div><button class="addd" id="addDive">+ Add a dive</button>';
     var tot=diveMins(draft);
@@ -2542,19 +3040,22 @@ function renderData(){
 
 /* ---------------- nav + toast ---------------- */
 function show(v){
-  ['log','dives','add','data'].forEach(function(n){
+  ['log','dives','dive','people','add','data'].forEach(function(n){
     document.getElementById('s-'+n).classList.toggle('on', n===v);
   });
   document.querySelectorAll('.tab').forEach(function(t){
     t.classList.toggle('on', t.getAttribute('data-go')===v);
   });
-  var inWizard = v==='add';
-  document.getElementById('tabbar').style.display = inWizard?'none':'grid';
-  document.getElementById('fabAdd').hidden = inWizard;
+  /* The wizard and the pushed detail screens own the whole viewport. */
+  var full = (v==='add' || v==='dive' || v==='people');
+  document.getElementById('tabbar').style.display = full?'none':'grid';
+  document.getElementById('fabAdd').hidden = full;
   window.scrollTo(0,0);
   if(v==='data') renderData();
   if(v==='log') renderLog();
   if(v==='dives') renderDives();
+  if(v==='dive') renderDive();
+  if(v==='people') renderDirectory();
 }
 var tt;
 function toast(msg){
@@ -2576,7 +3077,7 @@ document.getElementById('diveScope').addEventListener('click',function(ev){
   renderDives();
 });
 document.getElementById('diveList').addEventListener('click',function(ev){
-  var b=ev.target.closest('.drow'); if(b) openWizard(b.getAttribute('data-eid'));
+  var b=ev.target.closest('.drow'); if(b) openDive(b.getAttribute('data-did'));
 });
 document.getElementById('divesExport').addEventListener('click',function(){
   var list=visibleDives();
@@ -2640,6 +3141,15 @@ document.getElementById('slot').addEventListener('click',function(ev){
     renderStep(false);
     return;
   }
+  var wt=t.closest('[data-wizteam]');
+  if(wt){
+    capture();
+    var idx=+wt.getAttribute('data-wizteam');
+    var dv=draft.dives[idx];
+    /* Offer the role list first, then the people for whichever role is picked. */
+    pickRoleThenPerson(dv);
+    return;
+  }
   if(t.closest('#addDive')){
     capture();
     draft.dives.push(newDive());
@@ -2692,6 +3202,158 @@ document.getElementById('slot').addEventListener('keydown',function(ev){
 });
 
 /* data screen */
+/* dive detail */
+document.getElementById('diveBack').addEventListener('click',function(){ show('dives'); });
+document.getElementById('diveDetail').addEventListener('click',function(ev){
+  if(ev.target.closest('#diveEdit')) return openDiveEditor(openDiveId);
+  if(ev.target.closest('#diveDup'))  return duplicateDive(openDiveId);
+  if(ev.target.closest('#diveShift')){
+    var f=findDive(openDiveId);
+    if(f) openWizard(f.shift.id);
+  }
+});
+
+/* dive editor sheet */
+document.getElementById('editClose').addEventListener('click', closeDiveEditor);
+document.getElementById('editSheet').addEventListener('click',function(ev){
+  if(ev.target===this) closeDiveEditor();            /* tap the scrim */
+});
+document.getElementById('editBody').addEventListener('input',function(ev){
+  var el=ev.target.closest('[data-ed]'); if(!el) return;
+  var f=findDive(editDiveId); if(!f) return;
+  var k=el.getAttribute('data-ed');
+  f.dive[k] = (k==='depth')
+    ? (el.value===''? null : num(el.value))
+    : el.value;
+  if(k==='in'||k==='out'){
+    var m=minsBetween(f.dive.in,f.dive.out), dur=document.querySelector('#editBody .dur');
+    if(m){
+      if(!dur){ dur=document.createElement('div'); dur.className='dur';
+        dur.style.cssText='text-align:right;margin-top:8px';
+        document.querySelector('#editBody .dgrid').after(dur); }
+      dur.textContent=hm(m);
+    } else if(dur) dur.remove();
+  }
+});
+document.getElementById('editBody').addEventListener('click',function(ev){
+  var row=ev.target.closest('[data-role]');
+  if(row){
+    var fd=findDive(editDiveId); if(!fd) return;
+    return openPicker(row.getAttribute('data-role'), fd.dive, function(){
+      saveState(); renderDiveEditor();
+    });
+  }
+  if(ev.target.closest('#editDelete')){
+    var f=findDive(editDiveId); if(!f) return;
+    if(!confirm('Delete this dive? The rest of the shift is kept.')) return;
+    f.shift.dives.splice(f.index,1);
+    saveState();
+    document.getElementById('editSheet').hidden=true;
+    editDiveId=null; openDiveId=null;
+    show('dives');
+    toast('Dive deleted');
+  }
+});
+
+/* person picker */
+document.getElementById('pickClose').addEventListener('click', closePicker);
+document.getElementById('pickerSheet').addEventListener('click',function(ev){
+  if(ev.target===this) closePicker();
+});
+document.getElementById('pickSearch').addEventListener('input', renderPicker);
+document.getElementById('pickBody').addEventListener('click',function(ev){
+  var rolePick=ev.target.closest('[data-pickrole]');
+  if(rolePick){
+    var dv=pickCtx.dive;
+    return openPicker(rolePick.getAttribute('data-pickrole'), dv, function(){
+      renderStep(false);            /* the wizard card shows the new summary */
+    });
+  }
+  if(ev.target.closest('#pickClear')) return assignPerson(null);
+  if(ev.target.closest('[data-newperson]')){
+    var name=document.getElementById('pickSearch').value.trim();
+    if(!name) return;
+    return assignPerson(ensurePerson(name));
+  }
+  var row=ev.target.closest('[data-person]');
+  if(row) assignPerson(row.getAttribute('data-person'));
+});
+
+/* directory */
+document.getElementById('peopleBack').addEventListener('click',function(){ show('data'); });
+document.getElementById('dirScope').addEventListener('click',function(ev){
+  var b=ev.target.closest('[data-dir]'); if(!b) return;
+  dirScope=b.getAttribute('data-dir');
+  document.getElementById('dirSearch').value='';
+  renderDirectory();
+});
+document.getElementById('dirSearch').addEventListener('input', renderDirectory);
+document.getElementById('dirAdd').addEventListener('click',function(){
+  var what = dirScope==='people' ? 'person' : 'customer';
+  var name = prompt('Name of the new '+what+':');
+  if(name===null) return;
+  name=name.trim();
+  if(!name){ toast('A name is needed'); return; }
+  if(dirScope==='people'){
+    var company = prompt('Company (optional):') || '';
+    ensurePerson(name, company);
+  } else ensureCustomer(name);
+  saveState(); renderDirectory();
+  toast(name+' added');
+});
+document.getElementById('dirList').addEventListener('click',function(ev){
+  var ed=ev.target.closest('[data-diredit]'), del=ev.target.closest('[data-dirdel]');
+  var listRef = dirScope==='people' ? state.people : state.customers;
+  if(ed){
+    var id=ed.getAttribute('data-diredit');
+    var rec=listRef.filter(function(x){return x.id===id;})[0]; if(!rec) return;
+    var nm=prompt('Name:', rec.name);
+    if(nm===null) return;
+    nm=nm.trim(); if(!nm){ toast('A name is needed'); return; }
+    rec.name=nm;
+    if(dirScope==='people'){
+      var co=prompt('Company (optional):', rec.company||'');
+      if(co!==null) rec.company=co.trim();
+    }
+    saveState(); renderDirectory(); renderLog();
+    toast('Saved');
+    return;
+  }
+  if(del){
+    var did=del.getAttribute('data-dirdel');
+    var used = dirScope==='people' ? diveUsesPerson(did) : shiftsForCustomer(did);
+    var rec2=listRef.filter(function(x){return x.id===did;})[0]; if(!rec2) return;
+    /* Deleting something still referenced would leave records pointing at
+       nothing, so say what it costs before doing it. */
+    var msg = used
+      ? 'Delete '+rec2.name+'? '+used+' record'+(used===1?'':'s')+
+        ' still refer'+(used===1?'s':'')+' to them. '+
+        (dirScope==='people'
+          ? 'Those dives will show the role as unassigned.'
+          : 'Those shifts keep the client name as text.')
+      : 'Delete '+rec2.name+'?';
+    if(!confirm(msg)) return;
+    if(dirScope==='people'){
+      entries.forEach(function(e){ (e.dives||[]).forEach(function(d){
+        ROLES.forEach(function(r){ if(d[r.k]===did) d[r.k]=null; });
+      }); });
+      state.people = listRef.filter(function(x){ return x.id!==did; });
+    } else {
+      entries.forEach(function(e){ if(e.clientId===did) e.clientId=null; });   /* e.client keeps the name */
+      state.customers = listRef.filter(function(x){ return x.id!==did; });
+    }
+    saveState(); renderDirectory(); renderLog();
+    toast(rec2.name+' deleted');
+  }
+});
+
+document.getElementById('openPeople').addEventListener('click',function(){
+  dirScope='people'; document.getElementById('dirSearch').value=''; show('people');
+});
+document.getElementById('openCustomers').addEventListener('click',function(){
+  dirScope='customers'; document.getElementById('dirSearch').value=''; show('people');
+});
+
 /* backup */
 document.getElementById('backupSave').addEventListener('click',function(){
   if(!entries.length){ toast('Nothing to back up yet'); return; }

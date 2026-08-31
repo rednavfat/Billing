@@ -252,6 +252,40 @@ runs again.
 Backups written before v2 (`dataSchema: 1`) still restore — they are migrated
 on the way in by the same code, and the restore panel says the format is older.
 
+## Dive detail
+
+Every dive is its own record with its own id, opened by tapping it in the Dives
+tab. The page reads as a logbook entry: dive number (chronological across the
+whole log), date, in and out times, bottom time, depth, client, project, site
+and work performed.
+
+**Dyklag · team** — four roles per dive: Dykare, Reservdykare, Dykledare,
+Dykskötare. Nobody is tied to a role; the same person can be diver on one dive
+and tender on the next.
+
+**Kvävegrupp · nitrogen** shows the chain the app already computes rather than
+recalculating anything: surface interval, entering group, residual nitrogen
+added, the adjusted bottom time as arithmetic (`30 + 30 = 60 min`), the
+resulting group, and which table page and row it was read from.
+
+**Duplicate** copies what repeats — task, notes, and the whole team — and
+deliberately clears what must not be assumed: times and depth. Nitrogen is
+never copied; it is recomputed from the new times.
+
+## People and customers
+
+Reusable directories under **Data → People and customers**. A person is typed
+once: assigning an unknown name from the picker adds them to your people list
+in the same tap. The picker shows recents for that role first, then everyone,
+with search.
+
+Customers are created as you log shifts, matched case-insensitively so one
+company does not fragment across spellings.
+
+Both list how often each record is used. Deleting one says what it costs first:
+deleting a person clears their roles on the dives that referenced them but keeps
+the dives; deleting a customer keeps the client name as text on the shifts.
+
 ## Backup and restore
 
 **Data → Backup** writes a complete JSON copy of every shift, every dive and your settings.
