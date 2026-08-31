@@ -353,6 +353,21 @@ absent.
 *Print / PDF* uses the browser's own print path; *Copy* produces a plain-text
 version for pasting into an email.
 
+## Calendar
+
+The Log tab toggles between **Summary** and **Calendar**. The calendar is
+Monday-first and dots each day with what it holds — work, a dive, övertid,
+traktamente. Selecting a day lists its shifts and dives; tapping either opens
+the record, and Back returns to the calendar rather than dumping you somewhere
+else.
+
+## Incomplete records
+
+Records are never rejected for being incomplete — a historical import or a shift
+logged in a hurry is still worth keeping. **Data → Incomplete records** lists
+anything missing shift times, a client, dive times, depth, task or team, and
+tapping one opens it to finish. Nothing is discarded or guessed.
+
 ## Backup and restore
 
 **Data → Backup** writes a complete JSON copy of every shift, every dive and your settings.

@@ -33,8 +33,8 @@
   --line:#1c3f4e;
   --line-soft:#14313d;
   --text:#e8f1f3;
-  --muted:#7d9aa7;
-  --dim:#55747f;
+  --muted:#93aeba;
+  --dim:#6d8d99;
   --amber:#ffb23f;
   --amber-deep:#c9821f;
   --amber-ghost:rgba(255,178,63,.12);
@@ -85,7 +85,7 @@ button{cursor:pointer;background:none;border:none;padding:0}
   color:var(--amber);
 }
 .iconbtn{
-  width:36px;height:36px;border-radius:10px;border:1px solid var(--line);
+  width:42px;height:42px;border-radius:10px;border:1px solid var(--line);
   display:grid;place-items:center;color:var(--muted);background:var(--deep);
 }
 .iconbtn:hover{color:var(--text);border-color:var(--raise)}
@@ -95,7 +95,7 @@ button{cursor:pointer;background:none;border:none;padding:0}
 .gauge-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--line-soft)}
 .gauge-head .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
 .gauge-head .rng{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--text);letter-spacing:-.01em}
-.navb{width:30px;height:30px;border-radius:8px;color:var(--muted);display:grid;place-items:center;border:1px solid transparent}
+.navb{width:40px;height:40px;border-radius:8px;color:var(--muted);display:grid;place-items:center;border:1px solid transparent}
 .navb:hover{color:var(--amber);border-color:var(--line)}
 .navb[disabled]{opacity:.25;cursor:default}
 
@@ -253,7 +253,7 @@ button{cursor:pointer;background:none;border:none;padding:0}
 .fly-f{padding:8px 14px;font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);border-top:1px solid var(--line-soft)}
 
 .segwide{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:14px}
-.segwide button{flex:1;padding:9px;font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.segwide button{flex:1;padding:13px 9px;font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
 .segwide button.on{background:var(--amber);color:#08202b}
 
 /* ---------- overtime split + per-diem picker ---------- */
@@ -307,7 +307,7 @@ button{cursor:pointer;background:none;border:none;padding:0}
   border-top:1px solid var(--line);
   padding:7px 8px calc(7px + env(safe-area-inset-bottom,0px));
 }
-.tab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;color:var(--dim);border-radius:10px}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0;min-height:48px;justify-content:center;color:var(--dim);border-radius:10px}
 .tab .tl{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase}
 .tab.on{color:var(--amber)}
 
@@ -414,10 +414,47 @@ pre.csv{
   background:var(--abyss);border:1px solid var(--line-soft);border-radius:10px;
   padding:12px;overflow-x:auto;margin:0 0 12px;max-height:190px;white-space:pre;
 }
+/* ---------- calendar ---------- */
+.cal-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin-bottom:12px;font-family:var(--mono);font-size:13px;letter-spacing:.04em}
+.cal-head{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:5px}
+.cal-head span{text-align:center;font-family:var(--mono);font-size:9px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--dim)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cd{aspect-ratio:1;border:1px solid var(--line-soft);border-radius:9px;background:transparent;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  min-height:42px;color:var(--dim);padding:0}
+.cd.empty{border:none;background:none}
+.cd .n{font-family:var(--mono);font-size:12.5px;font-variant-numeric:tabular-nums}
+.cd.has{background:var(--deep);border-color:var(--line);color:var(--text)}
+.cd.today{border-color:var(--amber)}
+.cd.on{background:var(--amber-ghost);border-color:var(--amber)}
+.cd .marks{display:flex;gap:2.5px;height:5px;align-items:center}
+.cd .marks i{width:5px;height:5px;border-radius:50%;display:block}
+.marks i.w,.cal-key i.w{background:var(--amber)}
+.marks i.d,.cal-key i.d{background:var(--teal)}
+.marks i.o,.cal-key i.o{background:#ff9f43}
+.marks i.p,.cal-key i.p{background:var(--muted)}
+.cal-key{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.cal-key span{display:flex;align-items:center;gap:5px}
+.cal-key i{width:6px;height:6px;border-radius:50%;display:block}
+
+/* ---------- data quality ---------- */
+.iss{width:100%;text-align:left;border:1px solid var(--line);border-radius:11px;
+  background:var(--deep);padding:11px 13px;margin-bottom:8px;display:block}
+.iss:hover{border-color:var(--raise);background:var(--shelf)}
+.iss .t{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.iss .t b{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.iss .t .dt{font-family:var(--mono);font-size:11px;color:var(--dim);flex-shrink:0}
+.iss .why{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+.iss .why span{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;
+  line-height:1;padding:4px 6px;border-radius:5px;background:var(--amber-ghost);color:var(--amber)}
+
 /* ---------- search ---------- */
 .filters{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0 4px}
 .fchip{border:1px solid var(--line);background:var(--deep);border-radius:99px;
-  padding:7px 12px;font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
+  padding:10px 14px;min-height:40px;font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
 .fchip:hover{border-color:var(--raise);color:var(--text)}
 .fchip.on{border-color:var(--amber);background:var(--amber-ghost);color:var(--amber)}
 .fchip .x{font-family:var(--mono);font-size:11px;opacity:.7}
@@ -641,6 +678,13 @@ hr.rule{border:none;border-top:1px solid var(--line-soft);margin:18px 0 15px}
       </button>
     </div>
 
+    <div style="padding:0 var(--pad)">
+      <div class="segwide" id="logView">
+        <button data-lv="summary" class="on">Summary</button>
+        <button data-lv="calendar">Calendar</button>
+      </div>
+    </div>
+
     <div class="gauge">
       <div class="gauge-head">
         <button class="navb" id="pPrev" aria-label="Previous period">
@@ -678,6 +722,20 @@ hr.rule{border:none;border-top:1px solid var(--line-soft);margin:18px 0 15px}
         <div class="mini"><span class="k">Max depth</span><div class="v" id="tDepth">—</div></div>
         <div class="mini"><span class="k">Traktamente</span><div class="v" id="tPerDiem">—</div></div>
       </div>
+    </div>
+
+    <div class="sec" id="calSec" hidden>
+      <div class="cal-bar">
+        <button class="navb" id="calPrev" aria-label="Previous month">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <span id="calLabel">—</span>
+        <button class="navb" id="calNext" aria-label="Next month">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+      </div>
+      <div id="calGrid"></div>
+      <div id="calDay"></div>
     </div>
 
     <div class="sec" id="jobSec" hidden>
@@ -892,6 +950,13 @@ hr.rule{border:none;border-top:1px solid var(--line-soft);margin:18px 0 15px}
             <button data-u="m">m</button><button data-u="ft">ft</button>
           </div>
         </div>
+      </div>
+
+      <div class="card" id="issuesCard" hidden>
+        <h3>Incomplete records</h3>
+        <p>These are kept exactly as they are — nothing is discarded or guessed. They are
+           listed so they are easy to find and finish when you have a moment.</p>
+        <div id="issuesList"></div>
       </div>
 
       <div class="card">
@@ -2117,6 +2182,15 @@ function renderLog(){
 
   document.getElementById('summary').innerHTML = summaryHTML(t, list) + lockHTML(p, t);
 
+  /* Summary and calendar are two readings of the same period, not two screens. */
+  var cal = logView==='calendar';
+  document.getElementById('calSec').hidden = !cal;
+  document.getElementById('summary').parentNode.hidden = cal;
+  if(cal) renderCalendar();
+  document.querySelectorAll('#logView button').forEach(function(b){
+    b.classList.toggle('on', b.getAttribute('data-lv')===logView);
+  });
+
   document.getElementById('daysHead').textContent = list.length? 'Shifts · '+list.length : 'Shifts';
   var host=document.getElementById('dayList');
   if(!list.length){
@@ -2814,8 +2888,128 @@ function reportPlainText(){
   return out.join('\n');
 }
 
+/* ================================================================
+   DATA QUALITY
+
+   Incomplete records are allowed to exist — a historical import or a
+   shift logged in a hurry is still worth keeping. They are made easy
+   to find and fix rather than rejected at the door.
+   ================================================================ */
+function shiftIssues(e){
+  var out=[];
+  if(!e.start || !e.end) out.push('no shift times');
+  if(!shiftClient(e))    out.push('no client');
+  return out;
+}
+function diveIssues(d){
+  var out=[];
+  if(!d.in || !d.out) out.push('no dive times');
+  if(d.depth==null || !num(d.depth)) out.push('no depth');
+  if(!(d.task||'').trim()) out.push('no task');
+  var anyTeam = ROLES.some(function(r){ return d[r.k]; });
+  if(!anyTeam) out.push('no team');
+  return out;
+}
+function allIssues(){
+  var out=[];
+  entries.forEach(function(e){
+    var si=shiftIssues(e);
+    if(si.length) out.push({kind:'shift', id:e.id, date:e.date, label:shiftClient(e)||'Unassigned', issues:si});
+    (e.dives||[]).forEach(function(d){
+      var di=diveIssues(d);
+      if(di.length) out.push({kind:'dive', id:d.id, date:e.date,
+        label:(d.task||'').trim()||'Untitled dive', issues:di});
+    });
+  });
+  out.sort(function(a,b){ return a.date<b.date?1:a.date>b.date?-1:0; });
+  return out;
+}
+
+/* ================================================================
+   CALENDAR
+   ================================================================ */
+var calMonth = null;   /* Date on the first of the shown month */
+
+function calFirst(){
+  if(!calMonth){ var n=new Date(); calMonth=new Date(n.getFullYear(), n.getMonth(), 1); }
+  return calMonth;
+}
+function dayMap(){
+  var m={};
+  entries.forEach(function(e){
+    if(!e.date) return;
+    var c=categories(e);
+    var rec=m[e.date]||(m[e.date]={work:0,dives:0,ot:0,pd:'none'});
+    rec.work+=c.totalWorkingHours;
+    rec.dives+=c.diveCount;
+    rec.ot+=c.overtimeHours;
+    if(c.perDiem==='full') rec.pd='full';
+    else if(c.perDiem==='half' && rec.pd!=='full') rec.pd='half';
+  });
+  return m;
+}
+function renderCalendar(){
+  var first=calFirst(), y=first.getFullYear(), mo=first.getMonth();
+  var m=dayMap();
+  document.getElementById('calLabel').textContent = MON[mo]+' '+y;
+  /* Monday-first, which is how a Swedish working week reads. */
+  var lead=(new Date(y,mo,1).getDay()+6)%7;
+  var days=new Date(y,mo+1,0).getDate();
+  var h='<div class="cal-head">'+['M','T','O','T','F','L','S'].map(function(d){
+    return '<span>'+d+'</span>'; }).join('')+'</div><div class="cal">';
+  var i;
+  for(i=0;i<lead;i++) h+='<span class="cd empty"></span>';
+  for(i=1;i<=days;i++){
+    var key=y+'-'+pad(mo+1)+'-'+pad(i);
+    var r=m[key];
+    var cls='cd'+(r?' has':'')+(r&&r.dives?' dive':'')+(key===todayISO()?' today':'');
+    h+='<button class="'+cls+'" data-day="'+key+'">'+
+       '<span class="n">'+i+'</span>'+
+       (r? '<span class="marks">'+
+            (r.work? '<i class="w"></i>':'')+
+            (r.dives? '<i class="d"></i>':'')+
+            (r.ot? '<i class="o"></i>':'')+
+            (r.pd!=='none'? '<i class="p"></i>':'')+
+           '</span>' : '')+
+       '</button>';
+  }
+  h+='</div>';
+  h+='<div class="cal-key"><span><i class="w"></i>work</span><span><i class="d"></i>dive</span>'+
+     '<span><i class="o"></i>övertid</span><span><i class="p"></i>traktamente</span></div>';
+  document.getElementById('calGrid').innerHTML=h;
+  renderCalDay();
+}
+var calSelected=null;
+function renderCalDay(){
+  var host=document.getElementById('calDay');
+  if(!calSelected){ host.innerHTML=''; return; }
+  var list=entries.filter(function(e){ return e.date===calSelected; });
+  if(!list.length){ host.innerHTML='<div class="pick-empty">Nothing logged on '+esc(calSelected)+'.</div>'; return; }
+  var d=parseISO(calSelected);
+  var h='<div class="res-sec">'+pad(d.getDate())+' '+MON[d.getMonth()]+' '+d.getFullYear()+'</div>';
+  list.forEach(function(e){
+    var c=categories(e);
+    h+='<button class="hit" data-openshift="'+esc(e.id)+'">'+
+      '<span class="h1"><span class="ttl">'+esc(shiftClient(e)||'Unassigned')+'</span>'+
+      '<span class="dt">'+dec(c.totalWorkingHours)+' h</span></span>'+
+      '<span class="h2">'+esc(e.site||'')+(e.start?' · '+esc(e.start)+'–'+esc(e.end||''):'')+'</span>'+
+      (c.diveCount? '<span class="h3">'+c.diveCount+' dive'+(c.diveCount===1?'':'s')+
+        ' · '+dec(c.bottomTimeHours)+' h bottom</span>':'')+
+    '</button>';
+    (e.dives||[]).forEach(function(dv){
+      h+='<button class="hit" style="margin-left:14px" data-hit="dive" data-hid="'+esc(dv.id)+'">'+
+        '<span class="h1"><span class="ttl">'+esc((dv.task||'').trim()||'Untitled dive')+'</span>'+
+        '<span class="dt">'+(dv.in||'')+'</span></span>'+
+        '<span class="h3">'+(num(dv.depth)? num(dv.depth)+settings.unit+' · ':'')+
+        hm(minsBetween(dv.in,dv.out))+'</span></button>';
+    });
+  });
+  host.innerHTML=h;
+}
+
 /* ---------------- dive detail ---------------- */
 var openDiveId = null;
+var logView = 'summary';
 
 function siClock(mins){
   if(mins==null) return '—';
@@ -2904,9 +3098,17 @@ function rowMarksText(row){
   if(row.beyondRule) m.push('below the heavy rule');
   return m.join(' · ');
 }
-function openDive(diveId){
+/* Back should return where you came from — the dive log, the calendar, a
+   search result or the incomplete-records list are all entry points. */
+var diveOrigin = 'dives';
+function openDive(diveId, from){
   openDiveId = diveId;
+  diveOrigin = from || currentScreen() || 'dives';
   show('dive');
+}
+function currentScreen(){
+  var el=document.querySelector('.screen.on');
+  return el ? el.id.replace('s-','') : null;
 }
 
 /* Duplicating copies the context that repeats and clears what must not be
@@ -3710,6 +3912,7 @@ function renderData(){
   var prev=document.getElementById('csvPrev');
   prev.textContent = list.length? toCSV(list) : 'No shifts in this period.';
   document.getElementById('cntAll').textContent=entries.length;
+  renderIssues();
   renderBackupState();
   var snapShifts=snapshotShifts(load(K_SNAP,null));
   var undo=document.getElementById('undoRestore');
@@ -3722,6 +3925,21 @@ function renderData(){
   document.querySelectorAll('#setUnit button').forEach(function(b){
     b.classList.toggle('on', b.getAttribute('data-u')===settings.unit);
   });
+}
+
+function renderIssues(){
+  var list=allIssues();
+  document.getElementById('issuesCard').hidden = !list.length;
+  if(!list.length) return;
+  document.getElementById('issuesList').innerHTML = list.slice(0,40).map(function(x){
+    var d=x.date? parseISO(x.date) : null;
+    return '<button class="iss" data-fix="'+x.kind+'" data-fid="'+esc(x.id)+'">'+
+      '<span class="t"><b>'+esc(x.label)+'</b><span class="dt">'+
+      (d? pad(d.getDate())+' '+MON[d.getMonth()]+' '+d.getFullYear() : 'no date')+'</span></span>'+
+      '<span class="why">'+x.issues.map(function(i){return '<span>'+esc(i)+'</span>';}).join('')+'</span>'+
+    '</button>';
+  }).join('') + (list.length>40
+    ? '<div class="pick-empty">and '+(list.length-40)+' more</div>' : '');
 }
 
 /* ---------------- nav + toast ---------------- */
@@ -3891,6 +4109,41 @@ document.getElementById('slot').addEventListener('keydown',function(ev){
 });
 
 /* data screen */
+/* log view toggle + calendar */
+document.getElementById('logView').addEventListener('click',function(ev){
+  var b=ev.target.closest('[data-lv]'); if(!b) return;
+  logView=b.getAttribute('data-lv'); renderLog();
+});
+document.getElementById('calPrev').addEventListener('click',function(){
+  var f=calFirst(); calMonth=new Date(f.getFullYear(), f.getMonth()-1, 1); renderCalendar();
+});
+document.getElementById('calNext').addEventListener('click',function(){
+  var f=calFirst(); calMonth=new Date(f.getFullYear(), f.getMonth()+1, 1); renderCalendar();
+});
+document.getElementById('calGrid').addEventListener('click',function(ev){
+  var b=ev.target.closest('[data-day]'); if(!b) return;
+  var d=b.getAttribute('data-day');
+  calSelected = (calSelected===d) ? null : d;
+  document.querySelectorAll('#calGrid .cd').forEach(function(c){
+    c.classList.toggle('on', c.getAttribute('data-day')===calSelected);
+  });
+  renderCalDay();
+});
+document.getElementById('calDay').addEventListener('click',function(ev){
+  var sh=ev.target.closest('[data-openshift]');
+  if(sh) return openWizard(sh.getAttribute('data-openshift'));
+  var dv=ev.target.closest('[data-hit="dive"]');
+  if(dv) openDive(dv.getAttribute('data-hid'));
+});
+
+/* incomplete records */
+document.getElementById('issuesList').addEventListener('click',function(ev){
+  var b=ev.target.closest('[data-fix]'); if(!b) return;
+  var id=b.getAttribute('data-fid');
+  if(b.getAttribute('data-fix')==='dive'){ openDive(id); openDiveEditor(id); }
+  else openWizard(id);
+});
+
 /* period locking */
 document.getElementById('summary').addEventListener('click',function(ev){
   var p=activePeriod();
@@ -3960,7 +4213,9 @@ document.getElementById('statsBody').addEventListener('click',function(ev){
 });
 
 /* dive detail */
-document.getElementById('diveBack').addEventListener('click',function(){ show('dives'); });
+document.getElementById('diveBack').addEventListener('click',function(){
+  show(diveOrigin==='dive' ? 'dives' : diveOrigin);
+});
 document.getElementById('diveDetail').addEventListener('click',function(ev){
   if(ev.target.closest('#diveEdit')) return openDiveEditor(openDiveId);
   if(ev.target.closest('#diveDup'))  return duplicateDive(openDiveId);
