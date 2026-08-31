@@ -188,6 +188,27 @@ has its own export button for the dive log, with surface interval and nitrogen
 group columns. Inside the claude.ai viewer a *Save CSV file* button also
 appears, which hands you a real `.csv`.
 
+## Backup and restore
+
+**Data → Backup** writes a complete JSON copy of every shift, every dive and your settings.
+Save it as a file, or copy it. The card shows when this device last backed up and turns
+amber after 30 days.
+
+Backups are serialised with sorted keys, so two backups of unchanged data are byte-identical
+and can be diffed. The envelope carries metadata that legitimately changes between exports —
+the timestamp, the counts, the date range — while the `data` object is what round-trips exactly.
+When the device last backed up is deliberately kept **outside** `settings`, in its own key, so
+a backup never records the previous backup and break determinism.
+
+**Restore** takes a file or pasted text. It parses and describes the backup — shifts, dives,
+date range, when it was written — and shows what you currently have, before you confirm.
+Nothing is replaced until then, and every rejection says exactly what is wrong rather than
+failing silently.
+
+Restoring and erasing both write a one-step snapshot first, so **Undo** in the Danger zone puts
+back what was there. The snapshot is not a substitute for a file backup: it survives only until
+the next destructive action.
+
 ## Where data lives
 
 Entries are stored in your browser's `localStorage`, on the device you enter

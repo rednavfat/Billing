@@ -35,6 +35,7 @@
   --teal:#35d6c4;
   --teal-ghost:rgba(53,214,196,.12);
   --rose:#ff6b6b;
+  --rose-ghost:rgba(255,107,107,.13);
 
   --ui:'Archivo',system-ui,-apple-system,'Segoe UI',sans-serif;
   --mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
@@ -349,6 +350,35 @@ pre.csv{
   background:var(--abyss);border:1px solid var(--line-soft);border-radius:10px;
   padding:12px;overflow-x:auto;margin:0 0 12px;max-height:190px;white-space:pre;
 }
+/* ---------- backup ---------- */
+hr.rule{border:none;border-top:1px solid var(--line-soft);margin:18px 0 15px}
+.backup-state{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:12px;display:flex;align-items:center;gap:8px;
+}
+.backup-state.stale{color:var(--amber)}
+.backup-state .dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
+.filebtn{display:block;position:relative;overflow:hidden}
+.filebtn input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+.filebtn span{
+  display:block;text-align:center;border:1px dashed var(--line);border-radius:12px;
+  padding:13px;color:var(--teal);background:transparent;
+  font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;
+}
+.filebtn:hover span{border-color:var(--teal);background:var(--teal-ghost)}
+.rep{border:1px solid var(--line);border-radius:11px;background:var(--abyss);padding:14px;margin-top:12px}
+.rep.bad{border-color:var(--rose)}
+.rep h4{margin:0 0 9px;font-size:14px;font-weight:600}
+.rep h4.bad{color:var(--rose)}
+.rep .row{display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:4px 0}
+.rep .row .k{color:var(--dim)}
+.rep .row .v{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.rep .warn{
+  margin-top:11px;padding:10px 12px;border-radius:8px;
+  background:var(--rose-ghost);color:#ffc9c9;font-size:13px;line-height:1.5;
+}
+.rep .warn b{color:#fff}
+
 .setrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--line-soft)}
 .setrow:last-child{border-bottom:none}
 .setrow .k{font-size:14px}
@@ -466,12 +496,42 @@ pre.csv{
   <!-- ============ DATA ============ -->
   <section class="screen" id="s-data">
     <div class="topbar">
-      <div class="brand"><b>Data</b><span class="tick">Export · Import</span></div>
+      <div class="brand"><b>Data</b><span class="tick">Backup · Export</span></div>
       <button class="iconbtn" id="dataBack" aria-label="Back to log">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       </button>
     </div>
     <div style="padding:6px var(--pad) 0">
+
+      <div class="card">
+        <h3>Backup</h3>
+        <p>A complete copy of everything — every shift, every dive, and your settings — as one
+           file you can keep off this device. This is the only thing standing between you and a
+           cleared browser.</p>
+        <div class="backup-state" id="backupState"></div>
+        <button class="btn" id="backupSave" style="width:100%">Save backup file</button>
+        <div style="height:9px"></div>
+        <div class="row2">
+          <button class="btn ghost" style="flex:1" id="backupCopy">Copy backup</button>
+          <button class="btn ghost" style="flex:1" id="restoreOpen">Restore…</button>
+        </div>
+
+        <div id="restorePanel" hidden>
+          <hr class="rule">
+          <h3>Restore from a backup</h3>
+          <p>Choose a backup file, or paste one below. Nothing is replaced until you confirm.</p>
+          <label class="filebtn">
+            <input type="file" id="restoreFile" accept=".json,application/json">
+            <span>Choose backup file…</span>
+          </label>
+          <div style="height:9px"></div>
+          <textarea class="fld" id="restoreText" placeholder="…or paste the contents of a backup file here"
+                    style="min-height:96px;font-family:var(--mono);font-size:12px"></textarea>
+          <div style="height:9px"></div>
+          <button class="btn ghost" style="width:100%" id="restoreCheck">Check this backup</button>
+          <div id="restoreReport"></div>
+        </div>
+      </div>
 
       <div class="card">
         <h3>Export this period</h3>
@@ -512,8 +572,9 @@ pre.csv{
 
       <div class="card">
         <h3>Danger zone</h3>
-        <p><span id="cntAll">0</span> shifts stored on this device. Export before you clear — this can't be undone.</p>
-        <button class="btn danger" id="wipe">Erase all shifts</button>
+        <p><span id="cntAll">0</span> shifts stored on this device. Back up before you clear — this can't be undone.</p>
+        <button class="btn danger" id="undoRestore" hidden style="width:100%;margin-bottom:9px">Undo last restore</button>
+        <button class="btn danger" id="wipe" style="width:100%">Erase all shifts</button>
       </div>
 
       <div style="height:100px"></div>
@@ -1526,6 +1587,188 @@ function commit(){
   toast(found>=0?'Shift updated':'Shift saved');
 }
 
+/* ================================================================
+   BACKUP AND RESTORE
+
+   This app is the only copy of the record. Everything below exists so
+   that a cleared browser, a lost phone or a mistaken restore is not
+   the end of years of work.
+
+   Backups are serialised with sorted keys, so two backups of the same
+   data are byte-identical and can be diffed. The envelope carries
+   metadata that legitimately changes between exports (the timestamp);
+   the `data` object is what must round-trip exactly.
+   ================================================================ */
+var BACKUP_FORMAT = 1;   /* shape of the envelope below */
+var DATA_SCHEMA   = 1;   /* shape of entries/settings; Phase 1 raises this */
+var K_SNAP = 'bottomtime.snapshot.prerestore.v1';
+/* When this device last backed up is a property of the device, not of the log.
+   Keeping it out of `settings` is what makes two backups of unchanged data
+   byte-identical — otherwise each backup would record the previous one. */
+var K_BK = 'bottomtime.lastbackup.v1';
+
+/* Recursively sort object keys. Array order is meaningful and preserved. */
+function canon(v){
+  if(Array.isArray(v)) return v.map(canon);
+  if(v && typeof v === 'object'){
+    var out = {}, keys = Object.keys(v).sort(), i;
+    for(i=0;i<keys.length;i++) out[keys[i]] = canon(v[keys[i]]);
+    return out;
+  }
+  return v;
+}
+function stableStringify(v, indent){ return JSON.stringify(canon(v), null, indent||0); }
+
+function countDives(list){
+  var n=0;
+  list.forEach(function(e){ if(e.dives) n+=e.dives.length; });
+  return n;
+}
+function buildBackup(){
+  var dates = entries.map(function(e){ return e.date; }).filter(Boolean).sort();
+  return {
+    app:'bottom-time', kind:'backup',
+    backupFormat:BACKUP_FORMAT, dataSchema:DATA_SCHEMA,
+    exportedAt:new Date().toISOString(),
+    counts:{ shifts:entries.length, dives:countDives(entries) },
+    range:{ first:dates[0]||null, last:dates[dates.length-1]||null },
+    data:{ entries:entries, settings:settings }
+  };
+}
+function backupText(){ return stableStringify(buildBackup(), 2); }
+function backupFilename(){ return 'bottom-time-backup_'+iso(new Date())+'.json'; }
+
+/* Every rejection names what is wrong, so a bad file is never a silent no-op. */
+function parseBackup(text){
+  var o;
+  if(!text || !text.trim()) return {error:'There is nothing to read yet.'};
+  try{ o = JSON.parse(text); }
+  catch(e){ return {error:'That is not valid JSON. If you pasted it, check nothing was cut off.'}; }
+  if(!o || typeof o !== 'object' || Array.isArray(o))
+    return {error:'That file does not contain a backup.'};
+  if(o.app !== 'bottom-time' || o.kind !== 'backup')
+    return {error:'That is not a Bottom Time backup file.'};
+  if(o.backupFormat > BACKUP_FORMAT)
+    return {error:'That backup was written by a newer version of the app than this one.'};
+  if(!o.data || !Array.isArray(o.data.entries))
+    return {error:'That backup is missing its shifts, so it cannot be restored.'};
+  return {backup:o};
+}
+
+function markBackedUp(){
+  save(K_BK, {at:new Date().toISOString()});
+  renderBackupState();
+}
+function renderBackupState(){
+  var el = document.getElementById('backupState');
+  if(!el) return;
+  var rec = load(K_BK, null);
+  var last = rec && rec.at ? new Date(rec.at) : null;
+  if(!entries.length){ el.className='backup-state'; el.innerHTML='<span class="dot"></span>Nothing to back up yet'; return; }
+  if(!last){
+    el.className='backup-state stale';
+    el.innerHTML='<span class="dot"></span>Never backed up · '+entries.length+' shifts at risk';
+    return;
+  }
+  var days = Math.floor((Date.now()-last.getTime())/86400000);
+  el.className = 'backup-state' + (days>=30 ? ' stale' : '');
+  el.innerHTML = '<span class="dot"></span>Last backup '+
+    (days<=0 ? 'today' : days===1 ? 'yesterday' : days+' days ago');
+}
+
+/* Hand the file over by whatever route this environment allows. */
+function blobDownload(name, text, mime){
+  try{
+    var b = new Blob([text], {type: mime || 'application/json'});
+    var u = URL.createObjectURL(b), a = document.createElement('a');
+    a.href = u; a.download = name;
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(u); a.remove(); }, 1000);
+    return true;
+  }catch(e){ return false; }
+}
+function offerFile(name, text, mime, label){
+  if(downloads){
+    downloads.save({filename:name, data:text}).then(function(){
+      toast(label+' saved'); markBackedUp();
+    }, function(err){
+      if(err && err.code==='declined') return;
+      /* the viewer could not save it — fall back rather than lose the action */
+      if(blobDownload(name,text,mime)){ toast(label+' saved'); markBackedUp(); }
+      else copy(text, label);
+    });
+    return;
+  }
+  if(blobDownload(name,text,mime)){ toast(label+' saved'); markBackedUp(); }
+  else copy(text, label);
+}
+
+/* ---- restore ---- */
+var pendingRestore = null;
+
+function describeBackup(o){
+  var d = o.data, n = countDives(d.entries);
+  var when = o.exportedAt ? new Date(o.exportedAt) : null;
+  var cur = entries.length, curDives = countDives(entries);
+  return '<div class="rep"><h4>This backup contains</h4>'+
+    '<div class="row"><span class="k">Shifts</span><span class="v">'+d.entries.length+'</span></div>'+
+    '<div class="row"><span class="k">Dives</span><span class="v">'+n+'</span></div>'+
+    (o.range && o.range.first
+      ? '<div class="row"><span class="k">Covering</span><span class="v">'+esc(o.range.first)+' → '+esc(o.range.last)+'</span></div>'
+      : '')+
+    (when ? '<div class="row"><span class="k">Written</span><span class="v">'+esc(clockText(when))+'</span></div>' : '')+
+    '<div class="warn"><b>Restoring replaces everything on this device.</b> '+
+      'You currently have '+cur+' shift'+(cur===1?'':'s')+' and '+curDives+' dive'+(curDives===1?'':'s')+
+      '. They will be saved to a one-step undo, but keep a file backup too.</div>'+
+    '<div style="height:12px"></div>'+
+    '<button class="btn danger" id="restoreGo" style="width:100%">Replace my data with this backup</button>'+
+  '</div>';
+}
+function showRestoreError(msg){
+  document.getElementById('restoreReport').innerHTML =
+    '<div class="rep bad"><h4 class="bad">Cannot restore</h4>'+
+    '<div style="font-size:13.5px;color:var(--muted);line-height:1.55">'+esc(msg)+'</div></div>';
+  pendingRestore = null;
+}
+function checkRestore(text){
+  var r = parseBackup(text);
+  if(r.error){ showRestoreError(r.error); return; }
+  pendingRestore = r.backup;
+  document.getElementById('restoreReport').innerHTML = describeBackup(r.backup);
+}
+function doRestore(){
+  if(!pendingRestore) return;
+  /* Snapshot first — a restore is reversible exactly once. */
+  try{ save(K_SNAP, {savedAt:new Date().toISOString(), entries:entries, settings:settings}); }catch(e){}
+
+  var d = pendingRestore.data;
+  entries = d.entries;
+  settings = Object.assign({cycleStart:16, unit:'m', breakMin:60}, d.settings||{});
+  save(K_E, entries); save(K_S, settings);
+
+  pendingRestore = null;
+  offset = 0;
+  document.getElementById('restoreReport').innerHTML = '';
+  document.getElementById('restoreText').value = '';
+  document.getElementById('restorePanel').hidden = true;
+  renderLog(); renderData();
+  toast(entries.length+' shift'+(entries.length===1?'':'s')+' restored');
+}
+/* One step back from the last destructive action — a restore or a wipe. */
+function undoRestore(){
+  var snap = load(K_SNAP, null);
+  if(!snap) { toast('There is nothing to undo'); return; }
+  if(!confirm('Put back the '+snap.entries.length+' shift'+(snap.entries.length===1?'':'s')+
+              ' that were here before? This replaces what is on the device now.')) return;
+  entries = snap.entries;
+  settings = Object.assign({cycleStart:16, unit:'m', breakMin:60}, snap.settings||{});
+  save(K_E, entries); save(K_S, settings);
+  try{ localStorage.removeItem(K_SNAP); }catch(e){}
+  offset = 0;
+  renderLog(); renderData();
+  toast('Restore undone');
+}
+
 /* ---------------- CSV ---------------- */
 var COLS=['Date','Client','Site','On shift','Off shift','Unpaid lunch (h)','Hours worked','Dives',
           'Bottom time (min)','Bottom time (h)','Max depth','Standby (h)','Travel (h)',
@@ -1685,6 +1928,11 @@ function renderData(){
   var prev=document.getElementById('csvPrev');
   prev.textContent = list.length? toCSV(list) : 'No shifts in this period.';
   document.getElementById('cntAll').textContent=entries.length;
+  renderBackupState();
+  var snap=load(K_SNAP,null);
+  var undo=document.getElementById('undoRestore');
+  undo.hidden = !snap;
+  if(snap) undo.textContent='Undo — put back '+snap.entries.length+' shift'+(snap.entries.length===1?'':'s');
   document.getElementById('setCycle').value=cycleDay();
   document.getElementById('setBreak').value=breakMins();
   document.querySelectorAll('#setUnit button').forEach(function(b){
@@ -1833,6 +2081,42 @@ document.getElementById('slot').addEventListener('keydown',function(ev){
 });
 
 /* data screen */
+/* backup */
+document.getElementById('backupSave').addEventListener('click',function(){
+  if(!entries.length){ toast('Nothing to back up yet'); return; }
+  offerFile(backupFilename(), backupText(), 'application/json', 'Backup');
+});
+document.getElementById('backupCopy').addEventListener('click',function(){
+  if(!entries.length){ toast('Nothing to back up yet'); return; }
+  copy(backupText(), 'Backup');
+  markBackedUp();
+});
+document.getElementById('restoreOpen').addEventListener('click',function(){
+  var p=document.getElementById('restorePanel');
+  p.hidden = !p.hidden;
+  if(!p.hidden) p.scrollIntoView({block:'nearest'});
+});
+document.getElementById('restoreFile').addEventListener('change',function(){
+  var f=this.files && this.files[0];
+  if(!f) return;
+  var fr=new FileReader();
+  fr.onload=function(){
+    document.getElementById('restoreText').value=String(fr.result||'');
+    checkRestore(String(fr.result||''));
+  };
+  fr.onerror=function(){ showRestoreError('That file could not be read.'); };
+  fr.readAsText(f);
+});
+document.getElementById('restoreCheck').addEventListener('click',function(){
+  checkRestore(document.getElementById('restoreText').value);
+});
+document.getElementById('restoreReport').addEventListener('click',function(ev){
+  if(!ev.target.closest('#restoreGo')) return;
+  if(!confirm('Replace everything on this device with this backup?')) return;
+  doRestore();
+});
+document.getElementById('undoRestore').addEventListener('click', undoRestore);
+
 document.getElementById('copyPeriod').addEventListener('click',function(){
   var l=periodEntries();
   if(!l.length){ toast('Nothing to export in this period'); return; }
@@ -1867,9 +2151,11 @@ document.getElementById('setUnit').addEventListener('click',function(ev){
 });
 document.getElementById('wipe').addEventListener('click',function(){
   if(!entries.length){ toast('Nothing stored to erase'); return; }
-  if(!confirm('Erase all '+entries.length+' shifts? This cannot be undone.')) return;
+  if(!confirm('Erase all '+entries.length+' shifts?')) return;
+  /* Snapshot first, so an accidental wipe is recoverable in one step. */
+  try{ save(K_SNAP, {savedAt:new Date().toISOString(), entries:entries, settings:settings}); }catch(e){}
   entries=[]; save(K_E,entries);
-  renderLog(); renderData(); toast('All shifts erased');
+  renderLog(); renderData(); toast('All shifts erased — undo is in Danger zone');
 });
 
 /* ---------------- optional: hand the viewer a real .csv file ---------------- */
