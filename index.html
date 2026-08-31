@@ -599,13 +599,119 @@ var NDBT = {
   edition:'NDBT Standardtabell',
   unit:'msw',
   minSurfaceMin:10,             /* under 0:10 the tables do not treat it as a repetitive dive */
-  floorDepth:24,                /* pages for 24 m and shallower are not transcribed yet */
+  floorDepth:9,                 /* pages for 9 m and shallower are not transcribed yet */
 
   /* Each depth page: "Dybder ikke større enn N meter".
      stops are minutes at [15, 12, 9, 6, 3] msw; xs marks the rows below
      the page's heavy rule (exceptional exposure, printed with *).
      rnt is the page's own footer row, "Minutter tillegg til bunntid". */
   standard:[
+    {depth:12, rows:[
+      {bt:10,  stops:[0,0,0,0,0],   total:0,  group:'A'},
+      {bt:20,  stops:[0,0,0,0,0],   total:0,  group:'B'},
+      {bt:25,  stops:[0,0,0,0,0],   total:0,  group:'C'},
+      {bt:35,  stops:[0,0,0,0,0],   total:0,  group:'D'},
+      {bt:45,  stops:[0,0,0,0,0],   total:0,  group:'E'},
+      {bt:55,  stops:[0,0,0,0,0],   total:0,  group:'F'},
+      {bt:65,  stops:[0,0,0,0,0],   total:0,  group:'G'},
+      {bt:75,  stops:[0,0,0,0,0],   total:0,  group:'H'},
+      {bt:85,  stops:[0,0,0,0,0],   total:0,  group:'I'},
+      {bt:95,  stops:[0,0,0,0,0],   total:0,  group:'J'},
+      {bt:110, stops:[0,0,0,0,0],   total:0,  group:'K'},
+      {bt:120, stops:[0,0,0,0,0],   total:0,  group:'L'},
+      {bt:135, stops:[0,0,0,0,0],   total:0,  group:'M'},
+      {bt:150, stops:[0,0,0,0,0],   total:0,  group:'N'},
+      {bt:160, stops:[0,0,0,0,0],   total:0,  group:'O'},
+      {bt:165, stops:[0,0,0,0,5],   total:5,  group:'O'},
+      {bt:195, stops:[0,0,0,0,10],  total:10, group:'Z'},
+      {bt:225, stops:[0,0,0,0,15],  total:15, group:'Z'},
+      {bt:240, stops:[0,0,0,0,35],  total:35, group:'Z'},
+      {bt:270, stops:[0,0,0,0,45],  total:45, group:'Z', star:true, beyondRule:true}
+    ], rnt:{A:15,B:20,C:30,D:35,E:45,F:55,G:65,H:75,I:85,J:95,K:110,L:120,M:135,N:150,O:170,Z:190}},
+
+    {depth:15, rows:[
+      {bt:10,  stops:[0,0,0,0,0],   total:0,  group:'A'},
+      {bt:15,  stops:[0,0,0,0,0],   total:0,  group:'B'},
+      {bt:20,  stops:[0,0,0,0,0],   total:0,  group:'C'},
+      {bt:30,  stops:[0,0,0,0,0],   total:0,  group:'D'},
+      {bt:35,  stops:[0,0,0,0,0],   total:0,  group:'E'},
+      {bt:40,  stops:[0,0,0,0,0],   total:0,  group:'F'},
+      {bt:50,  stops:[0,0,0,0,0],   total:0,  group:'G'},
+      {bt:55,  stops:[0,0,0,0,0],   total:0,  group:'H'},
+      {bt:65,  stops:[0,0,0,0,0],   total:0,  group:'I'},
+      {bt:70,  stops:[0,0,0,0,0],   total:0,  group:'J'},
+      {bt:80,  stops:[0,0,0,0,0],   total:0,  group:'K'},
+      {bt:90,  stops:[0,0,0,0,0],   total:0,  group:'L'},
+      {bt:105, stops:[0,0,0,0,5],   total:5,  group:'O'},   /* page skips M and N here */
+      {bt:120, stops:[0,0,0,0,10],  total:10, group:'O'},
+      {bt:135, stops:[0,0,0,0,15],  total:15, group:'Z'},
+      {bt:145, stops:[0,0,0,0,20],  total:20, group:'Z'},
+      {bt:160, stops:[0,0,0,0,25],  total:25, group:'Z'},
+      {bt:180, stops:[0,0,0,5,25],  total:30, group:'Z', star:true},  /* starred, ABOVE the rule */
+      {bt:190, stops:[0,0,0,20,40], total:60, group:'Z', star:true, beyondRule:true}
+    ], rnt:{A:10,B:15,C:25,D:30,E:35,F:40,G:50,H:55,I:65,J:75,K:80,L:90,M:100,N:110,O:120,Z:130}},
+
+    {depth:18, rows:[
+      {bt:5,   stops:[0,0,0,0,0],   total:0,  group:'A'},
+      {bt:10,  stops:[0,0,0,0,0],   total:0,  group:'B'},
+      {bt:15,  stops:[0,0,0,0,0],   total:0,  group:'C'},
+      {bt:20,  stops:[0,0,0,0,0],   total:0,  group:'D'},
+      {bt:30,  stops:[0,0,0,0,0],   total:0,  group:'E'},
+      {bt:35,  stops:[0,0,0,0,0],   total:0,  group:'F'},
+      {bt:40,  stops:[0,0,0,0,0],   total:0,  group:'G'},
+      {bt:45,  stops:[0,0,0,0,0],   total:0,  group:'H'},
+      {bt:50,  stops:[0,0,0,0,0],   total:0,  group:'I'},
+      {bt:55,  stops:[0,0,0,0,0],   total:0,  group:'J'},
+      {bt:60,  stops:[0,0,0,0,0],   total:0,  group:'K'},
+      {bt:70,  stops:[0,0,0,0,5],   total:5,  group:'L'},
+      {bt:80,  stops:[0,0,0,5,5],   total:10, group:'N'},
+      {bt:90,  stops:[0,0,0,5,10],  total:15, group:'O'},
+      {bt:100, stops:[0,0,0,5,15],  total:20, group:'Z'},
+      {bt:110, stops:[0,0,0,5,20],  total:25, group:'Z'},
+      {bt:120, stops:[0,0,0,5,25],  total:30, group:'Z'},
+      {bt:130, stops:[0,0,0,20,40], total:60, group:'Z', star:true, beyondRule:true},
+      {bt:140, stops:[0,0,5,30,40], total:75, group:'Z', star:true, beyondRule:true}
+    ], rnt:{A:10,B:15,C:20,D:25,E:30,F:35,G:40,H:45,I:50,J:60,K:65,L:70,M:80,N:85,O:95,Z:100}},
+
+    {depth:21, rows:[
+      {bt:5,   stops:[0,0,0,0,0],   total:0,  group:'A'},
+      {bt:10,  stops:[0,0,0,0,0],   total:0,  group:'B'},
+      {bt:15,  stops:[0,0,0,0,0],   total:0,  group:'C'},
+      {bt:20,  stops:[0,0,0,0,0],   total:0,  group:'D'},
+      {bt:25,  stops:[0,0,0,0,0],   total:0,  group:'E'},
+      {bt:30,  stops:[0,0,0,0,0],   total:0,  group:'G'},
+      {bt:35,  stops:[0,0,0,0,0],   total:0,  group:'H'},
+      {bt:40,  stops:[0,0,0,0,0],   total:0,  group:'I'},
+      {bt:45,  stops:[0,0,0,0,0],   total:0,  group:'J'},
+      {bt:50,  stops:[0,0,0,0,5],   total:5,  group:'K'},
+      {bt:55,  stops:[0,0,0,0,5],   total:5,  group:'L'},
+      {bt:60,  stops:[0,0,0,5,5],   total:10, group:'M'},
+      {bt:70,  stops:[0,0,0,5,10],  total:15, group:'N'},
+      {bt:75,  stops:[0,0,0,5,15],  total:20, group:'O'},
+      {bt:85,  stops:[0,0,0,5,20],  total:25, group:'Z'},
+      {bt:90,  stops:[0,0,0,5,25],  total:30, group:'Z'},
+      {bt:95,  stops:[0,0,5,5,25],  total:35, group:'Z', star:true, beyondRule:true},
+      {bt:110, stops:[0,0,5,20,45], total:70, group:'Z', star:true, beyondRule:true}
+    ], rnt:{A:10,B:10,C:15,D:20,E:25,F:30,G:35,H:40,I:45,J:50,K:55,L:60,M:65,N:70,O:75,Z:85}},
+
+    {depth:24, rows:[
+      {bt:5,   stops:[0,0,0,0,0],   total:0,  group:'A'},
+      {bt:10,  stops:[0,0,0,0,0],   total:0,  group:'C'},
+      {bt:15,  stops:[0,0,0,0,0],   total:0,  group:'D'},
+      {bt:20,  stops:[0,0,0,0,0],   total:0,  group:'E'},
+      {bt:25,  stops:[0,0,0,0,0],   total:0,  group:'F'},
+      {bt:30,  stops:[0,0,0,0,0],   total:0,  group:'H'},
+      {bt:35,  stops:[0,0,0,0,0],   total:0,  group:'I'},
+      {bt:40,  stops:[0,0,0,0,5],   total:5,  group:'J'},
+      {bt:50,  stops:[0,0,0,5,5],   total:10, group:'M'},   /* page skips K and L */
+      {bt:55,  stops:[0,0,0,5,10],  total:15, group:'M'},   /* M repeats, as printed */
+      {bt:60,  stops:[0,0,0,5,15],  total:20, group:'N'},
+      {bt:70,  stops:[0,0,0,5,20],  total:25, group:'O'},
+      {bt:80,  stops:[0,0,5,5,30],  total:40, group:'Z', star:true, beyondRule:true},
+      {bt:85,  stops:[0,0,5,20,40], total:65, group:'Z', star:true, beyondRule:true},
+      {bt:90,  stops:[0,5,5,30,45], total:85, group:'Z', star:true, beyondRule:true}
+    ], rnt:{A:5,B:10,C:15,D:20,E:20,F:25,G:30,H:35,I:40,J:40,K:45,L:50,M:55,N:60,O:65,Z:70}},
+
     {depth:27, rows:[
       {bt:5,  stops:[0,0,0,0,0],    total:0,  group:'B'},
       {bt:10, stops:[0,0,0,0,0],    total:0,  group:'C'},
