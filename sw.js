@@ -6,7 +6,7 @@
    icons, and the Google Fonts stylesheet and font files — is cache-first, so
    after one online visit the whole app runs offline. */
 
-var VERSION = 'bottom-time-v2';
+var VERSION = 'bottom-time-v3';
 var PAGE = './index.html';
 var SHELL = [
   './',

@@ -285,6 +285,38 @@ Both list how often each record is used. Deleting one says what it costs first:
 deleting a person clears their roles on the dives that referenced them but keeps
 the dives; deleting a customer keeps the client name as text on the shifts.
 
+## Search
+
+The **Search** tab covers the whole local history offline — client, site,
+project, task, notes, dates, and every person on a dive team in any role.
+Multi-word queries require all terms. Matches are highlighted.
+
+Filters narrow by kind (dives or shifts), year, customer, person and depth
+band; tapping an active filter clears it. A result opens the record itself.
+
+Each dive and shift is reduced once to a lowercase haystack, and the index is
+rebuilt only when the store changes. Against six years of records — 432 shifts,
+432 dives — a keystroke reaches results in **15–25 ms**, and the app is
+interactive **96 ms** after reload.
+
+With nothing typed and nothing filtered the screen offers the twenty most
+recent records rather than rendering the entire history.
+
+## Statistics
+
+Two scopes, deliberately never mixed.
+
+**Diving** — lifetime dives, bottom time, diving days, average dive, deepest
+dive; bottom time by year; a month breakdown for a selected year; dives and
+bottom time by depth band; and hours grouped by what was typed in *worked on*.
+Nothing about work type is inferred.
+
+**Work** — working hours, regular, övertid, standby, resa, working days and
+traktamente days, plus working hours by year.
+
+Bottom time appears in the work scope too, labelled *inside the hours, not
+added*, so the two series can be read together without ever being summed.
+
 ## Backup and restore
 
 **Data → Backup** writes a complete JSON copy of every shift, every dive and your settings.
