@@ -172,6 +172,13 @@ button{cursor:pointer;background:none;border:none;padding:0}
 .dbody .t.untitled{color:var(--muted);font-weight:500;font-style:italic}
 .dbody .m{display:block;font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums}
 .dbody .c{display:block;font-size:11.5px;color:var(--dim);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dbody .why{
+  display:inline-block;margin-top:5px;margin-right:5px;
+  font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;
+  line-height:1;padding:4px 6px;border-radius:5px;background:var(--shelf);color:var(--dim);
+}
+.dbody .why.teal{background:var(--teal-ghost);color:var(--teal)}
+.dbody .why.warn{background:var(--amber-ghost);color:var(--amber)}
 .dright{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
 .dright .dp{display:block;font-size:16px;color:var(--amber);font-weight:500}
 .dright .bt{display:block;font-size:11px;color:var(--teal);margin-top:2px}
@@ -570,81 +577,174 @@ function billableH(e){ return workedMins(e)/60 + num(e.standby) + num(e.travel);
 
 /* ================================================================
    NITROGEN GROUPS — Norske dykke- og behandlingstabeller (NDBT)
+   "Standardtabell" (air, decompression in water) + surface-interval
+   adjustment table.
 
-   The machinery below is complete; the TABLES ARE DELIBERATELY EMPTY.
-   Repetitive-group values are decompression data: a wrong letter is
-   worse than no letter, so nothing here is guessed or ported from a
-   different table set (US Navy / PADI RDP are NOT interchangeable
-   with NDBT). Until the official tables are transcribed in, every
-   lookup returns null and the app shows "—" rather than a number.
+   Values are transcribed from the user's own copy of the tables.
+   Times are written exactly as the document prints them (H:MM, and
+   whole minutes for bottom time) so this block can be read straight
+   against the printed page. Nothing is interpolated: a lookup that
+   falls outside a transcribed table returns a reason, never a guess.
 
-   To enable, fill these three from the official NDBT edition and set
-   `loaded:true` plus the `edition` string:
-
-   1. noDecoGroup — group letter reached by a single dive.
-        depth  = table depth row, in msw
-        rows   = ascending bottom-time bands, in minutes
-        e.g. {depth:12, rows:[{maxBt:60,group:'D'},{maxBt:90,group:'E'}]}
-        A dive is matched to the FIRST row whose maxBt >= bottom time,
-        and to the first depth row >= actual depth (round deeper).
-
-   2. surfaceCredit — group after off-gassing on the surface.
-        {'E':[{maxSi:60,group:'E'},{maxSi:180,group:'D'}]}
-        maxSi in minutes, ascending; first row whose maxSi >= interval.
-
-   3. residualNitrogen — RNT in minutes added to the next dive's
-      bottom time before looking it up in noDecoGroup.
-        {'D':[{depth:12,rnt:25},{depth:18,rnt:17}]}
-
-   `seriesResetMin` is the surface interval after which a diver is
-   treated as clean again — confirm the correct value against the
-   tables rather than assuming the 12 h used by other table sets.
+   COVERAGE IS PARTIAL. Only the depth pages listed in `standard`
+   are loaded. `floorDepth` is the depth at or below which the
+   correct page has NOT been transcribed yet, so shallower dives are
+   reported as uncovered rather than being pushed onto a deeper —
+   and therefore wrong — page.
    ================================================================ */
+var GROUPS=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','Z'];
+
 var NDBT = {
-  loaded: false,
-  edition: '',
-  unit: 'msw',
-  seriesResetMin: null,
-  noDecoGroup: [],
-  surfaceCredit: {},
-  residualNitrogen: {}
+  loaded:false,                 /* set by validateNDBT() below, never by hand */
+  edition:'NDBT Standardtabell',
+  unit:'msw',
+  minSurfaceMin:10,             /* under 0:10 the tables do not treat it as a repetitive dive */
+  floorDepth:39,                /* pages for 39 m and shallower are not transcribed yet */
+
+  /* Each depth page: "Dybder ikke større enn N meter".
+     stops are minutes at [15, 12, 9, 6, 3] msw; xs marks the rows below
+     the page's heavy rule (exceptional exposure, printed with *).
+     rnt is the page's own footer row, "Minutter tillegg til bunntid". */
+  standard:[
+    {depth:42, rows:[
+      {bt:5,  stops:[0,0,0,0,0],   total:0,  group:'C'},
+      {bt:10, stops:[0,0,0,0,5],   total:5,  group:'E'},
+      {bt:15, stops:[0,0,0,5,5],   total:10, group:'H'},
+      {bt:20, stops:[0,0,0,5,10],  total:15, group:'J'},
+      {bt:25, stops:[0,0,0,5,15],  total:20, group:'L'},
+      {bt:30, stops:[0,0,5,5,20],  total:30, group:'N'},
+      {bt:35, stops:[0,5,10,15,35],total:65, group:'O', xs:true},
+      {bt:40, stops:[0,5,15,20,40],total:80, group:'Z', xs:true}
+    ], rnt:{A:5,B:5,C:10,D:10,E:10,F:15,G:15,H:20,I:20,J:25,K:25,L:25,M:30,N:30,O:35,Z:35}},
+
+    {depth:45, rows:[
+      {bt:10, stops:[0,0,0,0,5],   total:5,  group:'F'},
+      {bt:15, stops:[0,0,0,5,5],   total:10, group:'H'},
+      {bt:20, stops:[0,0,0,5,15],  total:20, group:'K'},
+      {bt:25, stops:[0,0,5,5,20],  total:30, group:'M'},
+      {bt:30, stops:[0,0,5,10,25], total:40, group:'O', xs:true},
+      {bt:35, stops:[0,5,15,20,40],total:80, group:'Z', xs:true}
+    ], rnt:{A:5,B:5,C:10,D:10,E:10,F:15,G:15,H:15,I:20,J:20,K:25,L:25,M:30,N:30,O:30,Z:35}},
+
+    {depth:48, rows:[
+      {bt:10, stops:[0,0,0,5,5],   total:10, group:'F'},
+      {bt:15, stops:[0,0,0,5,10],  total:15, group:'I'},
+      {bt:20, stops:[0,0,5,5,15],  total:25, group:'L'},
+      {bt:25, stops:[0,0,5,10,20], total:35, group:'N'},
+      {bt:30, stops:[0,5,5,10,25], total:45, group:'O', xs:true}
+    ], rnt:{A:5,B:5,C:5,D:10,E:10,F:15,G:15,H:15,I:20,J:20,K:20,L:25,M:25,N:30,O:30,Z:30}},
+
+    {depth:51, rows:[
+      {bt:10, stops:[0,0,0,5,5],   total:10, group:'G'},
+      {bt:15, stops:[0,0,0,5,10],  total:15, group:'J'},
+      {bt:20, stops:[0,0,5,5,15],  total:25, group:'L'},
+      {bt:25, stops:[0,0,5,10,25], total:40, group:'O', xs:true},
+      {bt:30, stops:[5,5,15,25,35],total:85, group:'Z', xs:true}
+    ], rnt:{A:5,B:5,C:5,D:10,E:10,F:10,G:15,H:15,I:15,J:20,K:20,L:20,M:25,N:25,O:30,Z:30}}
+  ],
+
+  /* "Justering av N2 gruppe ved opphold på overflaten."
+     For each group you surfaced with, the UPPER bound of each surface-interval
+     band, in the printed H:MM. Bands run left to right in the document, and the
+     resulting group counts DOWN from the entering group towards A — so a row for
+     group X must hold exactly as many bounds as there are groups from X to A.
+     validateNDBT() enforces that, which is what catches a mis-read column. */
+  surface:{
+    A:['2:20'],
+    B:['1:20','3:40'],
+    C:['1:00','2:10','4:30'],
+    D:['0:50','1:50','3:00','5:20'],
+    E:['0:50','1:40','2:40','4:00','6:20'],
+    F:['0:50','1:40','2:40','3:30','4:50','7:10'],
+    G:['0:50','1:40','2:40','3:30','4:20','5:40','8:00'],
+    H:['0:50','1:40','2:40','3:30','4:20','5:20','6:30','8:50'],
+    I:['0:50','1:40','2:40','3:30','4:20','5:10','6:10','7:20','9:40'],
+    J:['0:50','1:40','2:40','3:30','4:20','5:10','6:10','7:00','8:20','10:40'],
+    K:['0:50','1:40','2:40','3:30','4:20','5:10','6:10','7:00','7:50','9:10','11:30'],
+    L:['0:50','1:40','2:40','3:30','4:20','5:10','6:10','7:00','7:50','8:40','10:00','12:20'],
+    M:['0:50','1:40','2:40','3:30','4:20','5:10','6:10','7:00','7:50','8:40','9:40','10:50','13:10'],
+    N:['0:50','1:40','2:40','3:30','4:20','5:10','6:10','7:00','7:50','8:40','9:30','10:30','11:50','14:10'],
+    O:['0:50','1:40','2:40','3:30','4:20','5:10','6:10','7:00','7:50','8:40','9:30','10:30','11:20','12:40','15:00'],
+    Z:['0:50','1:40','2:40','3:30','4:20','5:10','6:10','7:00','7:50','8:40','9:30','10:30','11:20','12:10','13:30','15:50']
+  }
 };
 
-/* First row at or beyond the given key — tables are "round to the harder case". */
-function ndbtBand(rows,key,keyName){
-  if(!rows) return null;
-  for(var i=0;i<rows.length;i++) if(key <= rows[i][keyName]) return rows[i];
-  return null;                            /* beyond the table: no answer, not an extrapolation */
+function hhmm(s){ var p=String(s).split(':'); return (+p[0])*60 + (+p[1]); }
+function gIndex(g){ return GROUPS.indexOf(g); }
+
+/* Structural check on the transcription. Anything inconsistent leaves the
+   tables switched off rather than answering from half-read data. */
+function validateNDBT(){
+  var problems=[], i, j, g, row;
+  for(i=0;i<GROUPS.length;i++){
+    g=GROUPS[i];
+    var bounds=NDBT.surface[g];
+    if(!bounds){ problems.push('surface row missing for '+g); continue; }
+    if(bounds.length!==i+1) problems.push('surface row '+g+' has '+bounds.length+' bands, expected '+(i+1));
+    for(j=1;j<bounds.length;j++)
+      if(hhmm(bounds[j])<=hhmm(bounds[j-1])) problems.push('surface row '+g+' bands not ascending at '+bounds[j]);
+  }
+  for(i=0;i<NDBT.standard.length;i++){
+    var page=NDBT.standard[i];
+    if(i>0 && page.depth<=NDBT.standard[i-1].depth) problems.push('depth pages out of order at '+page.depth);
+    for(j=0;j<page.rows.length;j++){
+      row=page.rows[j];
+      if(j>0 && row.bt<=page.rows[j-1].bt) problems.push(page.depth+'m bottom times not ascending at '+row.bt);
+      if(gIndex(row.group)<0) problems.push(page.depth+'m row '+row.bt+' has unknown group '+row.group);
+      var sum=0; for(var k=0;k<row.stops.length;k++) sum+=row.stops[k];
+      if(sum!==row.total) problems.push(page.depth+'m row '+row.bt+' stops sum to '+sum+', printed total is '+row.total);
+    }
+    for(j=0;j<GROUPS.length;j++)
+      if(typeof page.rnt[GROUPS[j]]!=='number') problems.push(page.depth+'m RNT row missing group '+GROUPS[j]);
+  }
+  NDBT.problems=problems;
+  NDBT.loaded=problems.length===0;
+  return problems;
 }
-function ndbtDepthRow(depth){
+
+/* Smallest transcribed page at or beyond this depth ("dybder ikke større enn"). */
+function ndbtPage(depth){
   var best=null;
-  for(var i=0;i<NDBT.noDecoGroup.length;i++){
-    var r=NDBT.noDecoGroup[i];
-    if(depth <= r.depth && (!best || r.depth < best.depth)) best=r;
+  for(var i=0;i<NDBT.standard.length;i++){
+    var pg=NDBT.standard[i];
+    if(depth<=pg.depth && (!best || pg.depth<best.depth)) best=pg;
   }
   return best;
 }
-/* Group reached after a dive to `depth` for `bt` minutes, entering with `startGroup`. */
-function groupAfterDive(depth, bt, startGroup){
-  if(!NDBT.loaded || !depth || !bt) return null;
-  var row=ndbtDepthRow(depth);
-  if(!row) return null;
-  var total=bt;
+
+/* Group after `si` minutes on the surface, entering with `group`.
+   Returns {group, note}: group null when the diver is clean again, or when
+   the interval is too short for the tables to treat it as a separate dive. */
+function surfaceAdjust(group, si){
+  if(!NDBT.loaded || !group) return {group:null, note:'no-tables'};
+  if(si < NDBT.minSurfaceMin) return {group:group, note:'too-short'};
+  var bounds=NDBT.surface[group], gi=gIndex(group);
+  for(var i=0;i<bounds.length;i++)
+    if(si <= hhmm(bounds[i])) return {group:GROUPS[gi-i], note:'ok'};
+  return {group:null, note:'clean'};          /* past the row's last band */
+}
+
+/* Group reached after a dive, entering with `startGroup`.
+   Returns {group, note, rnt, row} — note explains every null. */
+function diveGroup(depth, bt, startGroup){
+  if(!NDBT.loaded) return {group:null, note:'no-tables'};
+  if(!depth || !bt) return {group:null, note:'incomplete'};
+  if(depth <= NDBT.floorDepth) return {group:null, note:'depth-uncovered'};
+  var page=ndbtPage(depth);
+  if(!page) return {group:null, note:'too-deep'};
+  var rnt=0;
   if(startGroup){
-    var rnt=ndbtBand(NDBT.residualNitrogen[startGroup], depth, 'depth');
-    if(!rnt) return null;                 /* no RNT for this pairing — refuse to invent one */
-    total+=rnt.rnt;
+    rnt=page.rnt[startGroup];
+    if(typeof rnt!=='number') return {group:null, note:'no-rnt'};
   }
-  var band=ndbtBand(row.rows,total,'maxBt');
-  return band? band.group : null;         /* past the no-deco limit: not a plain group */
+  var total=bt+rnt;
+  for(var i=0;i<page.rows.length;i++)
+    if(total <= page.rows[i].bt)
+      return {group:page.rows[i].group, note:'ok', rnt:rnt, row:page.rows[i], page:page};
+  return {group:null, note:'beyond-table', rnt:rnt, page:page};
 }
-/* Group after `si` minutes on the surface. */
-function groupAfterSurface(group, si){
-  if(!NDBT.loaded || !group) return null;
-  if(NDBT.seriesResetMin && si >= NDBT.seriesResetMin) return null;
-  var band=ndbtBand(NDBT.surfaceCredit[group], si, 'maxSi');
-  return band? band.group : null;
-}
+
+validateNDBT();
 
 /* ---------------- billing periods ---------------- */
 function cycleDay(){ return Math.min(28, Math.max(1, num(settings.cycleStart)||16)); }
@@ -707,14 +807,19 @@ function flatDives(){
 
   var prev=null;
   out.forEach(function(dv){
-    if(!prev){ dv.si=null; dv.startGroup=null; dv.seriesStart=true; }
-    else{
+    if(!prev){
+      dv.si=null; dv.startGroup=null; dv.seriesStart=true; dv.siNote='first';
+    } else {
       dv.si=Math.round((dv.inDT-prev.outDT)/60000);
       if(dv.si<0) dv.si=0;                                /* overlapping entries: treat as none */
-      dv.seriesStart = NDBT.seriesResetMin ? dv.si>=NDBT.seriesResetMin : false;
-      dv.startGroup = groupAfterSurface(prev.group, dv.si);
+      var adj=surfaceAdjust(prev.group, dv.si);
+      dv.startGroup=adj.group;
+      dv.siNote=adj.note;
+      /* A diver who has off-gassed past the end of their row starts clean again. */
+      dv.seriesStart = adj.note==='clean';
     }
-    dv.group = groupAfterDive(dv.depth, dv.mins, dv.startGroup);
+    var res=diveGroup(dv.depth, dv.mins, dv.startGroup);
+    dv.group=res.group; dv.note=res.note; dv.rnt=res.rnt; dv.row=res.row;
     prev=dv;
   });
   return out;
@@ -805,6 +910,15 @@ function siText(m){
   if(h>=24) return Math.floor(h/24)+'d '+(h%24)+'h on surface';
   return h+'h '+pad(r)+'m on surface';
 }
+/* Every blank group says why it is blank, so "—" is never mistaken for "clean". */
+var NOTE_TEXT={
+  'no-tables':'tables not loaded',
+  'depth-uncovered':'no table for this depth yet',
+  'too-deep':'deeper than the loaded tables',
+  'beyond-table':'bottom time past the table',
+  'no-rnt':'no residual nitrogen figure',
+  'incomplete':'needs depth and times'
+};
 function visibleDives(){
   var all=flatDives();
   if(diveScope==='all') return all.slice().reverse();
@@ -819,12 +933,19 @@ function renderDives(){
     b.classList.toggle('on', b.getAttribute('data-scope')===diveScope);
   });
 
-  document.getElementById('ndbtBanner').innerHTML = NDBT.loaded ? '' :
+  var depths=NDBT.standard.map(function(pg){ return pg.depth; });
+  var msg = !NDBT.loaded
+    ? '<b>Dive tables not loaded</b>'+
+      (NDBT.problems && NDBT.problems.length
+        ? 'The transcribed tables failed their consistency check, so groups are switched off: '+esc(NDBT.problems[0])+'.'
+        : 'Nitrogen groups stay blank until the NDBT tables are added. Nothing here is estimated.')
+    : '<b>Tables loaded for '+(NDBT.floorDepth+1)+'–'+depths[depths.length-1]+' m</b>'+
+      'Nitrogen groups are calculated from the NDBT Standardtabell pages for '+depths.join(', ')+' m. '+
+      'Dives to '+NDBT.floorDepth+' m or shallower show no group, because the page that covers them has not been added yet.';
+  document.getElementById('ndbtBanner').innerHTML =
     '<div class="banner"><span class="bi">'+
     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>'+
-    '</span><span class="bt"><b>Dive tables not loaded</b>'+
-    'Surface intervals are calculated, but nitrogen groups stay blank until the official NDBT tables are added. Nothing here is estimated.'+
-    '</span></div>';
+    '</span><span class="bt">'+msg+'</span></div>';
 
   var host=document.getElementById('diveList');
   if(!list.length){
@@ -841,6 +962,11 @@ function renderDives(){
           '<span class="t'+(d.task?'':' untitled')+'">'+esc(d.task||'No task recorded')+'</span>'+
           '<span class="m">'+pad(when.getDate())+' '+MON[when.getMonth()]+' · '+esc(d.in)+'–'+esc(d.out)+'</span>'+
           '<span class="c">'+esc([d.job,d.site].filter(Boolean).join(' · '))+'</span>'+
+          (d.group||d.note==='ok' ? '' :
+            '<span class="why">'+esc(NOTE_TEXT[d.note]||'no group')+'</span>')+
+          (d.rnt? '<span class="why teal">+'+d.rnt+' min residual nitrogen'+
+                  (d.startGroup? ' (entered group '+esc(d.startGroup)+')':'')+'</span>' : '')+
+          (d.row&&d.row.xs? '<span class="why warn">exceptional exposure row</span>' : '')+
         '</span>'+
         '<span class="dright">'+
           '<span class="dp">'+(d.depth? d.depth+settings.unit : '—')+'</span>'+
