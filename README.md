@@ -52,15 +52,48 @@ Per shift:
 | Travel hours | Optional, billable |
 | Notes | Optional |
 
-Per billing period: hours worked, total bottom time, dive count, days worked,
-max depth, total billable hours, and a per-client hours breakdown.
+| Övertid / overtime | A **subset** of the shift, not extra time on top |
+| Traktamente | None / half / full; a daily allowance, never an hour |
 
-`Total billable = hours worked + standby + travel`, where
-`hours worked = shift length − unpaid lunch`.
+## Billing categories
 
-The unpaid-break length is configurable (default 60 min), but the deduction
-actually applied is **stamped onto each shift when it is saved**, so changing
-the setting never rewrites hours on a period you have already billed.
+**Working hours and bottom time are separate categories and are never added
+together.** A diver on an 11 hour shift who spends 2.5 hours underwater worked
+11 hours, of which 2.5 were wet. That is 11 and 2.5 — never 13.5.
+
+Overtime is likewise a subset:
+
+```
+total working hours = regular hours + övertid
+```
+
+so an 8 + 3 shift is 11 hours, not 14. On the money side, regular bills at the
+working rate and övertid at the overtime rate, which together cover the shift
+exactly once. Bottom time is charged on top as its own category because it is
+*paid* differently, not because it is *extra time*.
+
+There is deliberately **no combined hours total anywhere** in the app, the CSV
+or the summary. The only total is monetary, reached by applying a distinct rate
+per category.
+
+The period summary keeps five blocks apart: Arbetstid, Dyktid, Other time,
+Traktamente, and — when any rate is set — a Financial summary. With no rates
+configured the app shows hours and no amounts at all.
+
+### What is stamped
+
+Two values are stamped onto a shift when it is saved, so later configuration
+changes cannot rewrite an invoiced period:
+
+- the **unpaid break** actually deducted
+- the **traktamente amount** actually claimed
+
+`null` means not yet stamped; a stamped `0` is a real value and survives — that
+distinction matters when an allowance is claimed with no rate configured.
+
+Traktamente is counted **per date**, not per shift, so two shifts on one day
+cannot produce two allowances. The larger wins and the clash is reported rather
+than silently dropped.
 
 ## Dive log
 

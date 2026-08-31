@@ -121,6 +121,30 @@ button{cursor:pointer;background:none;border:none;padding:0}
 .track{grid-column:1/-1;height:4px;border-radius:99px;background:var(--shelf);overflow:hidden}
 .track i{display:block;height:100%;background:linear-gradient(90deg,var(--amber-deep),var(--amber));border-radius:99px}
 
+/* ---------- period summary ---------- */
+.sum{display:flex;flex-direction:column;gap:11px}
+.sblock{border:1px solid var(--line);border-radius:var(--r);background:var(--deep);overflow:hidden}
+.sblock > h3{
+  margin:0;padding:11px 14px;font-family:var(--mono);font-size:9.5px;letter-spacing:.17em;
+  text-transform:uppercase;color:var(--dim);font-weight:500;border-bottom:1px solid var(--line-soft);
+}
+.sblock.money > h3{color:var(--amber);background:var(--amber-ghost);border-bottom-color:var(--amber-deep)}
+.srow{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:9px 14px;
+  border-bottom:1px solid var(--line-soft);font-size:14px}
+.srow:last-child{border-bottom:none}
+.srow .k{color:var(--muted)}
+.srow .k small{display:block;color:var(--dim);font-size:11px;margin-top:1px}
+.srow .v{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.srow .v.amber{color:var(--amber)}
+.srow .v.teal{color:var(--teal)}
+.srow.total{background:var(--shelf);border-top:1px solid var(--line)}
+.srow.total .k{color:var(--text);font-weight:600}
+.srow.total .v{color:var(--amber);font-size:17px;font-weight:600}
+.srow.sub .k{padding-left:12px;color:var(--dim);font-size:13px}
+.srow.sub .v{color:var(--muted);font-size:13px}
+.snote{padding:10px 14px;font-size:12.5px;line-height:1.5;color:var(--dim);border-top:1px solid var(--line-soft)}
+.snote.warn{color:var(--amber);background:var(--amber-ghost)}
+
 /* ---------- entries ---------- */
 .days{display:flex;flex-direction:column;gap:9px;padding-bottom:96px}
 .day{
@@ -223,6 +247,34 @@ button{cursor:pointer;background:none;border:none;padding:0}
 .segwide{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:14px}
 .segwide button{flex:1;padding:9px;font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
 .segwide button.on{background:var(--amber);color:#08202b}
+
+/* ---------- overtime split + per-diem picker ---------- */
+.split{margin-top:14px;border:1px solid var(--line-soft);border-radius:11px;background:var(--deep);overflow:hidden}
+.split:empty{display:none}
+.split-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+  padding:9px 14px;font-size:13.5px;color:var(--muted);border-bottom:1px solid var(--line-soft)}
+.split-row b{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--text);font-weight:500}
+.split-row b.ot{color:var(--amber)}
+.split-row.total{background:var(--shelf);border-bottom:none}
+.split-row.total span{color:var(--text)}
+.split-row.total b{color:var(--amber);font-size:15px}
+.split-warn{padding:10px 14px;background:var(--amber-ghost);color:var(--amber);
+  font-size:12.5px;line-height:1.5;border-top:1px solid var(--line-soft)}
+
+.picks{display:flex;flex-direction:column;gap:9px}
+.pick{display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+  border:1px solid var(--line);border-radius:12px;background:var(--deep);padding:15px 15px}
+.pick:hover{border-color:var(--raise)}
+.pick.on{border-color:var(--amber);background:var(--amber-ghost)}
+.pick .box{width:22px;height:22px;border-radius:7px;border:1.5px solid var(--line);flex-shrink:0;
+  display:grid;place-items:center;color:transparent;background:var(--abyss)}
+.pick.on .box{background:var(--amber);border-color:var(--amber);color:#08202b}
+.pick .cl{font-size:15px;line-height:1.35}
+.pick .cl small{display:block;color:var(--dim);font-size:12px;margin-top:2px;font-family:var(--mono)}
+
+.tag.ot{background:var(--amber-ghost);color:var(--amber)}
+.tag.pd{background:var(--shelf);color:var(--teal)}
+.bar-row .sub2{grid-column:1/-1;font-family:var(--mono);font-size:10.5px;color:var(--dim);margin-top:3px}
 
 /* ---------- lunch / checkbox ---------- */
 .checkline{
@@ -463,16 +515,27 @@ hr.rule{border:none;border-top:1px solid var(--line-soft);margin:18px 0 15px}
         </div>
       </div>
       <div class="minirow">
+        <div class="mini"><span class="k">Regular</span><div class="v" id="tRegular">0.00</div></div>
+        <div class="mini"><span class="k">Övertid</span><div class="v" id="tOvertime">0.00</div></div>
+        <div class="mini"><span class="k">Standby</span><div class="v" id="tStandby">0.00</div></div>
+        <div class="mini"><span class="k">Resa</span><div class="v" id="tTravel">0.00</div></div>
+      </div>
+      <div class="minirow">
         <div class="mini"><span class="k">Dives</span><div class="v" id="tDives">0</div></div>
         <div class="mini"><span class="k">Days</span><div class="v" id="tDays">0</div></div>
         <div class="mini"><span class="k">Max depth</span><div class="v" id="tDepth">—</div></div>
-        <div class="mini"><span class="k">Billable</span><div class="v" id="tBill">0.00</div></div>
+        <div class="mini"><span class="k">Traktamente</span><div class="v" id="tPerDiem">—</div></div>
       </div>
     </div>
 
     <div class="sec" id="jobSec" hidden>
-      <h2 class="sec-h">Hours by client</h2>
+      <h2 class="sec-h">Working hours by client</h2>
       <div class="bar" id="jobBars"></div>
+    </div>
+
+    <div class="sec">
+      <h2 class="sec-h">Period summary</h2>
+      <div id="summary"></div>
     </div>
 
     <div class="sec" style="flex:1">
@@ -587,10 +650,26 @@ hr.rule{border:none;border-top:1px solid var(--line-soft);margin:18px 0 15px}
           <input class="num-in" id="setBreak" type="number" min="0" max="480" step="15" inputmode="numeric">
         </div>
         <div class="setrow">
+          <div class="k">Currency</div>
+          <input class="num-in" id="setCurrency" type="text" maxlength="6" style="width:80px">
+        </div>
+        <div class="setrow">
           <div class="k">Depth unit</div>
           <div class="seg" id="setUnit">
             <button data-u="m">m</button><button data-u="ft">ft</button>
           </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Rates</h3>
+        <p>Optional. Leave any of these blank and the app simply shows hours with no
+           amounts. Each category bills at its own rate — bottom time is charged separately
+           because it is paid differently, not because it is extra time.</p>
+        <div id="rateRows"></div>
+        <div class="snote" style="border:none;padding:12px 0 0">
+          Changing a rate only affects periods you have not yet billed. Traktamente is
+          stamped onto each shift when it is saved, so past allowances never move.
         </div>
       </div>
 
@@ -888,7 +967,161 @@ function maxDepth(e){
   v=num(e.depthOverride); if(v>d) d=v;
   return d;
 }
-function billableH(e){ return workedMins(e)/60 + standbyH(e) + travelH(e); }
+/* ================================================================
+   BILLING CATEGORIES
+
+   The rule this whole section exists to enforce: working hours and
+   bottom time are SEPARATE categories and are never added together.
+   A diver on an 11 hour shift who spends 2.5 hours underwater worked
+   11 hours, of which 2.5 were wet. That is 11 and 2.5, never 13.5.
+
+   Overtime is likewise a SUBSET of working hours, not an addition:
+       total working = regular + overtime
+   so the money side bills `regular` at the working rate and `overtime`
+   at the overtime rate, which covers the shift exactly once.
+
+   There is deliberately no function here that returns a single "total
+   hours" figure. The only total is monetary, and it is reached by
+   applying a distinct rate to each category.
+   ================================================================ */
+function perDiemRate(type){
+  var r = settings.rates || {};
+  if(type==='full') return num(r.perDiemFull);
+  if(type==='half') return num(r.perDiemHalf);
+  return 0;
+}
+/* Stamped onto the shift when saved, exactly like the unpaid break, so
+   changing the configured amount never rewrites an invoiced period. */
+function perDiemAmount(e){
+  if(!e.perDiem || e.perDiem==='none') return 0;
+  return (e.perDiemAmount!=null && e.perDiemAmount!=='')
+    ? num(e.perDiemAmount)
+    : perDiemRate(e.perDiem);
+}
+function categories(e){
+  var working = workedMins(e)/60;
+  /* Overtime cannot exceed the shift it is part of. */
+  var ot = Math.max(0, Math.min(num(e.overtimeHours), working));
+  return {
+    totalWorkingHours: working,
+    overtimeHours: ot,
+    regularHours: working - ot,
+    bottomTimeHours: diveMins(e)/60,   /* inside the shift, never added to it */
+    diveCount: diveCount(e),
+    standbyHours: standbyH(e),
+    travelHours: travelH(e),
+    perDiem: e.perDiem || 'none',
+    perDiemAmount: perDiemAmount(e)
+  };
+}
+/* Traktamente is a daily allowance, so it is counted per DATE. Two shifts on
+   one day cannot yield two allowances; the larger wins and the clash is
+   reported rather than silently dropped. */
+function perDiemDays(list){
+  var byDate = {}, duplicates = 0;
+  list.forEach(function(e){
+    if(!e.date || !e.perDiem || e.perDiem==='none') return;
+    var rank = e.perDiem==='full' ? 2 : 1;
+    var cur = byDate[e.date];
+    if(cur){
+      duplicates++;
+      if(rank > cur.rank) byDate[e.date] = {type:e.perDiem, rank:rank, amount:perDiemAmount(e)};
+    } else {
+      byDate[e.date] = {type:e.perDiem, rank:rank, amount:perDiemAmount(e)};
+    }
+  });
+  var full=0, half=0, amount=0;
+  Object.keys(byDate).forEach(function(d){
+    var r=byDate[d];
+    if(r.type==='full') full++; else half++;
+    amount += r.amount;
+  });
+  return {full:full, half:half, amount:amount, duplicates:duplicates};
+}
+function periodTotals(list){
+  var t = {regular:0, overtime:0, working:0, bottom:0, dives:0,
+           standby:0, travel:0, depth:0, workDays:{}, diveDays:{}, clients:{}};
+  list.forEach(function(e){
+    var c = categories(e);
+    t.regular  += c.regularHours;
+    t.overtime += c.overtimeHours;
+    t.working  += c.totalWorkingHours;
+    t.bottom   += c.bottomTimeHours;
+    t.dives    += c.diveCount;
+    t.standby  += c.standbyHours;
+    t.travel   += c.travelHours;
+    var d = maxDepth(e); if(d > t.depth) t.depth = d;
+    if(e.date){
+      if(c.totalWorkingHours>0) t.workDays[e.date]=1;
+      if(c.diveCount>0) t.diveDays[e.date]=1;
+    }
+    var name = (shiftClient(e)||'Unassigned').trim() || 'Unassigned';
+    var row = t.clients[name] || (t.clients[name]={working:0, bottom:0, dives:0});
+    row.working += c.totalWorkingHours;
+    row.bottom  += c.bottomTimeHours;
+    row.dives   += c.diveCount;
+  });
+  var pd = perDiemDays(list);
+  t.perDiemFull = pd.full; t.perDiemHalf = pd.half;
+  t.perDiemAmount = pd.amount; t.perDiemDuplicates = pd.duplicates;
+  t.workDayCount = Object.keys(t.workDays).length;
+  t.diveDayCount = Object.keys(t.diveDays).length;
+  return t;
+}
+
+/* ---- money ---- */
+var RATE_KEYS = ['working','overtime','diving','standby','travel','perDiemFull','perDiemHalf'];
+function anyRateSet(){
+  var r = settings.rates || {};
+  for(var i=0;i<RATE_KEYS.length;i++) if(r[RATE_KEYS[i]]!=null && r[RATE_KEYS[i]]!=='') return true;
+  return false;
+}
+/* Regular hours bill at the working rate and overtime at the overtime rate.
+   Together they are the whole shift, counted once. Bottom time bills on top
+   as its own category, because it is paid differently, not because it is
+   extra time. */
+function money(t){
+  var r = settings.rates || {};
+  var m = {
+    working:  t.regular  * num(r.working),
+    overtime: t.overtime * num(r.overtime),
+    diving:   t.bottom   * num(r.diving),
+    standby:  t.standby  * num(r.standby),
+    travel:   t.travel   * num(r.travel),
+    perDiem:  t.perDiemAmount
+  };
+  m.total = m.working + m.overtime + m.diving + m.standby + m.travel + m.perDiem;
+  return m;
+}
+function fmtMoney(n){
+  var v = Math.round(n||0);
+  return v.toLocaleString('en-US').replace(/,/g,' ') + ' ' + (settings.currency||'SEK');
+}
+var PER_DIEM_LABEL = {none:'Inget traktamente', half:'Halvt traktamente', full:'Helt traktamente'};
+
+/* Reads a per-diem column from an imported sheet. Swedish and English, and the
+   0.5 / 1 convention some sheets use. Anything unrecognised means none. */
+function readPerDiem(v){
+  var t=String(v||'').trim().toLowerCase();
+  if(!t) return 'none';
+  if(/^(full|helt|hel|heldag|1|1\.0)$/.test(t)) return 'full';
+  if(/^(half|halvt|halv|halvdag|0\.5|0,5|½)$/.test(t)) return 'half';
+  if(/^(none|inget|nej|no|0)$/.test(t)) return 'none';
+  return num(t)>=1 ? 'full' : (num(t)>0 ? 'half' : 'none');
+}
+
+/* Shown live under the overtime field so the subset relationship is visible
+   as it is typed, rather than asserted in a help string. */
+function otSplitHTML(e){
+  var c=categories(e);
+  if(!c.totalWorkingHours) return '';
+  var over = num(e.overtimeHours) > c.totalWorkingHours;
+  return '<div class="split-row"><span>Regular</span><b>'+dec(c.regularHours)+' h</b></div>'+
+         '<div class="split-row"><span>Övertid</span><b class="ot">'+dec(c.overtimeHours)+' h</b></div>'+
+         '<div class="split-row total"><span>Total working</span><b>'+dec(c.totalWorkingHours)+' h</b></div>'+
+         (over? '<div class="split-warn">Övertid cannot be longer than the shift itself, so it has been capped at '+
+                dec(c.totalWorkingHours)+' h.</div>' : '');
+}
 
 /* ================================================================
    NITROGEN GROUPS — Norske dykke- og behandlingstabeller (NDBT)
@@ -1433,23 +1666,9 @@ function altitudeAdvice(st){
 }
 
 /* ---------------- rendering: log ---------------- */
-function totals(list){
-  var t={worked:0,dive:0,dives:0,days:{},depth:0,bill:0,standby:0,travel:0,jobs:{}};
-  list.forEach(function(e){
-    var w=workedMins(e)/60, dm=diveMins(e);
-    t.worked+=w; t.dive+=dm; t.dives+=diveCount(e);
-    t.standby+=standbyH(e); t.travel+=travelH(e);
-    t.bill+=billableH(e);
-    var d=maxDepth(e); if(d>t.depth) t.depth=d;
-    if(e.date) t.days[e.date]=1;
-    var j=(shiftClient(e)||'Unassigned').trim()||'Unassigned';
-    t.jobs[j]=(t.jobs[j]||0)+billableH(e);
-  });
-  return t;
-}
 
 function renderLog(){
-  var p=activePeriod(), list=periodEntries(), t=totals(list);
+  var p=activePeriod(), list=periodEntries(), t=periodTotals(list);
 
   document.getElementById('cycleTick').textContent = cycleDay()+' → '+(cycleDay()-1||'end');
   document.getElementById('pRange').textContent = periodLabel(p);
@@ -1457,30 +1676,41 @@ function renderLog(){
     offset===0 ? 'Current period' : (offset<0 ? 'Closed period' : 'Upcoming period');
   document.getElementById('pNext').disabled = offset>=1;
 
-  document.getElementById('tWorked').textContent = dec(t.worked);
-  document.getElementById('tWorkedHm').textContent = hm(t.worked*60);
-  document.getElementById('tDive').textContent = dec(t.dive/60);
-  document.getElementById('tDiveHm').textContent = t.dive? hm(t.dive) : 'no dives';
-  document.getElementById('tDives').textContent = t.dives;
-  document.getElementById('tDays').textContent = Object.keys(t.days).length;
-  document.getElementById('tDepth').textContent = t.depth? t.depth+settings.unit : '—';
-  document.getElementById('tBill').textContent = dec(t.bill);
+  /* Working hours and bottom time sit side by side and are never combined. */
+  document.getElementById('tWorked').textContent   = dec(t.working);
+  document.getElementById('tWorkedHm').textContent = hm(t.working*60);
+  document.getElementById('tDive').textContent     = dec(t.bottom);
+  document.getElementById('tDiveHm').textContent   = t.bottom ? hm(t.bottom*60) : 'no dives';
 
-  /* hours by client */
-  var jobs=Object.keys(t.jobs).map(function(k){return {n:k,h:t.jobs[k]};})
-              .sort(function(a,b){return b.h-a.h;});
+  document.getElementById('tRegular').textContent  = dec(t.regular);
+  document.getElementById('tOvertime').textContent = dec(t.overtime);
+  document.getElementById('tStandby').textContent  = dec(t.standby);
+  document.getElementById('tTravel').textContent   = dec(t.travel);
+  document.getElementById('tDives').textContent    = t.dives;
+  document.getElementById('tDays').textContent     = t.workDayCount;
+  document.getElementById('tDepth').textContent    = t.depth ? t.depth+settings.unit : '—';
+  document.getElementById('tPerDiem').textContent  =
+    (t.perDiemFull||t.perDiemHalf) ? t.perDiemFull+' / '+t.perDiemHalf : '—';
+
+  /* working hours by client — bottom time shown beside it, not added to it */
+  var names=Object.keys(t.clients).map(function(k){
+    return {n:k, w:t.clients[k].working, b:t.clients[k].bottom, d:t.clients[k].dives};
+  }).sort(function(a,b){ return b.w-a.w; });
   var sec=document.getElementById('jobSec');
-  if(jobs.length>1){
+  if(names.length>1){
     sec.hidden=false;
-    var top=jobs[0].h||1;
-    document.getElementById('jobBars').innerHTML = jobs.map(function(j){
+    var top=names[0].w||1;
+    document.getElementById('jobBars').innerHTML = names.map(function(j){
       return '<div class="bar-row"><span class="nm">'+esc(j.n)+'</span>'+
-             '<span class="hr">'+dec(j.h)+'</span>'+
-             '<span class="track"><i style="width:'+Math.max(2,(j.h/top)*100)+'%"></i></span></div>';
+             '<span class="hr">'+dec(j.w)+'</span>'+
+             '<span class="track"><i style="width:'+Math.max(2,(j.w/top)*100)+'%"></i></span>'+
+             (j.b? '<span class="sub2">'+dec(j.b)+' h bottom · '+j.d+' dive'+(j.d===1?'':'s')+'</span>' : '')+
+             '</div>';
     }).join('');
   } else sec.hidden=true;
 
-  /* shifts */
+  document.getElementById('summary').innerHTML = summaryHTML(t, list);
+
   document.getElementById('daysHead').textContent = list.length? 'Shifts · '+list.length : 'Shifts';
   var host=document.getElementById('dayList');
   if(!list.length){
@@ -1488,24 +1718,94 @@ function renderLog(){
     return;
   }
   host.innerHTML = list.map(function(e){
-    var d=parseISO(e.date), dm=diveMins(e), dn=diveCount(e), dep=maxDepth(e);
+    var c=categories(e), d=parseISO(e.date), dm=diveMins(e), dn=c.diveCount, dep=maxDepth(e);
     var tags='';
     if(dn) tags+='<span class="tag dive">'+dn+' dive'+(dn>1?'s':'')+'</span>';
     if(dep) tags+='<span class="tag dive">'+dep+settings.unit+'</span>';
     if(e.lunch) tags+='<span class="tag">−'+dec(lunchMins(e)/60)+' lunch</span>';
-    if(standbyH(e)) tags+='<span class="tag">standby '+dec(standbyH(e))+'</span>';
-    if(travelH(e)) tags+='<span class="tag">travel '+dec(travelH(e))+'</span>';
+    if(c.overtimeHours) tags+='<span class="tag ot">'+dec(c.overtimeHours)+' övertid</span>';
+    if(c.standbyHours) tags+='<span class="tag">standby '+dec(c.standbyHours)+'</span>';
+    if(c.travelHours) tags+='<span class="tag">resa '+dec(c.travelHours)+'</span>';
+    if(c.perDiem!=='none') tags+='<span class="tag pd">'+(c.perDiem==='full'?'helt':'halvt')+' trakt.</span>';
     if(e.notes) tags+='<span class="tag">note</span>';
     return '<button class="day" data-id="'+e.id+'">'+
       '<span class="dstamp"><span class="d">'+pad(d.getDate())+'</span><span class="m">'+MON[d.getMonth()]+'</span></span>'+
       '<span class="dmain"><span class="j">'+esc(shiftClient(e)||'Unassigned')+'</span>'+
         '<span class="s">'+esc(e.site||'')+(e.site&&e.start?' · ':'')+
         (e.start&&e.end?esc(e.start)+'–'+esc(e.end):'')+'</span></span>'+
-      '<span class="dnum"><span class="w">'+dec(workedMins(e)/60)+'</span>'+
+      '<span class="dnum"><span class="w">'+dec(c.totalWorkingHours)+'</span>'+
         '<span class="b'+(dm?'':' none')+'">'+(dm?hm(dm):'—')+'</span></span>'+
       (tags?'<span class="chipline">'+tags+'</span>':'')+
     '</button>';
   }).join('');
+}
+
+/* The period summary keeps every category on its own line. There is no
+   combined hour total, because adding these together would be wrong. */
+function summaryHTML(t, list){
+  function row(k, v, cls, sub){
+    return '<div class="srow'+(cls&&cls.indexOf('sub')>=0?' sub':'')+(cls&&cls.indexOf('total')>=0?' total':'')+'">'+
+      '<span class="k">'+k+(sub?'<small>'+sub+'</small>':'')+'</span>'+
+      '<span class="v'+(cls&&cls.indexOf('amber')>=0?' amber':'')+(cls&&cls.indexOf('teal')>=0?' teal':'')+'">'+v+'</span></div>';
+  }
+  var html='<div class="sum">';
+
+  html+='<div class="sblock"><h3>Arbetstid · work</h3>'+
+    row('Regular hours', dec(t.regular)+' h', 'sub')+
+    row('Övertid · overtime', dec(t.overtime)+' h', 'sub')+
+    row('Total working hours', dec(t.working)+' h', 'amber',
+        'regular + övertid — the shift, counted once')+
+    row('Working days', t.workDayCount, 'sub')+
+  '</div>';
+
+  html+='<div class="sblock"><h3>Dyktid · diving</h3>'+
+    row('Bottom time', dec(t.bottom)+' h', 'teal', 'inside the working hours above, not added to them')+
+    row('Dives', t.dives, 'sub')+
+    row('Diving days', t.diveDayCount, 'sub')+
+    row('Max depth', t.depth? t.depth+settings.unit : '—', 'sub')+
+  '</div>';
+
+  html+='<div class="sblock"><h3>Other time</h3>'+
+    row('Standby', dec(t.standby)+' h', 'sub')+
+    row('Resa · travel', dec(t.travel)+' h', 'sub')+
+  '</div>';
+
+  html+='<div class="sblock"><h3>Traktamente</h3>'+
+    row('Hela dagar · full', t.perDiemFull, 'sub')+
+    row('Halva dagar · half', t.perDiemHalf, 'sub')+
+    (t.perDiemAmount? row('Allowance', fmtMoney(t.perDiemAmount), 'amber') : '')+
+    (t.perDiemDuplicates
+      ? '<div class="snote warn">'+t.perDiemDuplicates+' shift'+(t.perDiemDuplicates===1?'':'s')+
+        ' claimed traktamente on a date already claimed. It is a daily allowance, so each date is counted once.</div>'
+      : '')+
+  '</div>';
+
+  if(anyRateSet()){
+    var m=money(t), r=settings.rates||{};
+    function line(label, hours, rate, amount){
+      if(rate==null||rate==='') return row(label, '<span style="color:var(--dim)">no rate set</span>', 'sub');
+      return row(label+' <span style="color:var(--dim);font-size:12px">'+dec(hours)+' × '+num(rate)+'</span>',
+                 fmtMoney(amount), 'sub');
+    }
+    html+='<div class="sblock money"><h3>Financial summary</h3>'+
+      line('Regular', t.regular, r.working, m.working)+
+      line('Övertid', t.overtime, r.overtime, m.overtime)+
+      line('Dyktid', t.bottom, r.diving, m.diving)+
+      line('Standby', t.standby, r.standby, m.standby)+
+      line('Resa', t.travel, r.travel, m.travel)+
+      row('Traktamente', fmtMoney(m.perDiem), 'sub')+
+      row('Total', fmtMoney(m.total), 'total')+
+      '<div class="snote">Each category is billed at its own rate. Regular and övertid together '+
+      'are the whole shift, so it is paid once; dyktid is charged separately because it is paid '+
+      'differently, not because it is extra time.</div>'+
+    '</div>';
+  } else if(list.length){
+    html+='<div class="sblock"><h3>Financial summary</h3>'+
+      '<div class="snote">No rates set. Add them in Data → Settings to see amounts per category.</div></div>';
+  }
+
+  html+='</div>';
+  return html;
 }
 
 /* ---------------- rendering: dive log ---------------- */
@@ -1650,7 +1950,8 @@ var STEPS=[
   {k:'start', t:'time',    q:'On shift at?',              h:'When you started work — not when you got in the water.'},
   {k:'end',   t:'time',    q:'Off shift at?',             h:'Crossing midnight is handled for you.'},
   {k:'dives', t:'dives',   q:'Dives this shift',          h:'Each dive is logged separately in the Dive Log, with its own depth, task and times.'},
-  {k:'extra', t:'extra',   q:'Standby and travel',        h:'Billable hours outside the main shift. Leave at zero if not applicable.'},
+  {k:'extra', t:'extra',   q:'Övertid, standby, resa',    h:'Overtime is part of the shift you already entered, not extra time on top. Standby and travel are their own categories.'},
+  {k:'perdiem',t:'perdiem', q:'Traktamente?',              h:'A daily allowance, counted per date and kept separate from all hours.'},
   {k:'notes', t:'textarea',q:'Anything to note?',         h:'Conditions, tasks, equipment, incidents. Optional.', ph:'Hull inspection, 2kt current, viz 3m…'},
   {k:'review',t:'review',  q:'Look right?',               h:'Check it over, then save to your log.'}
 ];
@@ -1665,7 +1966,7 @@ function blank(){
           clientId:null, client:'', site:'', project:'',
           start:'', end:'', lunch:false, lunchMin:0,
           overtimeHours:0, standbyHours:0, travelHours:0,
-          perDiem:'none', perDiemAmount:0,
+          perDiem:'none', perDiemAmount:null,
           notes:'', dives:[]};
 }
 function suggestions(field){
@@ -1748,14 +2049,28 @@ function renderStep(animate){
           (tot? dec(tot/60)+'  ·  '+hm(tot) : '—')+'</span></div>';
   }
   else if(s.t==='extra'){
+    var wk=workedMins(draft)/60;
     html+='<div class="dgrid">'+
-      '<label><span class="mlbl">Standby / tender (hrs)</span><input class="fld" type="number" inputmode="decimal" step="0.25" min="0" id="f" data-x="standbyHours" value="'+esc(draft.standbyHours||'')+'" placeholder="0"></label>'+
-      '<label><span class="mlbl">Travel (hrs)</span><input class="fld" type="number" inputmode="decimal" step="0.25" min="0" data-x="travelHours" value="'+esc(draft.travelHours||'')+'" placeholder="0"></label>'+
+      '<label class="full"><span class="mlbl">Övertid · overtime (hrs)</span><input class="fld" type="number" inputmode="decimal" step="0.25" min="0" id="f" data-x="overtimeHours" value="'+esc(draft.overtimeHours||'')+'" placeholder="0"></label>'+
+      '<label><span class="mlbl">Standby (hrs)</span><input class="fld" type="number" inputmode="decimal" step="0.25" min="0" data-x="standbyHours" value="'+esc(draft.standbyHours||'')+'" placeholder="0"></label>'+
+      '<label><span class="mlbl">Resa · travel (hrs)</span><input class="fld" type="number" inputmode="decimal" step="0.25" min="0" data-x="travelHours" value="'+esc(draft.travelHours||'')+'" placeholder="0"></label>'+
       '</div>';
-    html+='<div class="calc"><span class="k">Total billable</span><span class="v">'+dec(billableH(draft))+'</span></div>';
+    html+='<div class="split" id="otSplit">'+otSplitHTML(draft)+'</div>';
+  }
+  else if(s.t==='perdiem'){
+    html+='<div class="picks">'+['none','half','full'].map(function(v){
+      var on=(draft.perDiem||'none')===v;
+      var amt=perDiemRate(v);
+      return '<button type="button" class="pick'+(on?' on':'')+'" data-pd="'+v+'">'+
+        '<span class="box"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>'+
+        '<span class="cl">'+esc(PER_DIEM_LABEL[v])+
+        (v!=='none'? '<small>'+(amt? fmtMoney(amt) : 'no amount set in Settings')+'</small>' : '')+
+        '</span></button>';
+    }).join('')+'</div>';
   }
   else if(s.t==='review'){
     var w=workedMins(draft), dm=diveMins(draft), dn=diveCount(draft), dep=maxDepth(draft);
+    var cat=categories(draft);
     var d=parseISO(draft.date);
     var row=function(k,v,cls){ return '<div class="rev-r"><span class="k">'+k+'</span><span class="v '+(cls||'')+'">'+v+'</span></div>'; };
     html+='<div class="rev">'+
@@ -1764,13 +2079,15 @@ function renderStep(animate){
       (draft.site? row('Site', esc(draft.site)) : '')+
       row('Shift', (draft.start&&draft.end)? esc(draft.start)+' – '+esc(draft.end) : '—')+
       (draft.lunch? row('Unpaid lunch', '− '+dec(lunchMins(draft)/60), 'num') : '')+
-      row('Hours worked', dec(w/60), 'num')+
+      row('Total working', dec(cat.totalWorkingHours), 'num')+
+      (cat.overtimeHours? row('— of which övertid', dec(cat.overtimeHours), 'num') : '')+
       row('Dives', dn||'—', 'num teal')+
       row('Bottom time', dm? dec(dm/60)+' · '+hm(dm) : '—', 'num teal')+
       (dep? row('Max depth', dep+settings.unit, 'num teal') : '')+
-      (num(draft.standby)? row('Standby', dec(num(draft.standby)), 'num') : '')+
-      (num(draft.travel)? row('Travel', dec(num(draft.travel)), 'num') : '')+
-      row('Total billable', dec(billableH(draft)), 'num')+
+      (cat.standbyHours? row('Standby', dec(cat.standbyHours), 'num') : '')+
+      (cat.travelHours? row('Resa · travel', dec(cat.travelHours), 'num') : '')+
+      (cat.perDiem!=='none'? row('Traktamente', esc(PER_DIEM_LABEL[cat.perDiem])+
+          (cat.perDiemAmount? ' · '+fmtMoney(cat.perDiemAmount) : ''), '') : '')+
       (draft.notes? row('Notes', esc(draft.notes)) : '')+
     '</div>';
     html+='<div style="margin-top:12px;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)">Lands in '+esc(periodLabel(periodOf(draft.date)))+'</div>';
@@ -1810,6 +2127,10 @@ function commit(){
   for(i=0;i<entries.length;i++) if(entries[i].id===draft.id){ found=i; break; }
   /* Link the typed client name to a customer record, creating one if new. */
   draft.clientId = ensureCustomer(draft.client);
+  /* Stamp the allowance in force right now, so a later rate change cannot
+     rewrite a period that has already been billed. */
+  draft.perDiemAmount = (draft.perDiem && draft.perDiem!=='none')
+    ? perDiemRate(draft.perDiem) : 0;
   if(found>=0) entries[found]=draft; else entries.push(draft);
   saveState();
   var p=periodOf(draft.date), cur=periodOf(todayISO());
@@ -2034,18 +2355,26 @@ function undoRestore(){
 }
 
 /* ---------------- CSV ---------------- */
-var COLS=['Date','Client','Site','On shift','Off shift','Unpaid lunch (h)','Hours worked','Dives',
-          'Bottom time (min)','Bottom time (h)','Max depth','Standby (h)','Travel (h)',
-          'Total billable (h)','Notes'];
+/* One column per billing category. There is deliberately no combined hours
+   column: bottom time happens inside the working hours and adding them would
+   double-count the shift. */
+var COLS=['Date','Client','Site','On shift','Off shift','Unpaid lunch (h)',
+          'Regular hours','Overtime (h)','Total working hours',
+          'Dives','Bottom time (min)','Bottom time (h)','Max depth',
+          'Standby (h)','Travel (h)','Per diem','Per diem amount','Notes'];
 function q(v){ v=String(v==null?'':v); return /[",\n]/.test(v)? '"'+v.replace(/"/g,'""')+'"' : v; }
 function toCSV(list){
   var rows=[COLS.join(',')];
   list.slice().sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;}).forEach(function(e){
     var dm=diveMins(e);
+    var c=categories(e);
     rows.push([e.date,shiftClient(e),e.site||'',e.start||'',e.end||'',
-      dec(lunchMins(e)/60), dec(workedMins(e)/60),
-      diveCount(e),dm,dec(dm/60),maxDepth(e)||'',dec(standbyH(e)),dec(travelH(e)),
-      dec(billableH(e)),e.notes||''].map(q).join(','));
+      dec(lunchMins(e)/60),
+      dec(c.regularHours), dec(c.overtimeHours), dec(c.totalWorkingHours),
+      c.diveCount, dm, dec(dm/60), maxDepth(e)||'',
+      dec(c.standbyHours), dec(c.travelHours),
+      c.perDiem==='none'?'':c.perDiem, c.perDiemAmount||'',
+      e.notes||''].map(q).join(','));
   });
   return rows.join('\n');
 }
@@ -2093,6 +2422,8 @@ var ALIAS={
   standby:['standby','standby (h)','tender','stand by','standby hours'],
   travel:['travel','travel (h)','transit','travel hours'],
   task:['task','worked on','work','job description','scope','operation'],
+  overtime:['overtime','overtime (h)','ot','övertid','overtime hours'],
+  perdiem:['per diem','perdiem','traktamente','allowance','subsistence'],
   lunch:['unpaid lunch','lunch','break','unpaid break'],
   notes:['notes','note','comment','comments','remarks','description']
 };
@@ -2178,6 +2509,9 @@ function runImport(text){
     var dc=num(g('dives'));
     if(dc){ e.extraDives = Math.max(0, dc - (e.dives?e.dives.length:0)); }
     e.standbyHours=num(g('standby')); e.travelHours=num(g('travel')); e.notes=g('notes');
+    e.overtimeHours=num(g('overtime'));
+    e.perDiem=readPerDiem(g('perdiem'));
+    e.perDiemAmount=e.perDiem==='none'?0:perDiemRate(e.perDiem);
     entries.push(e); added++;
   }
   saveState();
@@ -2198,6 +2532,8 @@ function renderData(){
   undo.hidden = !snapShifts;
   if(snapShifts) undo.textContent='Undo — put back '+snapShifts.length+' shift'+(snapShifts.length===1?'':'s');
   document.getElementById('setCycle').value=cycleDay();
+  document.getElementById('setCurrency').value=settings.currency||'SEK';
+  renderRates();
   document.getElementById('setBreak').value=breakMins();
   document.querySelectorAll('#setUnit button').forEach(function(b){
     b.classList.toggle('on', b.getAttribute('data-u')===settings.unit);
@@ -2293,6 +2629,17 @@ document.getElementById('slot').addEventListener('click',function(ev){
     renderStep(false);
     return;
   }
+  var pd=t.closest('[data-pd]');
+  if(pd){
+    capture();
+    draft.perDiem=pd.getAttribute('data-pd');
+    /* Clear the stamp so the amount re-derives from the current rate; it is
+       stamped for real on save. A stamped 0 is a genuine value and must not
+       be produced here by accident. */
+    draft.perDiemAmount=null;
+    renderStep(false);
+    return;
+  }
   if(t.closest('#addDive')){
     capture();
     draft.dives.push(newDive());
@@ -2328,8 +2675,8 @@ document.getElementById('slot').addEventListener('input',function(ev){
   }
   if(el.hasAttribute('data-x')){
     draft[el.getAttribute('data-x')]=el.value;
-    var cb=document.querySelector('.calc .v');
-    if(cb) cb.textContent=dec(billableH(draft));
+    var sp=document.getElementById('otSplit');
+    if(sp) sp.innerHTML=otSplitHTML(draft);
   }
   if(el.id==='f' && STEPS[step].k==='end'){
     draft.end=el.value;
@@ -2407,6 +2754,38 @@ document.getElementById('setBreak').addEventListener('change',function(){
   settings.breakMin=v||60; this.value=breakMins(); saveState();
   renderLog(); renderData();
   toast('Unpaid lunch set to '+breakMins()+' min');
+});
+var RATE_ROWS=[
+  {k:'working',    label:'Regular hours',   unit:'per hour'},
+  {k:'overtime',   label:'Övertid',         unit:'per hour'},
+  {k:'diving',     label:'Dyktid · diving', unit:'per hour'},
+  {k:'standby',    label:'Standby',         unit:'per hour'},
+  {k:'travel',     label:'Resa · travel',   unit:'per hour'},
+  {k:'perDiemFull',label:'Helt traktamente',unit:'per day'},
+  {k:'perDiemHalf',label:'Halvt traktamente',unit:'per day'}
+];
+function renderRates(){
+  var r=settings.rates||{}, cur=settings.currency||'SEK';
+  document.getElementById('rateRows').innerHTML = RATE_ROWS.map(function(row){
+    var v=r[row.k];
+    return '<div class="setrow"><div class="k">'+esc(row.label)+
+      '<small>'+esc(cur)+' '+row.unit+'</small></div>'+
+      '<input class="num-in" type="number" inputmode="decimal" min="0" step="1" '+
+      'data-rate="'+row.k+'" value="'+(v==null||v===''?'':esc(String(v)))+'" placeholder="—"></div>';
+  }).join('');
+}
+document.getElementById('rateRows').addEventListener('change',function(ev){
+  var el=ev.target.closest('[data-rate]');
+  if(!el) return;
+  var k=el.getAttribute('data-rate'), raw=el.value.trim();
+  settings.rates[k] = raw==='' ? null : Math.max(0, num(raw));
+  saveState(); renderLog();
+  toast(raw==='' ? 'Rate cleared' : 'Rate saved');
+});
+document.getElementById('setCurrency').addEventListener('change',function(){
+  settings.currency=(this.value||'SEK').trim().toUpperCase().slice(0,6)||'SEK';
+  this.value=settings.currency;
+  saveState(); renderRates(); renderLog();
 });
 document.getElementById('setUnit').addEventListener('click',function(ev){
   var b=ev.target.closest('[data-u]'); if(!b) return;
