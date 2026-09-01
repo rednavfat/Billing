@@ -156,11 +156,33 @@ button{cursor:pointer;background:none;border:none;padding:0}
 /* ---------- entries ---------- */
 .days{display:flex;flex-direction:column;gap:9px;padding-bottom:96px}
 .day{
+  position:relative;
   width:100%;text-align:left;border:1px solid var(--line);border-radius:var(--r);
   background:var(--deep);padding:13px 14px;display:grid;
   grid-template-columns:44px 1fr auto;gap:0 13px;align-items:center;
 }
 .day:hover{border-color:var(--raise);background:var(--shelf)}
+/* The row is one big button for editing the shift, laid over the whole card so
+   a tap anywhere opens it. The dive shortcut sits above that layer, so it is
+   the one part of the row that does something else. */
+.dayopen{position:absolute;inset:0;width:100%;padding:0;border:0;background:none;
+  border-radius:inherit}
+/* The pill is chip-sized so it sits level with the tags beside it, but the
+   button around it is a full 40px of thumb. The negative margin keeps that
+   taller box from pushing the row open. */
+.adddive{
+  position:relative;z-index:2;margin:-9px 0 -9px auto;
+  display:inline-flex;align-items:center;min-height:40px;
+  padding:0 0 0 10px;border:0;background:none;
+}
+.adddive .pill{
+  display:inline-flex;align-items:center;gap:4px;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
+  line-height:1;padding:5px 8px;border-radius:5px;white-space:nowrap;
+  border:1px solid var(--teal-ghost);color:var(--teal);
+}
+.adddive:hover .pill,.adddive:focus-visible .pill{background:var(--teal-ghost);border-color:var(--teal)}
+.adddive svg{display:block}
 .dstamp{text-align:center;font-family:var(--mono);line-height:1.15}
 .dstamp .d{display:block;font-size:19px;font-weight:600;font-variant-numeric:tabular-nums}
 .dstamp .m{display:block;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-top:1px}
@@ -2214,15 +2236,23 @@ function renderLog(){
     if(c.travelHours) tags+='<span class="tag">resa '+dec(c.travelHours)+'</span>';
     if(c.perDiem!=='none') tags+='<span class="tag pd">'+(c.perDiem==='full'?'helt':'halvt')+' trakt.</span>';
     if(e.notes) tags+='<span class="tag">note</span>';
-    return '<button class="day" data-id="'+e.id+'">'+
+    var who = shiftClient(e)||'Unassigned';
+    var when = pad(d.getDate())+' '+MON[d.getMonth()];
+    return '<div class="day" data-id="'+e.id+'">'+
+      '<button class="dayopen" data-open="'+e.id+'" aria-label="'+esc('Edit shift · '+when+' · '+who)+'"></button>'+
       '<span class="dstamp"><span class="d">'+pad(d.getDate())+'</span><span class="m">'+MON[d.getMonth()]+'</span></span>'+
-      '<span class="dmain"><span class="j">'+esc(shiftClient(e)||'Unassigned')+'</span>'+
+      '<span class="dmain"><span class="j">'+esc(who)+'</span>'+
         '<span class="s">'+esc(e.site||'')+(e.site&&e.start?' · ':'')+
         (e.start&&e.end?esc(e.start)+'–'+esc(e.end):'')+'</span></span>'+
       '<span class="dnum"><span class="w">'+dec(c.totalWorkingHours)+'</span>'+
         '<span class="b'+(dm?'':' none')+'">'+(dm?hm(dm):'—')+'</span></span>'+
-      (tags?'<span class="chipline">'+tags+'</span>':'')+
-    '</button>';
+      '<span class="chipline">'+tags+
+        '<button class="adddive" data-adddive="'+e.id+'" aria-label="'+esc('Add a dive to '+when+' · '+who)+'">'+
+        '<span class="pill">'+
+        '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>'+
+        'dive</span></button>'+
+      '</span>'+
+    '</div>';
   }).join('');
 }
 
@@ -3021,11 +3051,58 @@ function siClock(mins){
   if(mins==null) return '—';
   return Math.floor(mins/60)+':'+pad(mins%60);
 }
+/* A dive on the books but not yet timed. */
+function untimedDiveHTML(found){
+  var d = found.dive, shift = found.shift, when = parseISO(shift.date);
+  document.getElementById('diveNo').textContent = shiftClient(shift) || 'Dive log';
+  function r(k,v){
+    return '<div class="dv-r"><span class="k">'+k+'</span><span class="v">'+v+'</span></div>';
+  }
+  function val(v, fallback){
+    return v ? esc(v) : '<span class="v none">'+(fallback||'not recorded')+'</span>';
+  }
+  return '<div class="dv-head">'+
+      '<div class="dv-num">Dive '+(found.index+1)+' of this shift</div>'+
+      '<h2 class="dv-date">'+pad(when.getDate())+' '+MON[when.getMonth()].toUpperCase()+' '+when.getFullYear()+'</h2>'+
+      '<div class="dv-times"><span class="t">'+
+        (d.in? esc(d.in)+' → …' : (d.out? '… → '+esc(d.out) : '— → —'))+'</span>'+
+      '<span class="bt">no bottom time yet</span></div>'+
+    '</div>'+
+    '<div class="dv-block"><h3>Dive</h3>'+
+      r('Max depth', (d.depth!=null && d.depth!=='')? '<span class="v mono">'+num(d.depth)+settings.unit+'</span>' : val(null))+
+      r('Client', val(shiftClient(shift)))+
+      r('Site', val(shift.site))+
+      r('Work performed', val(d.task))+
+    '</div>'+
+    '<div class="dv-block"><h3>Dyklag · team</h3>'+
+      ROLES.map(function(role){
+        return r(role.label, val(personName(d[role.k]), 'not assigned'));
+      }).join('')+
+    '</div>'+
+    '<div class="dv-block n2"><h3>Kvävegrupp · nitrogen</h3>'+
+      '<div class="dv-why">No group is worked out for this dive. The tables are '+
+      'read from time at depth, so both the in and the out time have to be '+
+      'entered first. Until then it is left out of the surface-interval chain '+
+      'as well, so it cannot shift the group on any dive after it.</div>'+
+    '</div>'+
+    '<div class="dv-acts">'+
+      '<button class="btn ghost" id="diveShift">Open the whole shift</button>'+
+      '<button class="btn" id="diveEdit">Add the times</button>'+
+    '</div>';
+}
 function renderDive(){
-  var d = openDiveId && flatDiveById(openDiveId);
   var host = document.getElementById('diveDetail');
-  if(!d){ host.innerHTML='<div class="empty"><b>Dive not found</b><p>It may have been deleted.</p></div>'; return; }
-  var found = findDive(openDiveId), shift = found ? found.shift : null;
+  var found = openDiveId && findDive(openDiveId);
+  if(!found){ host.innerHTML='<div class="empty"><b>Dive not found</b><p>It may have been deleted.</p></div>'; return; }
+
+  /* The chronological log is built from clock times, so a dive that has not
+     been given both of them yet has no place in it — and no surface interval
+     or group either. It is still a real dive on a real shift, so it gets its
+     own page rather than reading as missing. */
+  var d = flatDiveById(openDiveId);
+  if(!d){ host.innerHTML = untimedDiveHTML(found); return; }
+
+  var shift = found.shift;
   var when = parseISO(d.date);
   /* The page heading carries the dive number, so the bar carries the client. */
   document.getElementById('diveNo').textContent = d.job || 'Dive log';
@@ -3137,8 +3214,41 @@ function duplicateDive(diveId){
   openDiveEditor(copy.id);
 }
 
+/* Adding a dive to a shift already logged.
+
+   The shift already knows the date, the client and the vessel, so none of
+   that is asked again — the dive is appended and its editor opens straight
+   away. The crew carries over from the shift's previous dive, since a dive
+   team that changes mid-shift is the exception, and every role stays
+   editable in the sheet. */
+function addDiveToShift(shiftId){
+  var e=null, i;
+  for(i=0;i<entries.length;i++) if(entries[i].id===shiftId){ e=entries[i]; break; }
+  if(!e) return;
+
+  if(shiftLocked(e)){
+    if(!confirm('This shift is in a period you marked billed.\n\nReopen the period to add a dive?')) return;
+    reopenPeriod(periodOf(e.date));
+    toast('Period reopened');
+  }
+
+  if(!e.dives) e.dives=[];
+  var d = newDive();
+  var prev = e.dives[e.dives.length-1];
+  if(prev) ROLES.forEach(function(role){ d[role.k] = prev[role.k] || null; });
+  e.dives.push(d);
+  saveState();
+
+  addedDiveId = d.id;
+  addedDiveSeed = JSON.stringify(d);   /* what was handed over, before any editing */
+  openDive(d.id, 'log');
+  openDiveEditor(d.id);
+}
+
 /* ---------------- dive editor sheet ---------------- */
 var editDiveId = null;
+var addedDiveId = null;   /* a dive just created by the shortcut */
+var addedDiveSeed = null; /* and how it looked when it was handed over */
 
 function openDiveEditor(diveId){
   editDiveId = diveId;
@@ -3146,9 +3256,24 @@ function openDiveEditor(diveId){
   document.getElementById('editSheet').hidden = false;
 }
 function closeDiveEditor(){
+  /* A dive added by the shortcut and closed without a single edit was a
+     mis-tap, not a dive. Drop it rather than leave a blank record in the log.
+     Anything the diver did touch — even only the team — makes it theirs and it
+     stays. A dive that was already there is never removed here. */
+  var dropped = false;
+  if(editDiveId && editDiveId===addedDiveId){
+    var f = findDive(editDiveId);
+    if(f && JSON.stringify(f.dive)===addedDiveSeed){ f.shift.dives.splice(f.index,1); dropped = true; }
+  }
+  addedDiveId = addedDiveSeed = null;
   document.getElementById('editSheet').hidden = true;
   editDiveId = null;
   saveState();
+  if(dropped && currentScreen()==='dive'){
+    openDiveId = null;
+    show(diveOrigin==='dive' ? 'dives' : diveOrigin);
+    return;
+  }
   renderDive(); renderDives(); renderLog();
 }
 function renderDiveEditor(){
@@ -4010,6 +4135,8 @@ document.getElementById('pPrev').addEventListener('click',function(){ offset--; 
 document.getElementById('pNext').addEventListener('click',function(){ if(offset<1){offset++; renderLog();} });
 
 document.getElementById('dayList').addEventListener('click',function(ev){
+  var a=ev.target.closest('[data-adddive]');
+  if(a){ addDiveToShift(a.getAttribute('data-adddive')); return; }
   var b=ev.target.closest('.day'); if(b) openWizard(b.getAttribute('data-id'));
 });
 

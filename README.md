@@ -102,6 +102,21 @@ or all time, and exportable as its own CSV. Dives are entered as part of a
 shift but chained into one chronological series across shifts, so the
 **surface interval** between consecutive dives is shown between them.
 
+### Adding a dive to a shift already logged
+
+Every row in the **Shifts** list carries a **+ dive** button. It appends a dive
+to that shift and opens the dive editor straight away — the date, client and
+vessel are already on the shift, so none of it is asked again, and the shift
+wizard never opens. The crew carries over from the shift's previous dive, since
+a team that changes mid-shift is the exception, and every role stays editable.
+
+Closing the editor without changing a single field removes the dive again: a
+mis-tap should not leave a blank record in the log. Anything you did touch —
+even only the team — makes it yours, and it stays.
+
+A shift in a period marked billed asks to reopen the period first, exactly as
+editing the shift does.
+
 ### Nitrogen groups
 
 Each dive shows its N2 group, calculated from the *Norske dykke- og
@@ -266,6 +281,12 @@ and tender on the next.
 recalculating anything: surface interval, entering group, residual nitrogen
 added, the adjusted bottom time as arithmetic (`30 + 30 = 60 min`), the
 resulting group, and which table page and row it was read from.
+
+**A dive without both times** gets its own page rather than reading as missing.
+The chronological log is built from clock times, so such a dive has no place in
+it and no surface interval or group — and, being outside the chain, it cannot
+shift the group on any dive after it either. The page says so and offers to add
+the times.
 
 **Duplicate** copies what repeats — task, notes, and the whole team — and
 deliberately clears what must not be assumed: times and depth. Nitrogen is
