@@ -493,22 +493,28 @@ pre.csv{
 .yr-row .ysub{grid-column:1/-1;font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:2px}
 
 /* ---------- customer report ---------- */
-.paper{background:#fff;color:#10222b;border-radius:var(--r);padding:26px 24px;
+/* This is a document a customer reads, on a phone, often in daylight. Every
+   element states its own colour: the report sits inside the app's dark theme,
+   so anything left to inherit picks up the light body text and disappears
+   against the white paper. */
+.paper{background:#fff;color:#07141a;border-radius:var(--r);padding:26px 24px;
   font-size:14px;line-height:1.6}
-.paper h1{font-size:21px;margin:0 0 4px;letter-spacing:-.02em;color:#06131a}
-.paper .meta{font-family:var(--mono);font-size:11px;color:#5d7581;margin:0 0 20px}
+.paper h1{font-size:21px;margin:0 0 4px;letter-spacing:-.02em;color:#000}
+.paper .meta{font-family:var(--mono);font-size:11px;color:#2c4652;margin:0 0 20px}
 .paper h2{font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;
-  color:#5d7581;margin:22px 0 8px;padding-bottom:6px;border-bottom:1px solid #d9e3e7}
-.paper table{width:100%;border-collapse:collapse;font-size:13.5px}
-.paper td{padding:7px 0;border-bottom:1px solid #eef3f5}
+  color:#2c4652;margin:22px 0 8px;padding-bottom:6px;border-bottom:1px solid #c8d6dc}
+.paper table{width:100%;border-collapse:collapse;font-size:13.5px;color:#07141a}
+.paper td{padding:7px 0;border-bottom:1px solid #dfe8ec;color:#07141a}
+.paper td b{color:#000}
 .paper td:last-child{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;
-  font-family:var(--mono)}
+  font-family:var(--mono);color:#07141a}
 .paper tr:last-child td{border-bottom:none}
-.paper tr.tot td{border-top:2px solid #10222b;border-bottom:none;font-weight:700;
-  font-size:16px;padding-top:11px}
-.paper .fine{font-size:11.5px;color:#6c838e;margin-top:18px;line-height:1.55}
-.paper .sig{margin-top:30px;padding-top:12px;border-top:1px solid #d9e3e7;
-  font-size:11.5px;color:#6c838e}
+.paper tr.tot td{border-top:2px solid #07141a;border-bottom:none;font-weight:700;
+  font-size:16px;padding-top:11px;color:#000}
+.paper .rate{color:#425c68}
+.paper .fine{font-size:11.5px;color:#344e5a;margin-top:18px;line-height:1.55}
+.paper .sig{margin-top:30px;padding-top:12px;border-top:1px solid #c8d6dc;
+  font-size:11.5px;color:#344e5a}
 .optrow{display:flex;align-items:center;gap:11px;width:100%;text-align:left;
   border:1px solid var(--line);border-radius:11px;background:var(--deep);
   padding:12px 13px;margin-bottom:8px}
@@ -2844,7 +2850,7 @@ function reportHTML(){
     var lines=[];
     function ln(label,hours,rate,val){
       if(rate==null||rate===''||!hours) return;
-      lines.push(row(label+' <span style="color:#6c838e">'+dec(hours)+' × '+num(rate)+'</span>', amt(val)));
+      lines.push(row(label+' <span class="rate">'+dec(hours)+' × '+num(rate)+'</span>', amt(val)));
     }
     ln('Regular',  t.regular,  rates.working,  m.working);
     ln('Overtime', t.overtime, rates.overtime, m.overtime);
