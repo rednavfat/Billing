@@ -117,6 +117,35 @@ even only the team — makes it yours, and it stays.
 A shift in a period marked billed asks to reopen the period first, exactly as
 editing the shift does.
 
+### Where you stand right now
+
+The panel at the top of the Dive Log opens with **Kvävegrupp nu** — the group
+you are holding at this moment, with its spoken name (`N November`), and a
+live countdown reading **Time to M · Mike**.
+
+It is worked out by taking the group after your last dive and walking it
+forward across the printed surface-interval table by the time that has passed
+since you surfaced. That is the same walk the app makes to find the group your
+next dive would enter on, so the letter shown here and the letter used for the
+next dive can never disagree. A band runs to and including its printed bound,
+so the drop to the next letter happens the minute after it; nothing is
+interpolated, and you hold a letter for the whole band and then change, exactly
+as the table reads. Past the last band you are off the table, which the panel
+says rather than inventing a letter for.
+
+This reports what the table says about time on the surface. It assumes no
+further diving and is not a fitness-to-dive clearance.
+
+**Highest, 24 h** below it is a different figure and stays what it was: the
+highest group of the last 24 hours, which is what the flying and altitude
+guidance is read from. Both now show the spoken name beside the letter, so a
+group read aloud over comms or written on a slate cannot be mistaken for
+another letter.
+
+The countdown runs only while the Dive Log is on screen and the app is in
+front; leaving the tab stops it, and returning re-reads the real time rather
+than resuming where it stopped.
+
 ### Nitrogen groups
 
 Each dive shows its N2 group, calculated from the *Norske dykke- og

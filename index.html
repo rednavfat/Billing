@@ -258,10 +258,26 @@ button{cursor:pointer;background:none;border:none;padding:0}
 
 /* after the last dive: flying + altitude */
 .fly{border:1px solid var(--line);border-radius:var(--r);background:var(--deep);overflow:hidden;margin-bottom:13px}
-.fly-h{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line-soft)}
+.fly-h{display:grid;grid-template-columns:1fr auto;align-items:end;gap:12px;
+  padding:12px 14px;border-bottom:1px solid var(--line-soft)}
 .fly-h .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);display:block}
 .fly-h .g{font-family:var(--mono);font-size:15px;color:var(--teal);font-weight:600;margin-top:3px}
 .fly-h .g.none{color:var(--dim);font-weight:400;font-size:12px}
+.fly-h .g .nm{font-family:var(--ui);font-size:11px;font-weight:400;color:var(--muted);
+  letter-spacing:.02em;margin-left:2px}
+/* The current group leads the panel, so it is the largest thing in it. The two
+   columns share a baseline: the letter you hold now, and what is left of it. */
+.fly-now{display:grid;grid-template-columns:1fr auto;align-items:end;gap:12px;
+  background:var(--deep)}
+.fly-now .g{font-size:25px;line-height:1.1;display:block}
+.fly-now .g .nm{font-size:12px;margin-left:0}
+.nitro-r{text-align:right}
+.nitro-r .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--dim);display:block;white-space:nowrap}
+.nitro-r .cdown{display:block;font-family:var(--mono);font-size:21px;font-weight:600;
+  font-variant-numeric:tabular-nums;color:var(--amber);margin-top:4px;white-space:nowrap;
+  line-height:1.1}
+.nitro-r .cdown.done{color:var(--dim);font-size:14px;font-weight:400}
 .fly-state{text-align:right}
 .fly-state .s{display:block;font-family:var(--mono);font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
 .fly-state .s.ok{color:var(--teal)}
@@ -1576,6 +1592,12 @@ function otSplitHTML(e){
    and therefore wrong — page.
    ================================================================ */
 var GROUPS=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','Z'];
+/* Spoken names for the group letters, so a group read aloud over comms or
+   written on a slate cannot be mistaken for another letter. */
+var GROUP_NAME={A:'Alpha',B:'Bravo',C:'Charlie',D:'Delta',E:'Echo',F:'Foxtrot',
+  G:'Golf',H:'Hotel',I:'India',J:'Juliett',K:'Kilo',L:'Lima',M:'Mike',
+  N:'November',O:'Oscar',Z:'Zulu'};
+function groupName(g){ return (g && GROUP_NAME[g]) || ''; }
 
 var NDBT = {
   loaded:false,                 /* set by validateNDBT() below, never by hand */
@@ -2149,6 +2171,49 @@ function postDiveStatus(){
 }
 /* Each band's required wait, measured from the end of the last dive — so a wait
    that has already elapsed reads as clear rather than as advice to keep waiting. */
+/* Where the diver stands right now.
+
+   The group after the last dive is walked forward across the printed surface
+   table by the time that has passed since surfacing, which is the same walk
+   surfaceAdjust() makes for the next dive — so the letter shown here and the
+   letter the next dive would enter on can never disagree.
+
+   A band runs to and including its printed bound, so the drop to the next
+   letter happens the minute after it. Nothing is interpolated: the diver holds
+   a letter for the whole band and then changes, exactly as the table reads.
+
+   This says what the table says about time on the surface. It is not a
+   fitness-to-dive clearance and assumes no further diving. */
+function nitrogenNow(now){
+  if(!NDBT.loaded) return null;
+  var all = flatDives();
+  if(!all.length) return null;
+  var last = all[all.length-1];
+  now = now || new Date();
+  var si = Math.floor((now - last.outDT)/60000);
+  if(si < 0) return null;                       /* the last dive has not ended */
+  if(!last.group) return {last:last, si:si, group:null, nextGroup:null, nextAt:null, note:last.note||'no-group'};
+
+  var bounds = NDBT.surface[last.group], gi = gIndex(last.group), i;
+  for(i=0;i<bounds.length;i++){
+    if(si <= hhmm(bounds[i])) return {
+      last:last, si:si,
+      group: GROUPS[gi-i],
+      /* one past the last band is off the table altogether, not a letter */
+      nextGroup: (i+1 < bounds.length) ? GROUPS[gi-i-1] : null,
+      nextAt: new Date(last.outDT.getTime() + (hhmm(bounds[i])+1)*60000),
+      note:'ok'
+    };
+  }
+  return {last:last, si:si, group:null, nextGroup:null, nextAt:null, note:'clean'};
+}
+
+/* h:mm:ss, always padded, so the digits do not jump in the mono face. */
+function countdownText(ms){
+  var t = Math.max(0, Math.floor(ms/1000));
+  return pad(Math.floor(t/3600))+':'+pad(Math.floor(t/60)%60)+':'+pad(t%60);
+}
+
 function altitudeAdvice(st){
   var now=new Date();
   return NDBT.altitude.map(function(b){
@@ -2385,14 +2450,16 @@ function clockText(d){
 }
 function renderFlyPanel(){
   var host=document.getElementById('flyPanel'), st=postDiveStatus();
-  if(!st){ host.innerHTML=''; return; }
+  if(!st){ host.innerHTML=''; stopNitroTimer(); return; }
   var now=new Date(), clear=now>=st.clearAt;
   var alt=altitudeAdvice(st);
   host.innerHTML='<div class="fly">'+
+    nitrogenNowHTML(now)+
     '<div class="fly-h">'+
-      '<div><span class="k">Highest group, last 24 h</span>'+
+      '<div><span class="k">Highest, 24 h</span>'+
         '<span class="g'+(st.group?'':' none')+'">'+
-        (st.group? esc(st.group)+(st.ungrouped?' + ungrouped dives':'')
+        (st.group? esc(st.group)+' <span class="nm">'+esc(groupName(st.group))+'</span>'+
+                   (st.ungrouped?'<span class="nm">+ ungrouped dives</span>':'')
                  : (st.ungrouped?'no group assigned':'—'))+'</span></div>'+
       '<div class="fly-state"><span class="s '+(clear?'ok':'wait')+'">'+
         (clear? 'Clear to fly' : st.flyHours+' h before flying')+'</span>'+
@@ -2406,6 +2473,62 @@ function renderFlyPanel(){
     }).join('')+'</div>'+
     '<div class="fly-f">after last dive · '+esc(clockText(st.last.outDT))+'</div>'+
   '</div>';
+
+  if(document.getElementById('nitroCd')) startNitroTimer(); else stopNitroTimer();
+}
+
+/* The top line of the panel: the letter the diver is holding at this moment,
+   and how long is left of it. */
+function nitrogenNowHTML(now){
+  var n = nitrogenNow(now);
+  if(!n) return '';
+
+  var left, right;
+
+  if(n.group){
+    left = '<span class="k">Kvävegrupp nu</span>'+
+           '<span class="g">'+esc(n.group)+' <span class="nm">'+esc(groupName(n.group))+'</span></span>';
+  } else if(n.note==='clean'){
+    left = '<span class="k">Kvävegrupp nu · current group</span>'+
+           '<span class="g none">off the table · no group</span>';
+  } else {
+    left = '<span class="k">Kvävegrupp nu · current group</span>'+
+           '<span class="g none">'+esc(NOTE_TEXT[n.note]||'no group')+'</span>';
+  }
+
+  if(n.nextAt){
+    var to = n.nextGroup ? esc(n.nextGroup)+' · '+esc(groupName(n.nextGroup)) : 'no group';
+    right = '<span class="k">Time to '+to+'</span>'+
+            '<span class="cdown" id="nitroCd">'+countdownText(n.nextAt-now)+'</span>';
+  } else {
+    right = '<span class="k">Surface interval</span>'+
+            '<span class="cdown done">'+esc(hm(n.si))+'</span>';
+  }
+
+  return '<div class="fly-h fly-now"><div>'+left+'</div>'+
+         '<div class="nitro-r">'+right+'</div></div>';
+}
+
+/* The countdown is the only thing on screen that has to move by itself, so it
+   ticks only while its panel is actually being looked at. Crossing zero is a
+   change of group, which is a change of the whole panel. */
+var nitroTimer = null;
+function startNitroTimer(){
+  if(nitroTimer) return;
+  nitroTimer = setInterval(tickNitrogen, 1000);
+}
+function stopNitroTimer(){
+  if(nitroTimer){ clearInterval(nitroTimer); nitroTimer=null; }
+}
+function tickNitrogen(){
+  if(document.hidden) return;
+  var el = document.getElementById('nitroCd');
+  if(!el || !document.getElementById('s-dives').classList.contains('on')) return;
+  var n = nitrogenNow();
+  if(!n || !n.nextAt){ renderFlyPanel(); return; }
+  var ms = n.nextAt - new Date();
+  if(ms <= 0){ renderFlyPanel(); return; }
+  el.textContent = countdownText(ms);
 }
 function renderDives(){
   var list=visibleDives(), p=activePeriod();
@@ -4086,6 +4209,7 @@ function show(v){
   document.getElementById('tabbar').style.display = full?'none':'grid';
   document.getElementById('fabAdd').hidden = full;
   window.scrollTo(0,0);
+  if(v!=='dives') stopNitroTimer();
   if(v==='data') renderData();
   if(v==='log') renderLog();
   if(v==='dives') renderDives();
