@@ -164,8 +164,10 @@ editing the shift does.
 
 The panel at the top of the Dive Log opens with **Kvävegrupp nu** — the group
 you are holding at this moment, written with the symbol for the gas it
-measures and the letter's spoken name (`N₂ N November`), and a live countdown
-reading **Time to M · Mike**.
+measures and the letter's spoken name (`N₂ November`), and a live countdown
+reading **Time to M · Mike**. The letter *is* the first letter of its own name,
+so it is not printed twice — the group reads as one word, with its initial
+carrying the weight.
 
 It is worked out by taking the group after your last dive and walking it
 forward across the printed surface-interval table by the time that has passed
@@ -185,14 +187,25 @@ Past the last band the diver carries no group at all, and the panel says
 
 **Highest, 24 h** below it is a different figure and stays what it was: the
 highest group of the last 24 hours, which is what the flying and altitude
-guidance is read from. Both lines carry **N₂** in front of the letter, since
-what the letter measures is the nitrogen still in the diver, and the spoken
-name after it, so a group read aloud over comms or written on a slate cannot be
-mistaken for another letter.
+guidance is read from. Both lines carry **N₂** in front, since what the letter
+measures is the nitrogen still in the diver, and give the group its spoken name,
+so a group read aloud over comms or written on a slate cannot be mistaken for
+another letter.
 
 The countdown runs only while the Dive Log is on screen and the app is in
 front; leaving the tab stops it, and returning re-reads the real time rather
 than resuming where it stopped.
+
+### Where the groups come from
+
+The ⓘ in the Dive Log bar says which NDBT depth pages are loaded and what is
+applied to repetitive dives. It is reassurance rather than news, so it stays
+folded away until asked for.
+
+Anything that means a dive may show **no** group is a different matter and
+appears on the screen whether it was asked for or not: tables switched off by
+the validator, or a depth page missing so shallow dives cannot be read. The ⓘ
+turns amber when that is the case.
 
 ### Nitrogen groups
 

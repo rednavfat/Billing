@@ -78,12 +78,15 @@ button{cursor:pointer;background:none;border:none;padding:0}
   display:flex;align-items:baseline;justify-content:space-between;gap:12px;
   padding:22px var(--pad) 10px;
 }
-.brand{display:flex;align-items:baseline;gap:9px}
-.brand b{font-size:19px;font-weight:700;letter-spacing:-.015em}
+/* The title holds its line; the period beside it gives way first, since a
+   second button in the bar leaves less room than there was. */
+.brand{display:flex;align-items:baseline;gap:9px;min-width:0}
+.brand b{font-size:19px;font-weight:700;letter-spacing:-.015em;white-space:nowrap}
 .brand .tick{
-  font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;
-  color:var(--amber);
+  font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--amber);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
+.topbar .iconbtn{flex-shrink:0}
 .iconbtn{
   width:42px;height:42px;border-radius:10px;border:1px solid var(--line);
   display:grid;place-items:center;color:var(--muted);background:var(--deep);
@@ -217,7 +220,11 @@ button{cursor:pointer;background:none;border:none;padding:0}
   border:1px solid var(--line);border-left:3px solid var(--amber);
   border-radius:11px;background:var(--deep);padding:12px 13px;margin-bottom:13px;
 }
+.banner.quiet{border-left-color:var(--line)}
+.banner.quiet .bi{color:var(--dim)}
 .banner .bi{color:var(--amber);flex-shrink:0;margin-top:1px}
+.iconbtn.on{color:var(--text)}
+.iconbtn.warn{color:var(--amber)}
 .banner .bt{font-size:13px;line-height:1.55;color:var(--muted)}
 .banner .bt b{color:var(--text);display:block;font-size:13.5px;margin-bottom:2px;font-weight:600}
 
@@ -267,6 +274,10 @@ button{cursor:pointer;background:none;border:none;padding:0}
 .fly-h .g.none{color:var(--dim);font-weight:400;font-size:12px}
 .fly-h .g .nm{font-family:var(--ui);font-size:11px;font-weight:400;color:var(--muted);
   letter-spacing:.02em;margin-left:6px}
+/* One word, with its initial — the group letter — set apart by weight rather
+   than by being printed a second time. */
+.fly-h .g .gw{font-family:var(--ui);font-weight:400;letter-spacing:-.01em;margin-left:5px}
+.fly-h .g .gw b{font-weight:700}
 .fly-h .g sub{font-size:.62em;line-height:0;vertical-align:baseline;position:relative;top:.2em}
 .fly-h .g.clear{color:var(--teal);font-weight:600}
 .nitro-r .k sub{font-size:.75em;line-height:0;vertical-align:baseline;position:relative;top:.18em}
@@ -276,6 +287,7 @@ button{cursor:pointer;background:none;border:none;padding:0}
   background:var(--deep)}
 .fly-now .g{font-size:25px;line-height:1.1;display:block}
 .fly-now .g .nm{font-size:12px;margin-left:2px}
+.fly-now .g .gw{margin-left:7px}
 .nitro-r{text-align:right}
 .nitro-r .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
   color:var(--dim);display:block;white-space:nowrap}
@@ -750,13 +762,11 @@ hr.rule{border:none;border-top:1px solid var(--line-soft);margin:18px 0 15px}
       <div class="readout">
         <div class="cell">
           <span class="k">Hours worked</span>
-          <div class="v amber" id="tWorked">0.00</div>
-          <div class="sub" id="tWorkedHm">—</div>
+          <div class="v amber" id="tWorked">0h 00min</div>
         </div>
         <div class="cell">
           <span class="k">Bottom time</span>
-          <div class="v teal" id="tDive">0.00</div>
-          <div class="sub" id="tDiveHm">—</div>
+          <div class="v teal" id="tDive">0h 00min</div>
         </div>
       </div>
       <div class="minirow">
@@ -807,6 +817,9 @@ hr.rule{border:none;border-top:1px solid var(--line-soft);margin:18px 0 15px}
   <section class="screen" id="s-dives">
     <div class="topbar">
       <div class="brand"><b>Dive Log</b><span class="tick" id="diveTick">—</span></div>
+      <button class="iconbtn" id="ndbtInfo" aria-label="About the dive tables" aria-expanded="false">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5v.01"/></svg>
+      </button>
       <button class="iconbtn" id="divesExport" aria-label="Export dive log">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13m0 0l-4.5-4.5M12 16l4.5-4.5M4 20h16"/></svg>
       </button>
@@ -1687,10 +1700,13 @@ var GROUP_NAME={A:'Alpha',B:'Bravo',C:'Charlie',D:'Delta',E:'Echo',F:'Foxtrot',
   G:'Golf',H:'Hotel',I:'India',J:'Juliett',K:'Kilo',L:'Lima',M:'Mike',
   N:'November',O:'Oscar',Z:'Zulu'};
 function groupName(g){ return (g && GROUP_NAME[g]) || ''; }
+/* The letter IS the first letter of the name, so it is not printed twice: the
+   group reads as one word — N2 Oscar — with its initial carrying the weight.
+   Every name in the table begins with its own letter, so nothing is dropped. */
 function groupTag(g){
-  /* The space lives inside the name's span so it is sized by the small text,
-     not by the letter beside it — and so the two are still read apart. */
-  return g ? N2+' '+esc(g)+'<span class="nm"> '+esc(groupName(g))+'</span>' : '';
+  if(!g) return '';
+  var n=groupName(g);
+  return N2+' <span class="gw"><b>'+esc(g)+'</b>'+esc(n.slice(1))+'</span>';
 }
 
 var NDBT = {
@@ -2341,12 +2357,10 @@ function renderLog(){
   document.getElementById('pNext').disabled = offset>=1;
 
   /* Working hours and bottom time sit side by side and are never combined. */
-  /* Hours read as hours and minutes; the decimal sits underneath, because that
-     is the figure a rate is multiplied by. */
-  document.getElementById('tWorked').textContent   = hmh(t.working);
-  document.getElementById('tWorkedHm').textContent = dec(t.working)+' h';
-  document.getElementById('tDive').textContent     = hmh(t.bottom);
-  document.getElementById('tDiveHm').textContent   = t.bottom ? dec(t.bottom)+' h' : 'no dives';
+  /* Hours read as hours and minutes. The decimal is not repeated here — it is
+     only useful beside a rate, and it lives in the financial summary. */
+  document.getElementById('tWorked').textContent = hmh(t.working);
+  document.getElementById('tDive').textContent   = hmh(t.bottom);
 
   document.getElementById('tRegular').textContent  = hmh(t.regular);
   document.getElementById('tOvertime').textContent = hmh(t.overtime);
@@ -2638,6 +2652,7 @@ function tickNitrogen(){
   if(ms <= 0){ renderFlyPanel(); return; }
   el.textContent = countdownText(ms);
 }
+var ndbtOpen = false;
 function renderDives(){
   var list=visibleDives(), p=activePeriod();
   document.getElementById('diveTick').textContent =
@@ -2648,7 +2663,12 @@ function renderDives(){
 
   renderFlyPanel();
 
+  /* The note about where the groups come from is reassurance, not news, so it
+     sits behind the ⓘ once everything is loaded. Anything that means a dive
+     may show no group — tables off, or a depth page missing — is a warning
+     and stays on the screen whether it was asked for or not. */
   var depths=NDBT.standard.map(function(pg){ return pg.depth; });
+  var quiet = NDBT.loaded && !(NDBT.floorDepth>0);
   var msg = !NDBT.loaded
     ? '<b>Dive tables not loaded</b>'+
       (NDBT.problems && NDBT.problems.length
@@ -2662,9 +2682,14 @@ function renderDives(){
         'Nitrogen groups come from the NDBT Standardtabell pages for '+depths.join(', ')+' m, '+
         'with residual nitrogen and surface-interval adjustment applied to repetitive dives.';
   document.getElementById('ndbtBanner').innerHTML =
-    '<div class="banner"><span class="bi">'+
+    '<div class="banner'+(quiet?' quiet':'')+'"><span class="bi">'+
     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>'+
     '</span><span class="bt">'+msg+'</span></div>';
+  document.getElementById('ndbtBanner').hidden = quiet && !ndbtOpen;
+  var info=document.getElementById('ndbtInfo');
+  info.setAttribute('aria-expanded', (!quiet || ndbtOpen) ? 'true' : 'false');
+  info.classList.toggle('on', !quiet || ndbtOpen);
+  info.classList.toggle('warn', !quiet);
 
   var host=document.getElementById('diveList');
   if(!list.length){
@@ -4603,6 +4628,10 @@ document.getElementById('diveDetail').addEventListener('click',function(ev){
 });
 
 /* dive editor sheet */
+document.getElementById('ndbtInfo').addEventListener('click',function(){
+  ndbtOpen = !ndbtOpen;
+  renderDives();
+});
 document.getElementById('editClose').addEventListener('click', closeDiveEditor);
 document.getElementById('editSheet').addEventListener('click',function(ev){
   if(ev.target===this) closeDiveEditor();            /* tap the scrim */
