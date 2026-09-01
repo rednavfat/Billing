@@ -191,7 +191,9 @@ button{cursor:pointer;background:none;border:none;padding:0}
 .dmain .s{display:block;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px}
 .dmain .s:empty{display:none}
 .dnum{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
-.dnum .w{display:block;font-size:16px;color:var(--amber);font-weight:500}
+/* Hours and minutes are wider than a decimal, so the row's figures step down a
+   size rather than eat into the client name beside them. */
+.dnum .w{display:block;font-size:13.5px;color:var(--amber);font-weight:500}
 .dnum .b{display:block;font-size:11px;color:var(--teal);margin-top:2px}
 .dnum .b.none{color:var(--dim)}
 
@@ -273,7 +275,7 @@ button{cursor:pointer;background:none;border:none;padding:0}
 .fly-now{display:grid;grid-template-columns:1fr auto;align-items:end;gap:12px;
   background:var(--deep)}
 .fly-now .g{font-size:25px;line-height:1.1;display:block}
-.fly-now .g .nm{font-size:12px;margin-left:0}
+.fly-now .g .nm{font-size:12px;margin-left:2px}
 .nitro-r{text-align:right}
 .nitro-r .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
   color:var(--dim);display:block;white-space:nowrap}
@@ -1290,11 +1292,14 @@ function minsBetween(a,b){
   if(m<0) m+=1440;            /* shift or dive crossed midnight */
   return m;
 }
+/* Hours as they are said out loud and written on a job sheet: 22h 00min.
+   Decimal hours are kept only where a rate multiplies them. */
 function hm(mins){
   mins=Math.round(mins);
   var s=mins<0?'-':''; mins=Math.abs(mins);
-  return s+Math.floor(mins/60)+'h '+pad(mins%60)+'m';
+  return s+Math.floor(mins/60)+'h '+pad(mins%60)+'min';
 }
+function hmh(hours){ return hm(hours*60); }
 function dec(h){ return (Math.round(h*100)/100).toFixed(2); }
 function num(v){ var n=parseFloat(v); return isNaN(n)?0:n; }
 
@@ -1670,11 +1675,23 @@ function otSplitHTML(e){
    and therefore wrong — page.
    ================================================================ */
 var GROUPS=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','Z'];
-/* The groups are nitrogen groups, so the letter is shown carrying the symbol
-   for the gas it measures. N2 is written as markup rather than as the subscript
-   character, which not every fallback font carries. */
+/* The groups are nitrogen groups, so the letter carries the symbol for the gas
+   it measures, and its spoken name after it: N2 J Juliett. The symbol is
+   written as markup rather than as the subscript character, which not every
+   fallback font carries.
+
+   The spoken name is there so a group read aloud over comms or written on a
+   slate cannot be mistaken for another letter. */
 var N2 = 'N<sub>2</sub>';
-function groupTag(g){ return g ? N2+' '+esc(g) : ''; }
+var GROUP_NAME={A:'Alpha',B:'Bravo',C:'Charlie',D:'Delta',E:'Echo',F:'Foxtrot',
+  G:'Golf',H:'Hotel',I:'India',J:'Juliett',K:'Kilo',L:'Lima',M:'Mike',
+  N:'November',O:'Oscar',Z:'Zulu'};
+function groupName(g){ return (g && GROUP_NAME[g]) || ''; }
+function groupTag(g){
+  /* The space lives inside the name's span so it is sized by the small text,
+     not by the letter beside it — and so the two are still read apart. */
+  return g ? N2+' '+esc(g)+'<span class="nm"> '+esc(groupName(g))+'</span>' : '';
+}
 
 var NDBT = {
   loaded:false,                 /* set by validateNDBT() below, never by hand */
@@ -2324,15 +2341,17 @@ function renderLog(){
   document.getElementById('pNext').disabled = offset>=1;
 
   /* Working hours and bottom time sit side by side and are never combined. */
-  document.getElementById('tWorked').textContent   = dec(t.working);
-  document.getElementById('tWorkedHm').textContent = hm(t.working*60);
-  document.getElementById('tDive').textContent     = dec(t.bottom);
-  document.getElementById('tDiveHm').textContent   = t.bottom ? hm(t.bottom*60) : 'no dives';
+  /* Hours read as hours and minutes; the decimal sits underneath, because that
+     is the figure a rate is multiplied by. */
+  document.getElementById('tWorked').textContent   = hmh(t.working);
+  document.getElementById('tWorkedHm').textContent = dec(t.working)+' h';
+  document.getElementById('tDive').textContent     = hmh(t.bottom);
+  document.getElementById('tDiveHm').textContent   = t.bottom ? dec(t.bottom)+' h' : 'no dives';
 
-  document.getElementById('tRegular').textContent  = dec(t.regular);
-  document.getElementById('tOvertime').textContent = dec(t.overtime);
-  document.getElementById('tStandby').textContent  = dec(t.standby);
-  document.getElementById('tTravel').textContent   = dec(t.travel);
+  document.getElementById('tRegular').textContent  = hmh(t.regular);
+  document.getElementById('tOvertime').textContent = hmh(t.overtime);
+  document.getElementById('tStandby').textContent  = hmh(t.standby);
+  document.getElementById('tTravel').textContent   = hmh(t.travel);
   document.getElementById('tDives').textContent    = t.dives;
   document.getElementById('tDays').textContent     = t.workDayCount;
   document.getElementById('tDepth').textContent    = t.depth ? t.depth+settings.unit : '—';
@@ -2349,7 +2368,7 @@ function renderLog(){
     var top=names[0].w||1;
     document.getElementById('jobBars').innerHTML = names.map(function(j){
       return '<div class="bar-row"><span class="nm">'+esc(j.n)+'</span>'+
-             '<span class="hr">'+dec(j.w)+'</span>'+
+             '<span class="hr">'+hmh(j.w)+'</span>'+
              '<span class="track"><i style="width:'+Math.max(2,(j.w/top)*100)+'%"></i></span>'+
              (j.b? '<span class="sub2">'+dec(j.b)+' h bottom · '+j.d+' dive'+(j.d===1?'':'s')+'</span>' : '')+
              '</div>';
@@ -2392,7 +2411,7 @@ function renderLog(){
       '<span class="dmain"><span class="j">'+esc(who)+'</span>'+
         '<span class="s">'+esc(e.site||'')+(e.site&&e.start?' · ':'')+
         (e.start&&e.end?esc(e.start)+'–'+esc(e.end):'')+'</span></span>'+
-      '<span class="dnum"><span class="w">'+dec(c.totalWorkingHours)+'</span>'+
+      '<span class="dnum"><span class="w">'+hmh(c.totalWorkingHours)+'</span>'+
         '<span class="b'+(dm?'':' none')+'">'+(dm?hm(dm):'—')+'</span></span>'+
       '<span class="chipline">'+tags+
         '<button class="adddive" data-adddive="'+e.id+'" aria-label="'+esc('Add a dive to '+when+' · '+who)+'">'+
@@ -2415,18 +2434,18 @@ function summaryHTML(t, list){
   var html='<div class="sum">';
 
   html+='<div class="sblock"><h3>Arbetstid · work</h3>'+
-    row('Regular hours', dec(t.regular)+' h', 'sub')+
-    row('Övertid · overtime', dec(t.overtime)+' h', 'sub')+
-    row('Total working hours', dec(t.working)+' h', 'amber',
+    row('Regular hours', hmh(t.regular), 'sub')+
+    row('Övertid · overtime', hmh(t.overtime), 'sub')+
+    row('Total working hours', hmh(t.working), 'amber',
         'regular + övertid — the shift, counted once')+
     row('Working days', t.workDayCount, 'sub')+
   '</div>';
 
   html+='<div class="sblock"><h3>Dyktid · diving</h3>'+
-    row('Bottom time', dec(t.bottom)+' h', 'teal', 'time in the water — inside the working hours above, not added to them')+
-    (t.dressing? row('På- och avklädning', dec(t.dressing)+' h', 'sub',
+    row('Bottom time', hmh(t.bottom), 'teal', 'time in the water — inside the working hours above, not added to them')+
+    (t.dressing? row('På- och avklädning', hmh(t.dressing), 'sub',
         'dressing the diver — paid as diving, not time in the water') : '')+
-    (t.dressing? row('Dyktid billed', dec(t.paidDiving)+' h', 'teal',
+    (t.dressing? row('Dyktid billed', hmh(t.paidDiving), 'teal',
         'bottom time + dressing, at the diving rate') : '')+
     row('Dives', t.dives, 'sub')+
     row('Diving days', t.diveDayCount, 'sub')+
@@ -2434,8 +2453,8 @@ function summaryHTML(t, list){
   '</div>';
 
   html+='<div class="sblock"><h3>Other time</h3>'+
-    row('Standby', dec(t.standby)+' h', 'sub')+
-    row('Resa · travel', dec(t.travel)+' h', 'sub')+
+    row('Standby', hmh(t.standby), 'sub')+
+    row('Resa · travel', hmh(t.travel), 'sub')+
   '</div>';
 
   html+='<div class="sblock"><h3>Traktamente</h3>'+
@@ -2584,7 +2603,9 @@ function nitrogenNowHTML(now){
   }
 
   if(n.nextAt){
-    var to = n.nextGroup ? groupTag(n.nextGroup) : 'all clear';
+    /* The symbol is already on the line above; the label only needs to say
+       which letter is coming. */
+    var to = n.nextGroup ? esc(n.nextGroup)+' · '+esc(groupName(n.nextGroup)) : 'all clear';
     right = '<span class="k">Time to '+to+'</span>'+
             '<span class="cdown" id="nitroCd">'+countdownText(n.nextAt-now)+'</span>';
   } else {
@@ -3060,10 +3081,12 @@ function reportHTML(){
      '</table>';
 
   if(repOpts.dives){
+    /* On the invoice the diving figure is one number — the hours charged —
+       because splitting it there reads as two things being billed. The split
+       stays in the app's own dive data, where it is worked out. */
     h+='<h2>Diving</h2><table>'+
        row('Dives', t.dives)+
-       row('Total bottom time', dec(t.bottom)+' h')+
-       (t.dressing? row('Dressing and de-dressing', dec(t.dressing)+' h') : '')+
+       row('Total diving time', dec(t.paidDiving!=null? t.paidDiving : t.bottom)+' h')+
        (t.depth? row('Maximum depth', t.depth+settings.unit) : '')+
        row('Diving days', t.diveDayCount)+
        '</table>';
@@ -3753,7 +3776,7 @@ function renderStep(animate){
         '<span class="box"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>'+
         '<span class="cl">Unpaid lunch<small>Takes '+breakMins()+' min off the hours billed</small></span></button>';
       html+='<div class="calc"><span class="k">Hours worked</span><span class="v">'+
-            (draft.end? dec(workedMins(draft)/60)+'  ·  '+hm(workedMins(draft)) : '—')+'</span></div>';
+            (draft.end? hm(workedMins(draft)) : '—')+'</span></div>';
     }
   }
   else if(s.t==='dives'){
@@ -3776,10 +3799,10 @@ function renderStep(animate){
     html+='<div style="height:9px"></div><button class="addd" id="addDive">+ Add a dive</button>';
     var tot=diveMins(draft), dress=dressMins(draft);
     html+='<div class="calc"><span class="k">Total bottom time</span><span class="v teal">'+
-          (tot? dec(tot/60)+'  ·  '+hm(tot) : '—')+'</span></div>';
+          (tot? hm(tot) : '—')+'</span></div>';
     if(dress) html+='<div class="calc"><span class="k">Billed as diving<small>+'+
-          dec(dress/60)+' h dressing, either side</small></span><span class="v teal">'+
-          dec((tot+dress)/60)+'  ·  '+hm(tot+dress)+'</span></div>';
+          hm(dress)+' dressing, either side</small></span><span class="v teal">'+
+          hm(tot+dress)+'</span></div>';
   }
   else if(s.t==='extra'){
     var wk=workedMins(draft)/60;
@@ -3812,12 +3835,12 @@ function renderStep(animate){
       (draft.site? row('Site', esc(draft.site)) : '')+
       row('Shift', (draft.start&&draft.end)? esc(draft.start)+' – '+esc(draft.end) : '—')+
       (draft.lunch? row('Unpaid lunch', '− '+dec(lunchMins(draft)/60), 'num') : '')+
-      row('Total working', dec(cat.totalWorkingHours), 'num')+
-      (cat.overtimeHours? row('— of which övertid', dec(cat.overtimeHours), 'num') : '')+
+      row('Total working', hmh(cat.totalWorkingHours), 'num')+
+      (cat.overtimeHours? row('— of which övertid', hmh(cat.overtimeHours), 'num') : '')+
       row('Dives', dn||'—', 'num teal')+
-      row('Bottom time', dm? dec(dm/60)+' · '+hm(dm) : '—', 'num teal')+
-      (cat.dressingHours? row('Billed as diving', dec(cat.paidDivingHours)+
-          ' · incl. '+dec(cat.dressingHours)+' h dressing', 'num teal') : '')+
+      row('Bottom time', dm? hm(dm) : '—', 'num teal')+
+      (cat.dressingHours? row('Billed as diving', hmh(cat.paidDivingHours)+
+          ' · incl. '+hmh(cat.dressingHours)+' dressing', 'num teal') : '')+
       (dep? row('Max depth', dep+settings.unit, 'num teal') : '')+
       (cat.standbyHours? row('Standby', dec(cat.standbyHours), 'num') : '')+
       (cat.travelHours? row('Resa · travel', dec(cat.travelHours), 'num') : '')+

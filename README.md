@@ -54,6 +54,14 @@ Per shift:
 | Traktamente | None / half / full; a daily allowance, never an hour |
 | Notes | Optional |
 
+## How hours are shown
+
+Hours read as hours and minutes — **22h 00min** — everywhere the app shows you
+your own time: the period readout, the summary, the shift rows, the wizard.
+Decimal hours are kept only where a rate multiplies them: the financial summary,
+the customer report and the CSV, so a line like `3.50 × 103` can be checked
+against the total.
+
 ## Billing categories
 
 **Working hours and bottom time are separate categories and are never added
@@ -95,6 +103,12 @@ Like the unpaid break, the length is **stamped onto the shift when it is
 saved**, so changing the setting later cannot rewrite a period already invoiced.
 Setting it to 0 turns the whole thing off, and diving is then billed on bottom
 time alone.
+
+The split between the two is shown **in the app's own dive data**, where it is
+worked out — bottom time, på- och avklädning and dyktid billed on three lines.
+On the **customer report it is one figure**, *Total diving time*, because
+splitting it on an invoice reads as two things being charged. The report's
+footnote says what the figure contains.
 
 It changes nothing about the invariant above: dressing time is a slice of the
 shift, like bottom time, never an addition to it.
@@ -150,8 +164,8 @@ editing the shift does.
 
 The panel at the top of the Dive Log opens with **Kvävegrupp nu** — the group
 you are holding at this moment, written with the symbol for the gas it
-measures (`N₂ N`), and a
-live countdown reading **Time to N₂ M**.
+measures and the letter's spoken name (`N₂ N November`), and a live countdown
+reading **Time to M · Mike**.
 
 It is worked out by taking the group after your last dive and walking it
 forward across the printed surface-interval table by the time that has passed
@@ -172,7 +186,9 @@ Past the last band the diver carries no group at all, and the panel says
 **Highest, 24 h** below it is a different figure and stays what it was: the
 highest group of the last 24 hours, which is what the flying and altitude
 guidance is read from. Both lines carry **N₂** in front of the letter, since
-what the letter measures is the nitrogen still in the diver.
+what the letter measures is the nitrogen still in the diver, and the spoken
+name after it, so a group read aloud over comms or written on a slate cannot be
+mistaken for another letter.
 
 The countdown runs only while the Dive Log is on screen and the app is in
 front; leaving the tab stops it, and returning re-reads the real time rather
