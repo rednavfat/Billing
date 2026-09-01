@@ -71,6 +71,34 @@ working rate and övertid at the overtime rate, which together cover the shift
 exactly once. Bottom time is charged on top as its own category because it is
 *paid* differently, not because it is *extra time*.
 
+### Dressing time
+
+Dressing and de-dressing the diver is **paid as diving time but is never
+counted as time in the water**. A window either side of every dive — 15 minutes
+by default, set under Data → Settings — is added to the hours charged at the
+diving rate. Bottom time, the dive log, the surface intervals and every
+nitrogen group stay exactly what they were: minutes actually spent under.
+
+```
+diving hours billed = bottom time + dressing
+bottom time         = time in the water, and nothing else
+```
+
+The windows are **merged, not counted one per dive**. Two dives twenty minutes
+apart are not two changes of kit — the diver stays dressed — so the paid span is
+the union of the windows less the time actually spent under, which gives 50
+minutes rather than 60. Dives far enough apart are unaffected: each still brings
+its full margin either side. The windows are also held inside the shift, since
+dressing cannot happen before the diver came on shift or after they went off.
+
+Like the unpaid break, the length is **stamped onto the shift when it is
+saved**, so changing the setting later cannot rewrite a period already invoiced.
+Setting it to 0 turns the whole thing off, and diving is then billed on bottom
+time alone.
+
+It changes nothing about the invariant above: dressing time is a slice of the
+shift, like bottom time, never an addition to it.
+
 There is deliberately **no combined hours total anywhere** in the app, the CSV
 or the summary. The only total is monetary, reached by applying a distinct rate
 per category.
@@ -86,6 +114,7 @@ changes cannot rewrite an invoiced period:
 
 - the **unpaid break** actually deducted
 - the **traktamente amount** actually claimed
+- the **dressing time** in force either side of a dive
 
 `null` means not yet stamped; a stamped `0` is a real value and survives — that
 distinction matters when an allowance is claimed with no rate configured.
@@ -120,8 +149,9 @@ editing the shift does.
 ### Where you stand right now
 
 The panel at the top of the Dive Log opens with **Kvävegrupp nu** — the group
-you are holding at this moment, with its spoken name (`N November`), and a
-live countdown reading **Time to M · Mike**.
+you are holding at this moment, written with the symbol for the gas it
+measures (`N₂ N`), and a
+live countdown reading **Time to N₂ M**.
 
 It is worked out by taking the group after your last dive and walking it
 forward across the printed surface-interval table by the time that has passed
@@ -131,16 +161,18 @@ next dive can never disagree. A band runs to and including its printed bound,
 so the drop to the next letter happens the minute after it; nothing is
 interpolated, and you hold a letter for the whole band and then change, exactly
 as the table reads. Past the last band you are off the table, which the panel
-says rather than inventing a letter for.
+says — **All clear** — rather than inventing a letter for.
 
 This reports what the table says about time on the surface. It assumes no
 further diving and is not a fitness-to-dive clearance.
 
+Past the last band the diver carries no group at all, and the panel says
+**All clear**.
+
 **Highest, 24 h** below it is a different figure and stays what it was: the
 highest group of the last 24 hours, which is what the flying and altitude
-guidance is read from. Both now show the spoken name beside the letter, so a
-group read aloud over comms or written on a slate cannot be mistaken for
-another letter.
+guidance is read from. Both lines carry **N₂** in front of the letter, since
+what the letter measures is the nitrogen still in the diver.
 
 The countdown runs only while the Dive Log is on screen and the app is in
 front; leaving the tab stops it, and returning re-reads the real time rather
@@ -259,7 +291,10 @@ the dive task rather than being swallowed by `Hours worked`.
 ## Getting data out
 
 **Data → Export** shows the current period as CSV. *Copy period* / *Copy all*
-put it on the clipboard, ready to paste into a spreadsheet. The **Dives** tab
+put it on the clipboard, ready to paste into a spreadsheet. The shift export
+carries bottom time, dressing time and diving hours billed as three separate
+columns, so the diving line on an invoice can be checked without recomputing
+anything. The **Dives** tab
 has its own export button for the dive log, with surface interval and nitrogen
 group columns. Inside the claude.ai viewer a *Save CSV file* button also
 appears, which hands you a real `.csv`.

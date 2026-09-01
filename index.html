@@ -264,7 +264,10 @@ button{cursor:pointer;background:none;border:none;padding:0}
 .fly-h .g{font-family:var(--mono);font-size:15px;color:var(--teal);font-weight:600;margin-top:3px}
 .fly-h .g.none{color:var(--dim);font-weight:400;font-size:12px}
 .fly-h .g .nm{font-family:var(--ui);font-size:11px;font-weight:400;color:var(--muted);
-  letter-spacing:.02em;margin-left:2px}
+  letter-spacing:.02em;margin-left:6px}
+.fly-h .g sub{font-size:.62em;line-height:0;vertical-align:baseline;position:relative;top:.2em}
+.fly-h .g.clear{color:var(--teal);font-weight:600}
+.nitro-r .k sub{font-size:.75em;line-height:0;vertical-align:baseline;position:relative;top:.18em}
 /* The current group leads the panel, so it is the largest thing in it. The two
    columns share a baseline: the letter you hold now, and what is left of it. */
 .fly-now{display:grid;grid-template-columns:1fr auto;align-items:end;gap:12px;
@@ -985,6 +988,10 @@ hr.rule{border:none;border-top:1px solid var(--line-soft);margin:18px 0 15px}
           <input class="num-in" id="setBreak" type="number" min="0" max="480" step="15" inputmode="numeric">
         </div>
         <div class="setrow">
+          <div class="k">Dressing time<small>Minutes each side of a dive, paid as diving but not counted as time in water</small></div>
+          <input class="num-in" id="setDress" type="number" min="0" max="120" step="5" inputmode="numeric">
+        </div>
+        <div class="setrow">
           <div class="k">Currency</div>
           <input class="num-in" id="setCurrency" type="text" maxlength="6" style="width:80px">
         </div>
@@ -1130,6 +1137,8 @@ var SCHEMA = 2;
 function defaultSettings(){
   return {
     cycleStart:16, unit:'m', breakMin:60,
+    /* Minutes each side of a dive spent dressing and de-dressing the diver. */
+    dressMin:15,
     currency:'SEK',
     /* null means "not set" — with no rates the app shows hours and no money */
     rates:{ working:null, overtime:null, diving:null, standby:null, travel:null,
@@ -1398,6 +1407,68 @@ function workedMins(e){
   m -= lunchMins(e);
   return m>0? m : 0;                     /* never let a deduction push a shift negative */
 }
+/* Dressing and de-dressing the diver is paid as diving time, but it is not
+   time in the water: it never touches bottom time, the dive log, or anything
+   the tables are read from.
+
+   The length is stamped onto the shift when it is saved, so changing the
+   setting later cannot rewrite hours already billed. */
+function dressSetting(){ var v=num(settings.dressMin); return v>0? v : 0; }
+function dressMinsFor(e){
+  return (e.dressMin!=null && e.dressMin!=='') ? num(e.dressMin) : dressSetting();
+}
+
+/* The shift as two absolute times, so a shift running past midnight is one
+   span rather than two. */
+function shiftBounds(e){
+  if(!e.date || !e.start || !e.end) return null;
+  var a=String(e.start).split(':'), b=String(e.end).split(':');
+  if(a.length<2 || b.length<2) return null;
+  var base=parseISO(e.date);
+  var s=new Date(base.getFullYear(),base.getMonth(),base.getDate(),+a[0],+a[1]);
+  var t=new Date(base.getFullYear(),base.getMonth(),base.getDate(),+b[0],+b[1]);
+  if(t<=s) t.setDate(t.getDate()+1);
+  return [s.getTime(), t.getTime()];
+}
+
+/* Minutes covered by a set of [from,to] spans, counting an overlap once. */
+function unionMins(spans){
+  if(!spans.length) return 0;
+  var s=spans.slice().sort(function(a,b){ return a[0]-b[0]; });
+  var total=0, from=s[0][0], to=s[0][1], i;
+  for(i=1;i<s.length;i++){
+    if(s[i][0] > to){ total += to-from; from=s[i][0]; to=s[i][1]; }
+    else if(s[i][1] > to){ to=s[i][1]; }
+  }
+  return (total + (to-from))/60000;
+}
+
+/* The windows are merged, not counted one per dive. Two dives twenty minutes
+   apart are not two changes of kit — the diver stays dressed — so the paid
+   span is the union of the windows less the time actually spent under. Dives
+   far enough apart are untouched by this: each still brings its full margin
+   either side. The windows are held inside the shift, because dressing cannot
+   happen before the diver came on shift or after they went off. */
+function dressMins(e){
+  var d=dressMinsFor(e);
+  if(!(d>0) || !e.dives || !e.dives.length) return 0;
+  var ms=d*60000, win=[], wet=[], i, c;
+  for(i=0;i<e.dives.length;i++){
+    c=diveClock(e, e.dives[i]);
+    if(!c) continue;                 /* not timed yet: nothing to pay for */
+    win.push([c.inDT.getTime()-ms, c.outDT.getTime()+ms]);
+    wet.push([c.inDT.getTime(), c.outDT.getTime()]);
+  }
+  if(!win.length) return 0;
+  var b=shiftBounds(e);
+  if(b){
+    win = win.map(function(w){ return [Math.max(w[0],b[0]), Math.min(w[1],b[1])]; })
+             .filter(function(w){ return w[1]>w[0]; });
+    if(!win.length) return 0;
+  }
+  return Math.max(0, unionMins(win) - unionMins(wet));
+}
+
 function diveMins(e){
   var t=0,i;
   if(e.dives) for(i=0;i<e.dives.length;i++) t+=minsBetween(e.dives[i].in, e.dives[i].out);
@@ -1454,6 +1525,9 @@ function categories(e){
     overtimeHours: ot,
     regularHours: working - ot,
     bottomTimeHours: diveMins(e)/60,   /* inside the shift, never added to it */
+    /* Paid as diving, but never counted as time in the water. */
+    dressingHours: dressMins(e)/60,
+    paidDivingHours: (diveMins(e)+dressMins(e))/60,
     diveCount: diveCount(e),
     standbyHours: standbyH(e),
     travelHours: travelH(e),
@@ -1486,14 +1560,16 @@ function perDiemDays(list){
   return {full:full, half:half, amount:amount, duplicates:duplicates};
 }
 function periodTotals(list){
-  var t = {regular:0, overtime:0, working:0, bottom:0, dives:0,
-           standby:0, travel:0, depth:0, workDays:{}, diveDays:{}, clients:{}};
+  var t = {regular:0, overtime:0, working:0, bottom:0, dressing:0, paidDiving:0,
+           dives:0, standby:0, travel:0, depth:0, workDays:{}, diveDays:{}, clients:{}};
   list.forEach(function(e){
     var c = categories(e);
     t.regular  += c.regularHours;
     t.overtime += c.overtimeHours;
     t.working  += c.totalWorkingHours;
     t.bottom   += c.bottomTimeHours;
+    t.dressing += c.dressingHours;
+    t.paidDiving += c.paidDivingHours;
     t.dives    += c.diveCount;
     t.standby  += c.standbyHours;
     t.travel   += c.travelHours;
@@ -1532,7 +1608,9 @@ function money(t){
   var m = {
     working:  t.regular  * num(r.working),
     overtime: t.overtime * num(r.overtime),
-    diving:   t.bottom   * num(r.diving),
+    /* Time in the water plus the dressing either side of it, at the diving
+       rate. Still a slice of the shift, never an addition to it. */
+    diving:   (t.paidDiving!=null ? t.paidDiving : t.bottom) * num(r.diving),
     standby:  t.standby  * num(r.standby),
     travel:   t.travel   * num(r.travel),
     perDiem:  t.perDiemAmount
@@ -1592,12 +1670,11 @@ function otSplitHTML(e){
    and therefore wrong — page.
    ================================================================ */
 var GROUPS=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','Z'];
-/* Spoken names for the group letters, so a group read aloud over comms or
-   written on a slate cannot be mistaken for another letter. */
-var GROUP_NAME={A:'Alpha',B:'Bravo',C:'Charlie',D:'Delta',E:'Echo',F:'Foxtrot',
-  G:'Golf',H:'Hotel',I:'India',J:'Juliett',K:'Kilo',L:'Lima',M:'Mike',
-  N:'November',O:'Oscar',Z:'Zulu'};
-function groupName(g){ return (g && GROUP_NAME[g]) || ''; }
+/* The groups are nitrogen groups, so the letter is shown carrying the symbol
+   for the gas it measures. N2 is written as markup rather than as the subscript
+   character, which not every fallback font carries. */
+var N2 = 'N<sub>2</sub>';
+function groupTag(g){ return g ? N2+' '+esc(g) : ''; }
 
 var NDBT = {
   loaded:false,                 /* set by validateNDBT() below, never by hand */
@@ -2061,7 +2138,8 @@ function closePeriod(p){
     stamped:{
       shifts:list.length,
       regular:t.regular, overtime:t.overtime, working:t.working,
-      bottom:t.bottom, dives:t.dives, depth:t.depth,
+      bottom:t.bottom, dressing:t.dressing, paidDiving:t.paidDiving,
+      dives:t.dives, depth:t.depth,
       standby:t.standby, travel:t.travel,
       perDiemFull:t.perDiemFull, perDiemHalf:t.perDiemHalf, perDiemAmount:t.perDiemAmount,
       workDayCount:t.workDayCount, diveDayCount:t.diveDayCount,
@@ -2082,7 +2160,12 @@ function effectiveTotals(p, list){
   if(rec && rec.status==='closed' && rec.stamped){
     var st=rec.stamped;
     return {stamped:true, closedAt:rec.closedAt, regular:st.regular, overtime:st.overtime,
-      working:st.working, bottom:st.bottom, dives:st.dives, depth:st.depth,
+      working:st.working, bottom:st.bottom,
+      /* Periods closed before dressing time existed have neither figure; their
+         diving hours were the time in the water, and stay that. */
+      dressing:st.dressing!=null? st.dressing : 0,
+      paidDiving:st.paidDiving!=null? st.paidDiving : st.bottom,
+      dives:st.dives, depth:st.depth,
       standby:st.standby, travel:st.travel, perDiemFull:st.perDiemFull,
       perDiemHalf:st.perDiemHalf, perDiemAmount:st.perDiemAmount,
       perDiemDuplicates:0, workDayCount:st.workDayCount, diveDayCount:st.diveDayCount,
@@ -2340,7 +2423,11 @@ function summaryHTML(t, list){
   '</div>';
 
   html+='<div class="sblock"><h3>Dyktid · diving</h3>'+
-    row('Bottom time', dec(t.bottom)+' h', 'teal', 'inside the working hours above, not added to them')+
+    row('Bottom time', dec(t.bottom)+' h', 'teal', 'time in the water — inside the working hours above, not added to them')+
+    (t.dressing? row('På- och avklädning', dec(t.dressing)+' h', 'sub',
+        'dressing the diver — paid as diving, not time in the water') : '')+
+    (t.dressing? row('Dyktid billed', dec(t.paidDiving)+' h', 'teal',
+        'bottom time + dressing, at the diving rate') : '')+
     row('Dives', t.dives, 'sub')+
     row('Diving days', t.diveDayCount, 'sub')+
     row('Max depth', t.depth? t.depth+settings.unit : '—', 'sub')+
@@ -2372,7 +2459,7 @@ function summaryHTML(t, list){
     html+='<div class="sblock money"><h3>Financial summary</h3>'+
       line('Regular', t.regular, r.working, m.working)+
       line('Övertid', t.overtime, r.overtime, m.overtime)+
-      line('Dyktid', t.bottom, r.diving, m.diving)+
+      line('Dyktid', t.paidDiving!=null? t.paidDiving : t.bottom, r.diving, m.diving)+
       line('Standby', t.standby, r.standby, m.standby)+
       line('Resa', t.travel, r.travel, m.travel)+
       row('Traktamente', fmtMoney(m.perDiem), 'sub')+
@@ -2458,7 +2545,7 @@ function renderFlyPanel(){
     '<div class="fly-h">'+
       '<div><span class="k">Highest, 24 h</span>'+
         '<span class="g'+(st.group?'':' none')+'">'+
-        (st.group? esc(st.group)+' <span class="nm">'+esc(groupName(st.group))+'</span>'+
+        (st.group? groupTag(st.group)+
                    (st.ungrouped?'<span class="nm">+ ungrouped dives</span>':'')
                  : (st.ungrouped?'no group assigned':'—'))+'</span></div>'+
       '<div class="fly-state"><span class="s '+(clear?'ok':'wait')+'">'+
@@ -2487,17 +2574,17 @@ function nitrogenNowHTML(now){
 
   if(n.group){
     left = '<span class="k">Kvävegrupp nu</span>'+
-           '<span class="g">'+esc(n.group)+' <span class="nm">'+esc(groupName(n.group))+'</span></span>';
+           '<span class="g">'+groupTag(n.group)+'</span>';
   } else if(n.note==='clean'){
-    left = '<span class="k">Kvävegrupp nu · current group</span>'+
-           '<span class="g none">off the table · no group</span>';
+    left = '<span class="k">Kvävegrupp nu</span>'+
+           '<span class="g clear">All clear</span>';
   } else {
-    left = '<span class="k">Kvävegrupp nu · current group</span>'+
+    left = '<span class="k">Kvävegrupp nu</span>'+
            '<span class="g none">'+esc(NOTE_TEXT[n.note]||'no group')+'</span>';
   }
 
   if(n.nextAt){
-    var to = n.nextGroup ? esc(n.nextGroup)+' · '+esc(groupName(n.nextGroup)) : 'no group';
+    var to = n.nextGroup ? groupTag(n.nextGroup) : 'all clear';
     right = '<span class="k">Time to '+to+'</span>'+
             '<span class="cdown" id="nitroCd">'+countdownText(n.nextAt-now)+'</span>';
   } else {
@@ -2976,6 +3063,7 @@ function reportHTML(){
     h+='<h2>Diving</h2><table>'+
        row('Dives', t.dives)+
        row('Total bottom time', dec(t.bottom)+' h')+
+       (t.dressing? row('Dressing and de-dressing', dec(t.dressing)+' h') : '')+
        (t.depth? row('Maximum depth', t.depth+settings.unit) : '')+
        row('Diving days', t.diveDayCount)+
        '</table>';
@@ -3007,7 +3095,7 @@ function reportHTML(){
     }
     ln('Regular',  t.regular,  rates.working,  m.working);
     ln('Overtime', t.overtime, rates.overtime, m.overtime);
-    ln('Diving',   t.bottom,   rates.diving,   m.diving);
+    ln('Diving',   t.paidDiving!=null? t.paidDiving : t.bottom, rates.diving, m.diving);
     ln('Standby',  t.standby,  rates.standby,  m.standby);
     ln('Travel',   t.travel,   rates.travel,   m.travel);
     var total = m.working+m.overtime+m.diving+m.standby+m.travel;
@@ -3017,7 +3105,9 @@ function reportHTML(){
          '<tr class="tot"><td>Total</td><td>'+amt(total)+'</td></tr></table>';
       h+='<p class="fine">Each category is charged at its own rate. Regular and overtime '+
          'together are the working time, charged once; diving is charged separately because '+
-         'it is paid at a different rate, not because it is additional time.</p>';
+         'it is paid at a different rate, not because it is additional time.'+
+         (t.dressing? ' Diving hours charged are the bottom time plus the time spent dressing '+
+            'and de-dressing the diver either side of each dive.' : '')+'</p>';
     } else {
       h+='<h2>Amount</h2><p class="fine">No rates are configured, so no amounts are shown.</p>';
     }
@@ -3266,7 +3356,7 @@ function renderDive(){
   h+='<div class="dv-block n2"><h3>Kvävegrupp · nitrogen</h3>'+
       r('Surface interval', d.si==null
           ? '<span class="v none">first dive of the series</span>'
-          : '<span class="v mono">'+siClock(d.si)+'</span>'+(d.seriesStart?' <span class="v none">· clean</span>':''))+
+          : '<span class="v mono">'+siClock(d.si)+'</span>'+(d.seriesStart?' <span class="v none">· all clear</span>':''))+
       r('Entering group', d.startGroup
           ? '<span class="v mono teal">'+esc(d.startGroup)+'</span>'
           : val(null,'none — started clean'))+
@@ -3684,9 +3774,12 @@ function renderStep(animate){
         (m?'<div class="dur">'+hm(m)+'</div>':'')+'</div>';
     }).join('')+'</div>';
     html+='<div style="height:9px"></div><button class="addd" id="addDive">+ Add a dive</button>';
-    var tot=diveMins(draft);
+    var tot=diveMins(draft), dress=dressMins(draft);
     html+='<div class="calc"><span class="k">Total bottom time</span><span class="v teal">'+
           (tot? dec(tot/60)+'  ·  '+hm(tot) : '—')+'</span></div>';
+    if(dress) html+='<div class="calc"><span class="k">Billed as diving<small>+'+
+          dec(dress/60)+' h dressing, either side</small></span><span class="v teal">'+
+          dec((tot+dress)/60)+'  ·  '+hm(tot+dress)+'</span></div>';
   }
   else if(s.t==='extra'){
     var wk=workedMins(draft)/60;
@@ -3723,6 +3816,8 @@ function renderStep(animate){
       (cat.overtimeHours? row('— of which övertid', dec(cat.overtimeHours), 'num') : '')+
       row('Dives', dn||'—', 'num teal')+
       row('Bottom time', dm? dec(dm/60)+' · '+hm(dm) : '—', 'num teal')+
+      (cat.dressingHours? row('Billed as diving', dec(cat.paidDivingHours)+
+          ' · incl. '+dec(cat.dressingHours)+' h dressing', 'num teal') : '')+
       (dep? row('Max depth', dep+settings.unit, 'num teal') : '')+
       (cat.standbyHours? row('Standby', dec(cat.standbyHours), 'num') : '')+
       (cat.travelHours? row('Resa · travel', dec(cat.travelHours), 'num') : '')+
@@ -3771,6 +3866,7 @@ function commit(){
      rewrite a period that has already been billed. */
   draft.perDiemAmount = (draft.perDiem && draft.perDiem!=='none')
     ? perDiemRate(draft.perDiem) : 0;
+  draft.dressMin = dressSetting();
   if(found>=0) entries[found]=draft; else entries.push(draft);
   saveState();
   var p=periodOf(draft.date), cur=periodOf(todayISO());
@@ -4000,7 +4096,7 @@ function undoRestore(){
    double-count the shift. */
 var COLS=['Date','Client','Site','On shift','Off shift','Unpaid lunch (h)',
           'Regular hours','Overtime (h)','Total working hours',
-          'Dives','Bottom time (min)','Bottom time (h)','Max depth',
+          'Dives','Bottom time (min)','Bottom time (h)','Dressing (h)','Diving billed (h)','Max depth',
           'Standby (h)','Travel (h)','Per diem','Per diem amount','Notes'];
 function q(v){ v=String(v==null?'':v); return /[",\n]/.test(v)? '"'+v.replace(/"/g,'""')+'"' : v; }
 function toCSV(list){
@@ -4011,7 +4107,7 @@ function toCSV(list){
     rows.push([e.date,shiftClient(e),e.site||'',e.start||'',e.end||'',
       dec(lunchMins(e)/60),
       dec(c.regularHours), dec(c.overtimeHours), dec(c.totalWorkingHours),
-      c.diveCount, dm, dec(dm/60), maxDepth(e)||'',
+      c.diveCount, dm, dec(dm/60), dec(c.dressingHours), dec(c.paidDivingHours), maxDepth(e)||'',
       dec(c.standbyHours), dec(c.travelHours),
       c.perDiem==='none'?'':c.perDiem, c.perDiemAmount||'',
       e.notes||''].map(q).join(','));
@@ -4176,6 +4272,7 @@ function renderData(){
   document.getElementById('setCurrency').value=settings.currency||'SEK';
   renderRates();
   document.getElementById('setBreak').value=breakMins();
+  document.getElementById('setDress').value=dressSetting();
   document.querySelectorAll('#setUnit button').forEach(function(b){
     b.classList.toggle('on', b.getAttribute('data-u')===settings.unit);
   });
@@ -4679,6 +4776,12 @@ document.getElementById('setCycle').addEventListener('change',function(){
   settings.cycleStart=v; this.value=v; saveState();
   offset=0; renderLog(); renderData();
   toast('Billing cycle starts on the '+v+'th');
+});
+document.getElementById('setDress').addEventListener('change',function(){
+  var v=Math.min(120,Math.max(0,Math.round(num(this.value))));
+  settings.dressMin=v; this.value=v; saveState();
+  renderLog(); renderData();
+  toast(v? 'Dressing time set to '+v+' min each side' : 'Dressing time turned off');
 });
 document.getElementById('setBreak').addEventListener('change',function(){
   var v=Math.min(480,Math.max(0,Math.round(num(this.value))));
