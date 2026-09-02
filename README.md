@@ -57,7 +57,10 @@ Per shift:
 ## How hours are shown
 
 Hours read as hours and minutes — **22h 00min** — everywhere the app shows you
-your own time: the period readout, the summary, the shift rows, the wizard.
+your own time: the period readout, the summary, the shift rows, the wizard. In
+the four narrow cells under the readout the `:00` is dropped, because a whole
+number of hours is said as *20h* and the long form does not fit a quarter of a
+phone.
 Decimal hours are kept only where a rate multiplies them: the financial summary,
 the customer report and the CSV, so a line like `3.50 × 103` can be checked
 against the total.
@@ -474,6 +477,13 @@ Monday-first and dots each day with what it holds — work, a dive, övertid,
 traktamente. Selecting a day lists its shifts and dives; tapping either opens
 the record, and Back returns to the calendar rather than dumping you somewhere
 else.
+
+**Tap the month and year** to jump. The picker gives a year stepper, one chip
+per year that actually holds shifts, and a grid of twelve months carrying the
+number of shifts in each — so where there is something to look at is visible
+before choosing. *This month* returns to today. A day selected in one month is
+dropped when the calendar moves to another, since a day listed under a grid it
+does not belong to reads as a bug.
 
 ## Incomplete records
 
