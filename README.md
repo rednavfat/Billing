@@ -478,6 +478,14 @@ traktamente. Selecting a day lists its shifts and dives; tapping either opens
 the record, and Back returns to the calendar rather than dumping you somewhere
 else.
 
+**Selecting a day** lists what it holds and offers to add to it. *Add a shift on
+03 Sep* opens the wizard already dated to that day — hours, dives, traktamente,
+standby and resa all live on a shift, so that one button covers all of them. A
+shift already on the day carries the same **+ dive** shortcut as a row in the
+shift list, so a dive can be added without walking the wizard again. A day
+inside a period marked billed asks to reopen it first: a shift added underneath
+stamped figures would never show up in them.
+
 **Tap the month and year** to jump. The picker gives a year stepper, one chip
 per year that actually holds shifts, and a grid of twelve months carrying the
 number of shifts in each — so where there is something to look at is visible
