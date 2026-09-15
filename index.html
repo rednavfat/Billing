@@ -606,6 +606,8 @@ pre.csv{
 .paper td small{display:block;font-family:var(--mono);font-size:10.5px;color:#4a6470;
   font-weight:400;margin-top:2px;letter-spacing:.02em}
 .paper td small .nw{white-space:nowrap}
+/* The figures column is right-aligned, so its note is too. */
+.paper td:last-child small{text-align:right}
 /* The names column takes what it needs; the figures column only what it is. */
 .paper td:first-child{width:99%}
 .paper .rate{color:#425c68}
@@ -3232,20 +3234,24 @@ function reportHTML(){
        held some. The bottom time goes here too rather than beside the hours —
        the right column is nowrap, and a second figure in it squeezes the names
        until they break across lines. */
+    /* One note per column, so neither has to carry two figures on one line:
+       the bottom time sits under the name, the overtime under the hours it is
+       part of. Reading down the right-hand column, "2h ot" beneath "184.00 h"
+       says what that figure contains without a sentence to parse. */
+    var anyOt=false;
     function nameCell(label, c, bold){
-      var note=[];
-      /* Each fragment holds together: the line may wrap between them, never
-         between a figure and the word it belongs to. */
-      function frag(t){ return '<span class="nw">'+t+'</span>'; }
-      if(c.overtime) note.push(frag('of which '+dec(c.overtime)+' h overtime'));
-      if(repOpts.dives && c.bottom) note.push(frag(dec(c.bottom)+' h bottom'));
       return (bold? '<b>'+label+'</b>' : label)+
-             (note.length? '<small>'+note.join(' · ')+'</small>' : '');
+             (repOpts.dives && c.bottom? '<small>'+dec(c.bottom)+' h bottom</small>' : '');
+    }
+    function hoursCell(c){
+      if(!c.overtime) return dec(c.working)+' h';
+      anyOt = true;
+      return dec(c.working)+' h<small>'+hmShort(c.overtime)+' ot</small>';
     }
     function line(label, c, cls, bold){
       return '<tr'+(cls? ' class="'+cls+'"' : '')+'>'+
              '<td>'+nameCell(label, c, bold)+'</td>'+
-             '<td>'+dec(c.working)+' h</td></tr>';
+             '<td>'+hoursCell(c)+'</td></tr>';
     }
     /* Most hours first, so the page opens on the work that matters most. A
        shift with no site recorded is the leftovers, so it always sits last
@@ -3282,7 +3288,10 @@ function reportHTML(){
 
     h+='<h2>'+head+'</h2><table>'+body+
        '<tr class="bc-total"><td>Total working hours</td><td>'+dec(grand)+' h</td></tr>'+
-       '</table>';
+       '</table>'+
+       /* Said once, under the table, rather than on every row that carries it. */
+       (anyOt? '<p class="fine">ot — overtime, already part of the hours beside it '+
+               'and not added to them.</p>' : '');
   }
   if(repOpts.perDiem && (t.perDiemFull||t.perDiemHalf)){
     h+='<h2>Traktamente</h2><table>'+

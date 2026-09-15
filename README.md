@@ -472,17 +472,18 @@ than disappearing out of a total, and sits last. Rows are ordered by hours, most
 first, and the section closes with a total that can be checked against the
 working hours at the top of the page.
 
-**Overtime is named at the place it was worked.** A site that carried overtime
-says so under its name — `of which 2.00 h overtime` — and its client says the
-same for the sum of its sites, so a customer can see which site the overtime was
-run on rather than only that the period held some. The wording is deliberate:
-overtime is *inside* the hours beside it, never something to add to them, which
-is the subset rule the whole app is built on. A site with no overtime says
-nothing. With diving detail on, the bottom time at each place joins the same
-note; turning that option off takes the bottom time away and leaves the
-overtime, which is working time rather than diving detail. Both ride under the
-name rather than beside the figure — the figures column is nowrap, and a second
-number in it breaks the names across lines.
+**Overtime is named at the place it was worked**, so a customer can see which
+site the overtime was run on rather than only that the period held some. It sits
+under the hours it is part of, short — `2h ot` beneath `184.00 h` — and one line
+under the table says what `ot` means and that it is already inside those hours,
+not added to them. That subset rule is what the whole app is built on, and
+reading it down a column of figures needs no sentence to parse.
+
+Each column carries at most one note: the bottom time under the name, the
+overtime under the hours. Neither has to hold two figures on one line, which is
+what used to break the names across lines. A place with no overtime says
+nothing, and turning diving detail off removes the bottom time and leaves the
+overtime, which is working time rather than diving detail.
 
 Toggles: amounts, diving detail, split by client, split by site, and
 **traktamente, which is off by default** because a personal allowance is usually
