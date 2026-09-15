@@ -458,10 +458,17 @@ It defaults to the commercial facts only:
 - other time — standby and travel, when non-zero
 - amounts — per category at its own rate, with a total
 
-**Split by client and site** adds a section showing where the hours went: each
-client with its own total, the sites worked at underneath it, and the hours at
-each. A shift with no site recorded gets its own row rather than disappearing
-out of its client's total, and sits last. Both levels are ordered by hours, most
+**Split by client** and **Split by site** are two switches, so the section is
+whichever of them is on:
+
+| | result |
+|---|---|
+| client only | each client with its own hours |
+| site only | each place worked, merged across clients — a berth worked for two clients is one berth |
+| both | the places nested under the client they were worked for |
+
+Whichever way it is cut, a shift with no site recorded gets its own row rather
+than disappearing out of a total, and sits last. Rows are ordered by hours, most
 first, and the section closes with a total that can be checked against the
 working hours at the top of the page.
 
@@ -477,7 +484,7 @@ overtime, which is working time rather than diving detail. Both ride under the
 name rather than beside the figure — the figures column is nowrap, and a second
 number in it breaks the names across lines.
 
-Four toggles: amounts, diving detail, split by client and site, and
+Five toggles: amounts, diving detail, split by client, split by site, and
 **traktamente, which is off by default** because a personal allowance is usually
 not the customer's business. Turning amounts off suppresses every figure in currency, the allowance
 line included.
