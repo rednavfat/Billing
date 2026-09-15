@@ -484,9 +484,23 @@ overtime, which is working time rather than diving detail. Both ride under the
 name rather than beside the figure — the figures column is nowrap, and a second
 number in it breaks the names across lines.
 
-Five toggles: amounts, diving detail, split by client, split by site, and
+Toggles: amounts, diving detail, split by client, split by site, and
 **traktamente, which is off by default** because a personal allowance is usually
-not the customer's business. Turning amounts off suppresses every figure in currency, the allowance
+not the customer's business.
+
+Traktamente is two separate choices. **Traktamente days** shows how many full
+and half days, with no amount against them — counting the days you were away is
+a different thing from putting a figure on them. **Traktamente amount** is
+offered only once there are days to put a figure on and amounts to put it among,
+and adds the allowance to the figures *and* to the total. Leaving it off leaves
+the allowance out of the total as well: a total that does not add up from the
+lines above it is worse than no total.
+
+The rate itself, under Data → Settings, is optional. With no rate configured
+there is no amount to show and the app reports days only; it exists so that a
+period can be totalled in money when that is what you want, and it is stamped
+onto each shift as it is saved so a later change of rate cannot rewrite a period
+already invoiced. Turning amounts off suppresses every figure in currency, the allowance
 line included.
 
 Nitrogen groups, flying restrictions, team names and personal notes are **never**

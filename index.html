@@ -3156,16 +3156,25 @@ function monthRows(year){
    off by default; nitrogen groups, flying restrictions, team names and
    personal notes are never included at all.
    ================================================================ */
-var repOpts = {perDiem:false, money:true, dives:true, byClient:false, bySite:false};
+/* The allowance in currency is its own choice, and off: counting the days you
+   were away is a different thing from putting a figure on them. */
+var repOpts = {perDiem:false, perDiemMoney:false, money:true, dives:true,
+               byClient:false, bySite:false};
 var REP_OPTS = [
   {k:'money',    label:'Amounts',            sub:'Per category and a total, using your rates'},
   {k:'dives',    label:'Diving detail',      sub:'Number of dives and total bottom time'},
   {k:'byClient', label:'Split by client',      sub:'Each client with its own hours'},
   {k:'bySite',   label:'Split by site',        sub:'Where the hours were worked, nested under the client if that is on too'},
-  {k:'perDiem',  label:'Include traktamente', sub:'A personal allowance — usually not the customer’s business'}
+  {k:'perDiem',  label:'Traktamente days',   sub:'How many full and half days, with no amount against them'},
+  /* Only offered once there are days to put a figure on, and amounts to put
+     it among. */
+  {k:'perDiemMoney', label:'Traktamente amount', sub:'Put the allowance in the figures and in the total',
+   when:function(){ return repOpts.perDiem && repOpts.money; }}
 ];
 function renderRepOpts(){
-  document.getElementById('repOpts').innerHTML = REP_OPTS.map(function(o){
+  document.getElementById('repOpts').innerHTML = REP_OPTS.filter(function(o){
+    return !o.when || o.when();
+  }).map(function(o){
     return '<button class="optrow'+(repOpts[o.k]?' on':'')+'" data-opt="'+o.k+'">'+
       '<span class="box"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>'+
       '<span class="cl">'+esc(o.label)+'<small>'+esc(o.sub)+'</small></span></button>';
@@ -3279,7 +3288,8 @@ function reportHTML(){
     h+='<h2>Traktamente</h2><table>'+
        row('Full days', t.perDiemFull)+
        row('Half days', t.perDiemHalf)+
-       (repOpts.money && t.perDiemAmount? row('Allowance', amt(t.perDiemAmount)) : '')+
+       (repOpts.money && repOpts.perDiemMoney && t.perDiemAmount
+          ? row('Allowance', amt(t.perDiemAmount)) : '')+
        '</table>';
   }
   if(repOpts.money){
@@ -3294,7 +3304,12 @@ function reportHTML(){
     ln('Standby',  t.standby,  rates.standby,  m.standby);
     ln('Travel',   t.travel,   rates.travel,   m.travel);
     var total = m.working+m.overtime+m.diving+m.standby+m.travel;
-    if(repOpts.perDiem && m.perDiem){ lines.push(row('Traktamente', amt(m.perDiem))); total+=m.perDiem; }
+    /* A figure left off the page is left out of the total with it — a total
+       that does not add up from the lines above it is worse than no total. */
+    if(repOpts.perDiem && repOpts.perDiemMoney && m.perDiem){
+      lines.push(row('Traktamente', amt(m.perDiem)));
+      total += m.perDiem;
+    }
     if(lines.length){
       h+='<h2>Amount</h2><table>'+lines.join('')+
          '<tr class="tot"><td>Total</td><td>'+amt(total)+'</td></tr></table>';
