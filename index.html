@@ -599,6 +599,14 @@ pre.csv{
 .paper tr:last-child td{border-bottom:none}
 .paper tr.tot td{border-top:2px solid #07141a;border-bottom:none;font-weight:700;
   font-size:16px;padding-top:11px;color:#000}
+/* A site sits under the client it was worked for. */
+.paper tr.bc-site td{font-size:12.5px;color:#334e5a;border-bottom-color:#eef3f5}
+.paper tr.bc-site td:first-child{padding-left:15px}
+.paper tr.bc-total td{border-top:1px solid #7f96a0;border-bottom:none;font-weight:700;padding-top:9px}
+.paper td small{display:block;font-family:var(--mono);font-size:10.5px;color:#4a6470;
+  font-weight:400;margin-top:2px;letter-spacing:.02em}
+/* The names column takes what it needs; the figures column only what it is. */
+.paper td:first-child{width:99%}
 .paper .rate{color:#425c68}
 .paper .fine{font-size:11.5px;color:#344e5a;margin-top:18px;line-height:1.55}
 .paper .sig{margin-top:30px;padding-top:12px;border-top:1px solid #c8d6dc;
@@ -1652,10 +1660,19 @@ function periodTotals(list){
       if(c.diveCount>0) t.diveDays[e.date]=1;
     }
     var name = (shiftClient(e)||'Unassigned').trim() || 'Unassigned';
-    var row = t.clients[name] || (t.clients[name]={working:0, bottom:0, dives:0});
+    var row = t.clients[name] || (t.clients[name]={working:0, bottom:0, dives:0, sites:{}});
+    if(!row.sites) row.sites={};
     row.working += c.totalWorkingHours;
     row.bottom  += c.bottomTimeHours;
     row.dives   += c.diveCount;
+    /* Where the hours were worked, kept under the client they were worked for.
+       A shift with no site still belongs somewhere, so it gets its own row
+       rather than disappearing out of the client's total. */
+    var site = (e.site||'').trim();
+    var sr = row.sites[site] || (row.sites[site]={working:0, bottom:0, dives:0});
+    sr.working += c.totalWorkingHours;
+    sr.bottom  += c.bottomTimeHours;
+    sr.dives   += c.diveCount;
   });
   var pd = perDiemDays(list);
   t.perDiemFull = pd.full; t.perDiemHalf = pd.half;
@@ -3128,7 +3145,7 @@ var repOpts = {perDiem:false, money:true, dives:true, byClient:false};
 var REP_OPTS = [
   {k:'money',    label:'Amounts',            sub:'Per category and a total, using your rates'},
   {k:'dives',    label:'Diving detail',      sub:'Number of dives and total bottom time'},
-  {k:'byClient', label:'Split by client',    sub:'Only useful if the period covers more than one'},
+  {k:'byClient', label:'Split by client and site', sub:'Where the hours were worked, and how many at each'},
   {k:'perDiem',  label:'Include traktamente', sub:'A personal allowance — usually not the customer’s business'}
 ];
 function renderRepOpts(){
@@ -3177,11 +3194,39 @@ function reportHTML(){
        (t.travel?  row('Travel',  dec(t.travel)+' h')  : '')+
        '</table>';
   }
-  if(repOpts.byClient && names.length>1){
-    h+='<h2>By client</h2><table>'+names.map(function(n){
+  if(repOpts.byClient && names.length){
+    /* Each client, then the sites the hours were worked at, then the whole
+       period — so the parts can be checked against the total on the page. */
+    /* The bottom time goes under the name rather than beside the hours: the
+       right column is nowrap, and a second figure in it squeezes the names
+       until they break across lines. */
+    function nameCell(label, c, bold){
+      return (bold? '<b>'+label+'</b>' : label)+
+             (repOpts.dives && c.bottom? '<small>'+dec(c.bottom)+' h bottom</small>' : '');
+    }
+    var body='', grand=0;
+    /* Most hours first, at both levels, so the page opens on the work that
+       matters most. A shift with no site recorded is the leftovers, so it
+       always sits at the foot of its client whatever it holds. */
+    var ranked = names.slice().sort(function(a,b){
+      return (t.clients[b].working - t.clients[a].working) || (a<b?-1:a>b?1:0);
+    });
+    ranked.forEach(function(n){
       var c=t.clients[n];
-      return row(esc(n), dec(c.working)+' h'+(repOpts.dives&&c.bottom? ' · '+dec(c.bottom)+' h bottom':''));
-    }).join('')+'</table>';
+      grand += c.working;
+      body += '<tr><td>'+nameCell(esc(n), c, true)+'</td><td>'+dec(c.working)+' h</td></tr>';
+      var sites=Object.keys(c.sites||{}).sort(function(a,b){
+        if(!a !== !b) return a? -1 : 1;
+        return (c.sites[b].working - c.sites[a].working) || (a<b?-1:a>b?1:0);
+      });
+      sites.forEach(function(sn){
+        body += '<tr class="bc-site"><td>'+nameCell(esc(sn || 'No site recorded'), c.sites[sn], false)+'</td>'+
+                '<td>'+dec(c.sites[sn].working)+' h</td></tr>';
+      });
+    });
+    h+='<h2>By client and site</h2><table>'+body+
+       '<tr class="bc-total"><td>Total working hours</td><td>'+dec(grand)+' h</td></tr>'+
+       '</table>';
   }
   if(repOpts.perDiem && (t.perDiemFull||t.perDiemHalf)){
     h+='<h2>Traktamente</h2><table>'+
@@ -3232,7 +3277,9 @@ function reportPlainText(){
   div.querySelectorAll('h1,h2,tr,.fine').forEach(function(el){
     if(el.tagName==='TR'){
       var td=el.querySelectorAll('td');
-      out.push(td[0].textContent.trim().replace(/\s+/g,' ')+'\t'+td[1].textContent.trim());
+      /* The indent is CSS on the page, so it is spelt out here instead. */
+      var pre = el.classList.contains('bc-site') ? '  ' : '';
+      out.push(pre+td[0].textContent.trim().replace(/\s+/g,' ')+'\t'+td[1].textContent.trim());
     } else if(el.tagName==='H1'){ out.push(el.textContent.trim()); }
     else if(el.tagName==='H2'){ out.push(''); out.push(el.textContent.trim().toUpperCase()); }
     else out.push('\n'+el.textContent.trim());

@@ -458,9 +458,18 @@ It defaults to the commercial facts only:
 - other time — standby and travel, when non-zero
 - amounts — per category at its own rate, with a total
 
-Four toggles: amounts, diving detail, split by client, and **traktamente, which
-is off by default** because a personal allowance is usually not the customer's
-business. Turning amounts off suppresses every figure in currency, the allowance
+**Split by client and site** adds a section showing where the hours went: each
+client with its own total, the sites worked at underneath it, and the hours at
+each. A shift with no site recorded gets its own row rather than disappearing
+out of its client's total, and sits last. Both levels are ordered by hours, most
+first, and the section closes with a total that can be checked against the
+working hours at the top of the page. With diving detail on, the bottom time at
+each rides as a note under the name — the figures column is nowrap, and a second
+number in it breaks the names across lines.
+
+Four toggles: amounts, diving detail, split by client and site, and
+**traktamente, which is off by default** because a personal allowance is usually
+not the customer's business. Turning amounts off suppresses every figure in currency, the allowance
 line included.
 
 Nitrogen groups, flying restrictions, team names and personal notes are **never**
