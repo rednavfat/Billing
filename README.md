@@ -463,8 +463,18 @@ client with its own total, the sites worked at underneath it, and the hours at
 each. A shift with no site recorded gets its own row rather than disappearing
 out of its client's total, and sits last. Both levels are ordered by hours, most
 first, and the section closes with a total that can be checked against the
-working hours at the top of the page. With diving detail on, the bottom time at
-each rides as a note under the name — the figures column is nowrap, and a second
+working hours at the top of the page.
+
+**Overtime is named at the place it was worked.** A site that carried overtime
+says so under its name — `of which 2.00 h overtime` — and its client says the
+same for the sum of its sites, so a customer can see which site the overtime was
+run on rather than only that the period held some. The wording is deliberate:
+overtime is *inside* the hours beside it, never something to add to them, which
+is the subset rule the whole app is built on. A site with no overtime says
+nothing. With diving detail on, the bottom time at each place joins the same
+note; turning that option off takes the bottom time away and leaves the
+overtime, which is working time rather than diving detail. Both ride under the
+name rather than beside the figure — the figures column is nowrap, and a second
 number in it breaks the names across lines.
 
 Four toggles: amounts, diving detail, split by client and site, and
